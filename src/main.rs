@@ -585,6 +585,46 @@ fn update_player(
 	}
 }
 
+fn append_player_events_to_queue(player: &mut Player, queue: &mut VecDeque<GameEvent>) {
+	let _ = match player.rot_direction {
+		RotDirection::Left => try_rotl_mino(falling_mino, &well, stream),
+		RotDirection::Right => try_rotr_mino(falling_mino, &well, stream),
+		RotDirection::None => false,
+	};
+	player.rot_direction = RotDirection::None;
+	
+	if MoveState::Instant == player.move_state {
+		let _ = match player.move_direction{
+			MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+			MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
+			_ => false, // oh no
+		};
+		player.move_repeat_countdown = Duration::from_secs(0);
+		player.move_state = MoveState::Prepeat;
+	}
+	if MoveState::Prepeat == player.move_state {
+		if player.move_repeat_countdown >= move_prepeat_duration {
+			player.move_repeat_countdown -= move_prepeat_duration;
+			let _ = match player.move_direction{
+				MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+				MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
+				_ => false, // oh no
+			};
+			player.move_state = MoveState::Repeat;
+		}
+	}
+	if MoveState::Repeat == player.move_state {
+		while player.move_repeat_countdown >= move_repeat_duration {
+			player.move_repeat_countdown -= move_repeat_duration;
+			let _ = match player.move_direction{
+				MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+				MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
+				_ => false, // oh no
+			};
+		}
+	}
+}
+
 #[derive(Default)]
 struct Layout {
 	x: i32,
