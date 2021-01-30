@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 
 use sdl2::render::TextureQuery;
 use sdl2::event::Event;
@@ -22,6 +22,14 @@ pub mod config;
 use vec2::vec2i;
 use text_builder::TextBuilder;
 use config::Config;
+
+use std::net::TcpListener;
+use std::net::TcpStream;
+
+use std::io::{Write, Read};
+
+use serde::{Serialize,Deserialize};
+use bincode::{serialize,deserialize};
 
 type Well = array2d::Array2D<Option<block::Data>>;
 
@@ -154,16 +162,13 @@ fn mino_falling_system(
 	}
 	
 	while *fall_countdown >= fall_duration {
-		let mut clone_mino = falling_mino.clone();
-		clone_mino.down();
-		
-		if !check_mino_well_collision(&mut clone_mino, well) {
-			*falling_mino = clone_mino;
+		if try_down_mino(falling_mino, well, &mut None) {
+			*fall_countdown -= fall_duration;
 		}else{
 			return true;
 		}
-		*fall_countdown -= fall_duration;
 	}
+	
 	false
 }
 
@@ -177,19 +182,24 @@ fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool where F: Fn(&m
 	false
 }
 
-fn try_rotl_mino(mino: &mut Mino, well: &Well) -> bool{
+fn try_rotl_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
+	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::RotLeft).unwrap()[..]).unwrap();}
 	try_mutate_mino(mino, well, |mino|mino.rotl())
 }
-fn try_rotr_mino(mino: &mut Mino, well: &Well) -> bool{
+fn try_rotr_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
+	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::RotRight).unwrap()[..]).unwrap();}
 	try_mutate_mino(mino, well, |mino|mino.rotr())
 }
-fn try_left_mino(mino: &mut Mino, well: &Well) -> bool{
+fn try_left_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
+	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Left).unwrap()[..]).unwrap();}
 	try_mutate_mino(mino, well, |mino|mino.left())
 }
-fn try_right_mino(mino: &mut Mino, well: &Well) -> bool{
+fn try_right_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
+	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Right).unwrap()[..]).unwrap();}
 	try_mutate_mino(mino, well, |mino|mino.right())
 }
-fn try_down_mino(mino: &mut Mino, well: &Well) -> bool{
+fn try_down_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
+	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Down).unwrap()[..]).unwrap();}
 	try_mutate_mino(mino, well, |mino|mino.down())
 }
 
@@ -226,7 +236,7 @@ fn mark_clearable_lines(well: &Well, clearable: &mut Vec<bool>, clearable_count:
 fn create_shadow_mino(mino: &Mino, well: &Well) -> Mino {
 	let mut shadow_mino = mino.clone();
 	shadow_mino.make_shadow();
-	while try_down_mino(&mut shadow_mino, &well) {}
+	while try_down_mino(&mut shadow_mino, &well, &mut None) {}
 	shadow_mino
 }
 
@@ -264,6 +274,8 @@ enum State {
 	Pause,
 	Over,
 	Start,
+	LobbyHost,
+	LobbyClient,
 }
 
 enum UnitState {
@@ -620,6 +632,19 @@ enum StartState {
 	ChangePlayers,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[allow(dead_code)]
+enum GameEvent {
+	Left = 0,
+	Right,
+	Down,
+	RotLeft,
+	RotRight,
+	AddToWell,
+	GenerateNew,
+	Store,
+}
+
 impl StartLayout {
 	fn centered_x(&self, obj_width: u32) -> i32 {
 		((self.width-obj_width) / 2) as i32
@@ -719,7 +744,25 @@ fn main() {
 		TextBuilder::new("<Sprint>".to_string(), Color::WHITE).build(&font, &texture_creator),
 	];
 	
+	#[derive(Debug)]
+	enum NetworkState {
+		Offline,
+		Host {
+			listener: TcpListener,
+			streams: Vec<TcpStream>,
+		},
+		Client {
+			stream: TcpStream,
+		},
+	}
 	
+	let mut network_states = (0..3i32).cycle();
+	let mut selected_network_state = network_states.next().unwrap();
+	let mut network_state = NetworkState::Offline;
+	
+	let offline_text = TextBuilder::new("Offline".to_string(), Color::WHITE).build(&font, &texture_creator);
+	let host_text = TextBuilder::new("Host".to_string(),Color::WHITE).build(&font, &texture_creator);
+	let client_text = TextBuilder::new("Client".to_string(),Color::WHITE).build(&font, &texture_creator);
 	
 	let mut lines_cleared_text = [
 		create_lines_cleared_text(0, &font, &texture_creator),
@@ -867,6 +910,10 @@ fn main() {
 					}
 				}
 				
+				if is_key_down(&event, Some(Keycode::Q)) {
+					selected_network_state = network_states.next().unwrap();
+				}
+				
 				if is_key_down(&event, Some(Keycode::Return)) {
 					for _ in 0..player_count {
 						units.push(Unit::new(game_mode_ctors[chosen_game_mode](), None));
@@ -874,11 +921,41 @@ fn main() {
 					for (Unit{player,..}, controller) in units.iter_mut().zip(controllers.iter()) {
 						player.joystick_id = Some(controller.instance_id());
 					}
-					state = State::Play;
+					network_state = match selected_network_state {
+						0 => {
+							state = State::Play;
+							NetworkState::Offline
+						}
+						1 => {
+							let listener = TcpListener::bind("127.0.0.1:4141")
+								.expect("Couldn't bind listener");
+							listener.set_nonblocking(true)
+								.expect("Couldn't set listener to be non-blocking");
+							
+							state = State::LobbyHost;
+							
+							NetworkState::Host {
+								listener,
+								streams: Vec::new(),
+							}
+						}
+						2 => {
+							let stream = TcpStream::connect("127.0.0.1:4141")
+								.expect("Couldn't connect stream");
+							stream.set_nonblocking(true)
+								.expect("Couldn't set stream to be non-blocking");
+							
+							state = State::LobbyClient;
+							
+							NetworkState::Client {
+								stream
+							}
+						}
+						_ => {panic!()}
+					}
 				}
 			}
 		}
-		
 		
 		// @update
 		match state {
@@ -906,17 +983,22 @@ fn main() {
 								center_mino(falling_mino, &well);
 							}
 							
+							let stream = &mut match network_state {
+								NetworkState::Client{ref mut stream} => Some(stream),
+								_ => None,
+							};
+							
 							let _ = match player.rot_direction {
-								RotDirection::Left => try_rotl_mino(falling_mino, &well),
-								RotDirection::Right => try_rotr_mino(falling_mino, &well),
+								RotDirection::Left => try_rotl_mino(falling_mino, &well, stream),
+								RotDirection::Right => try_rotr_mino(falling_mino, &well, stream),
 								RotDirection::None => false,
 							};
 							player.rot_direction = RotDirection::None;
 							
 							if MoveState::Instant == player.move_state {
 								let _ = match player.move_direction{
-									MoveDirection::Left => try_left_mino(falling_mino, &well),
-									MoveDirection::Right => try_right_mino(falling_mino, &well),
+									MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+									MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
 									_ => false, // oh no
 								};
 								player.move_repeat_countdown = Duration::from_secs(0);
@@ -926,8 +1008,8 @@ fn main() {
 								if player.move_repeat_countdown >= move_prepeat_duration {
 									player.move_repeat_countdown -= move_prepeat_duration;
 									let _ = match player.move_direction{
-										MoveDirection::Left => try_left_mino(falling_mino, &well),
-										MoveDirection::Right => try_right_mino(falling_mino, &well),
+										MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+										MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
 										_ => false, // oh no
 									};
 									player.move_state = MoveState::Repeat;
@@ -937,8 +1019,8 @@ fn main() {
 								while player.move_repeat_countdown >= move_repeat_duration {
 									player.move_repeat_countdown -= move_repeat_duration;
 									let _ = match player.move_direction{
-										MoveDirection::Left => try_left_mino(falling_mino, &well),
-										MoveDirection::Right => try_right_mino(falling_mino, &well),
+										MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
+										MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
 										_ => false, // oh no
 									};
 								}
@@ -1042,6 +1124,29 @@ fn main() {
 				stopwatch += dpf;
 			}
 			
+			State::LobbyHost => {
+				if let NetworkState::Host {listener, streams} = &mut network_state {
+					while let Ok(incoming) = listener.accept() {
+						streams.push(incoming.0);
+						println!("Connection established");
+					}
+					
+					for stream in streams {
+						let mut buffer = [0;16];
+						if stream.read(&mut buffer).is_ok() {
+							println!("{:?}", deserialize::<GameEvent>(&buffer));
+						}
+					}
+					
+				}else {
+					panic!();
+				}
+			}
+			
+			State::LobbyClient => {
+				state = State::Play;
+			}
+			
 			_ => ()
 			
 		}
@@ -1099,6 +1204,26 @@ fn main() {
 				&player_count_text,
 				Rect::new(0, 0, width, height),
 				Rect::new(layout.centered_x(width), layout.y, width, height));
+			
+			layout.row(height as i32);
+			layout.row_margin(15);
+			
+			let network_text = match selected_network_state {
+				0 => &offline_text,
+				1 => &host_text,
+				2 => &client_text,
+				_ => panic!(),
+			};
+			let TextureQuery {width, height, ..} = network_text.query();
+			let _ = canvas.copy(
+				&network_text,
+				Rect::new(0, 0, width, height),
+				Rect::new(layout.centered_x(width), layout.y, width, height));
+			
+		}else if let State::LobbyHost {..} = state {
+			
+		}else if let State::LobbyClient {..} = state {
+			
 		}else{
 			
 			let mut layout = Layout {
