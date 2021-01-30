@@ -1,0 +1,2473 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"window",
+				"window_rect\t  Rect"
+			],
+			[
+				"rect",
+				"window_rect\t  Rect"
+			],
+			[
+				"Start",
+				"StartState\t  Enum"
+			],
+			[
+				"playe",
+				"player_count\t  i32"
+			],
+			[
+				"player",
+				"player_count_text\t  [Texture; _]"
+			],
+			[
+				"Star",
+				"StartState\t  Enum"
+			],
+			[
+				"start",
+				"start_state\t  StartState"
+			],
+			[
+				"playert",
+				"player_count\t  i32"
+			],
+			[
+				"Change",
+				"ChangePlayers\t  ()"
+			],
+			[
+				"ite",
+				"iter_mut()\t  pub fn iter_mut(&mut self) -> IterMut<'_, T>"
+			],
+			[
+				"lines",
+				"lines_before_next_level\t  u32"
+			],
+			[
+				"line",
+				"create_lines_cleared_text(…)\t  fn create_lines_cleared_text<'a>(lines_cleared: u32, font: &sdl2::ttf::Font, texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>) -> sdl2::render::Texture<'a>"
+			],
+			[
+				"block",
+				"block_canvas\t  Canvas"
+			],
+			[
+				"bloc",
+				"block_canvas\t  Canvas"
+			],
+			[
+				"uni",
+				"units\t  [Unit; _]"
+			],
+			[
+				"windo",
+				"window_rect\t  Rect"
+			],
+			[
+				"re",
+				"rect\t  Rect"
+			],
+			[
+				"De",
+				"Default\t  EnumMember"
+			],
+			[
+				"Un",
+				"Unit\t  Unit { well$1, animate_line$2, state$3, queue$4, rng$5, player$6, lines_cleared$7, mode$8 }$0"
+			],
+			[
+				"pl",
+				"player\t  Player"
+			],
+			[
+				"ve",
+				"vec![…]\t  #[macro_export]\nmacro_rules! vec"
+			],
+			[
+				"col",
+				"col_margin(…)\t  fn col_margin(&mut self, x: i32)"
+			],
+			[
+				"Ve",
+				"VecDeque<…>\t  Struct"
+			],
+			[
+				"Vec",
+				"VecDeque\t  Struct"
+			],
+			[
+				"MI",
+				"MinoRng\t  Enum"
+			],
+			[
+				"Mino",
+				"MinoRng\t  Enum"
+			],
+			[
+				"WellS",
+				"WellState::Over\t  ()"
+			],
+			[
+				"Well",
+				"WellState::LineClear\t  { countdown: Duration }"
+			],
+			[
+				"from",
+				"from_secs\t  pub const fn from_secs(secs: u64) -> Duration"
+			],
+			[
+				"count",
+				"countdown\t  Duration"
+			],
+			[
+				"de",
+				"default()\t  fn default() -> Self"
+			],
+			[
+				"We",
+				"Weller\t  Struct"
+			],
+			[
+				"Unit",
+				"UnitState\t  Enum"
+			],
+			[
+				"row",
+				"row_margin(…)\t  fn row_margin(&mut self, y: i32)"
+			],
+			[
+				"as",
+				"as_vec2i()\t  fn as_vec2i(&self) -> vec2i"
+			],
+			[
+				"ro",
+				"row_margin(…)\t  fn row_margin(&mut self, y: i32)"
+			],
+			[
+				"B",
+				"BLUE\t  pub const BLUE: Data = Data{texture_pos:vec2i{x:1,y:1}};"
+			],
+			[
+				"blocks",
+				"blocks_data\t  [Data; _]"
+			],
+			[
+				"mi",
+				"mino\t  Module"
+			],
+			[
+				"mino",
+				"Mino\t  Struct"
+			],
+			[
+				"even",
+				"event_axis\t  &Axis"
+			],
+			[
+				"C",
+				"Controlcode\t  Enum"
+			],
+			[
+				"prin",
+				"println\tprintln!(…)"
+			],
+			[
+				"joy",
+				"joystick_id\t  u32"
+			],
+			[
+				"joys",
+				"joystick_id\t  Option<u32>"
+			],
+			[
+				"iter",
+				"iter_mut()\t  pub fn iter_mut(&mut self) -> IterMut<'_, T>"
+			],
+			[
+				"fall",
+				"falling_mino\t  &mut Mino"
+			],
+			[
+				"into",
+				"into_iter()\t  fn into_iter(self) -> Self::IntoIter"
+			],
+			[
+				"rng",
+				"mino_rng\t  MinoRng"
+			],
+			[
+				"Mi",
+				"Mino\t  Struct"
+			],
+			[
+				"fal",
+				"falling_mino\t  Mino"
+			],
+			[
+				"str",
+				"to_string()\t  fn to_string(&self) -> String"
+			],
+			[
+				"P",
+				"Play\t  ()"
+			],
+			[
+				"game",
+				"game_mode_ctors\t  [fn default_marathon() -> Mode; _]"
+			],
+			[
+				"defa",
+				"default_sprint()\t  fn default_sprint() -> Mode"
+			],
+			[
+				"M",
+				"Marathon\t  { level_target: u32 }"
+			],
+			[
+				"star",
+				"start_text\t  Texture"
+			],
+			[
+				"But",
+				"ControllerButtonDown\t  { timestamp: u32, which: u32, button: Button }"
+			],
+			[
+				"controller_",
+				"controller_store\t  Controlcode"
+			],
+			[
+				"T",
+				"TriggerRight\t  ()"
+			],
+			[
+				"event",
+				"event_axis"
+			],
+			[
+				"can",
+				"can_store_mino\t  bool"
+			],
+			[
+				"Controller",
+				"Controller::Button(…)\t  (Button)"
+			],
+			[
+				"left",
+				"left\t  Keycode"
+			],
+			[
+				"Button",
+				"ControllerButtonUp\t  { timestamp: u32, which: u32, button: Button }"
+			],
+			[
+				"print",
+				"println\tprintln!(…)"
+			],
+			[
+				"In",
+				"InputMethod\t  Enum"
+			],
+			[
+				"IN",
+				"InputMethod\t  Enum"
+			],
+			[
+				"Playe",
+				"PlayerKeybinds\t  Struct"
+			],
+			[
+				"cleared_",
+				"lines_cleared_target\t  u32"
+			],
+			[
+				"S",
+				"Sprint\t  { lines_cleared_target: u32 }"
+			],
+			[
+				"FallS",
+				"FallState::Fall\t  ()"
+			],
+			[
+				"defau",
+				"fn default()\t  Function"
+			],
+			[
+				"Text",
+				"TextBuilder"
+			],
+			[
+				"won",
+				"won_text\t  Texture"
+			],
+			[
+				"from_se",
+				"from_secs(…)\t  pub const fn from_secs(secs: u64) -> Duration"
+			],
+			[
+				"lines_",
+				"lines_cleared_target\t  u32"
+			],
+			[
+				"level",
+				"level_target\t  u32"
+			],
+			[
+				"Ev",
+				"event\t  Module"
+			],
+			[
+				"donw",
+				"down_alt\t  Keycode"
+			],
+			[
+				"rot",
+				"rot_right_alt\t  Keycode"
+			],
+			[
+				"rot_",
+				"rot_left\t  Keycode"
+			],
+			[
+				"rot_r",
+				"rot_right_alt\t  Keycode"
+			],
+			[
+				"righ",
+				"right_alt\t  Keycode"
+			],
+			[
+				"le",
+				"left\t  Keycode"
+			],
+			[
+				"conf",
+				"config\t  Config"
+			],
+			[
+				"from_",
+				"from_name(…)\t  pub fn from_name(name: &str) -> Option<Keycode>"
+			],
+			[
+				"read_to_",
+				"read_to_string(…)\t  fn read_to_string(&mut self, buf: &mut String) -> Result<usize>"
+			],
+			[
+				"Min",
+				"MinoRng\t  Enum"
+			],
+			[
+				"gen_",
+				"gen_range(…)\t  fn gen_range<T, R>(&mut self, range: R) -> T\nwhere\n        T: SampleUniform,\n        R: SampleRange<T>"
+			],
+			[
+				"stored",
+				"stored_mino\t  Option<Mino>"
+			],
+			[
+				"euc",
+				"rem_euclid(…)\t  pub const fn rem_euclid(self, rhs:Self) ->Self"
+			],
+			[
+				"Inde",
+				"IndexMut\t  Interface"
+			],
+			[
+				"eu",
+				"rem_euclid(…)\t  pub const fn rem_euclid(self, rhs:Self) ->Self"
+			],
+			[
+				"minos",
+				"queued_minos\t  VecDeque<Mino>"
+			],
+			[
+				"it",
+				"iter()\t  pub fn iter(&self) -> Iter<'_, T>"
+			],
+			[
+				"que",
+				"queued_minos\t  VecDeque<Mino>"
+			],
+			[
+				"unwra",
+				"unwrap()\t  pub const fn unwrap(self) -> T"
+			],
+			[
+				"pop",
+				"pop_front()\t  pub fn pop_front(&mut self) -> Option<T>"
+			],
+			[
+				"textu",
+				"texture_creator\t  &TextureCreator<WindowContext>"
+			],
+			[
+				"Tex",
+				"TextureCreator\t  Struct"
+			],
+			[
+				"li",
+				"lines_cleared\t  u32"
+			],
+			[
+				"tex",
+				"texture_creator"
+			],
+			[
+				"craete_L",
+				"create_lines_cleared_text(…)\t  fn create_lines_cleared_text<'a>(lines_cleared: u32, font: &sdl2::ttf::Font, texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>) -> sdl2::render::Texture<'a>"
+			],
+			[
+				"bl",
+				"blended(…)\t  pub fn blended<'b, T>(self, color: T) -> FontResult<Surface<'b>>\nwhere T: Into<Color>"
+			],
+			[
+				"create",
+				"create_text_texture(…)\t  fn create_text_texture<'a>(text: &str, font: &sdl2::ttf::Font, texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>) -> sdl2::render::Texture<'a>"
+			],
+			[
+				"DP",
+				"DPadDown\t  ()"
+			],
+			[
+				"D",
+				"DPadLeft\t  ()"
+			],
+			[
+				"Sh",
+				"RightShoulder\t  ()"
+			],
+			[
+				"is",
+				"is_ok()\t  pub const fn is_ok(&self) -> bool"
+			],
+			[
+				"ep",
+				"expect(…)\t  pub fn expect(self, msg: &str) -> T"
+			],
+			[
+				"Dp",
+				"DPadRight\t  ()"
+			],
+			[
+				"co",
+				"controller\t  Module"
+			],
+			[
+				"div",
+				"div_f64\t  pub const fn div_f64(self, rhs: f64) -> Duration"
+			],
+			[
+				"get_",
+				"get_lines_before_next_level(…)\t  fn get_lines_before_next_level(level: u32) -> u32"
+			],
+			[
+				"froms",
+				"from_secs_f32(…)\t  pub const fn from_secs_f32(secs: f32) -> Duration"
+			],
+			[
+				"levle",
+				"level_text\t  Texture"
+			],
+			[
+				"lev",
+				"level\t  u32"
+			],
+			[
+				"lines_cl",
+				"lines_cleared_text\t  Texture"
+			],
+			[
+				"set",
+				"set_draw_color(…)\t  pub fn set_draw_color<C: Into<pixels::Color>>(&mut self, color: C)"
+			],
+			[
+				"forma",
+				"format!(…)\t  #[macro_export]\nmacro_rules! format"
+			],
+			[
+				"unwr",
+				"unwrap()\t  pub fn unwrap(self) -> T"
+			],
+			[
+				"craete",
+				"create_texture_from_surface(…)\t  pub fn create_texture_from_surface<S: AsRef<SurfaceRef>>(&self, surface: S) -> Result<Texture, TextureValueError>"
+			],
+			[
+				"crae",
+				"create_texture_from_surface(…)\t  pub fn create_texture_from_surface<S: AsRef<SurfaceRef>>(&self, surface: S) -> Result<Texture, TextureValueError>"
+			],
+			[
+				"ble",
+				"blended_wrapped(…)\t  pub fn blended_wrapped<'b, T>(self, color: T, wrap_max_width: u32) -> FontResult<Surface<'b>>\nwhere T: Into<Color>"
+			],
+			[
+				"set_",
+				"set_blend_mode(…)\t  pub fn set_blend_mode(&mut self, blend: BlendMode)"
+			],
+			[
+				"sdl2",
+				"sdl2::render::BlendMode::Blend\t  ()"
+			],
+			[
+				"n",
+				"new(…)\t  pub fn new(x: i32, y: i32, width: u32, height: u32) -> Rect"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "src/main.rs",
+			"settings":
+			{
+				"buffer_size": 33145,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Cargo.toml",
+			"settings":
+			{
+				"buffer_size": 429,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/mino.rs",
+			"settings":
+			{
+				"buffer_size": 2521,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/block.rs",
+			"settings":
+			{
+				"buffer_size": 2813,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "thoughts/TODO.md",
+			"settings":
+			{
+				"buffer_size": 51,
+				"encoding": "UTF-8",
+				"line_ending": "Windows",
+				"name": "TODO"
+			}
+		},
+		{
+			"file": "src/config.rs",
+			"settings":
+			{
+				"buffer_size": 3856,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "config.toml",
+			"settings":
+			{
+				"buffer_size": 801,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
+			"settings":
+			{
+				"buffer_size": 1326,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "Packages/Rust Enhanced/RustEnhanced.sublime-build",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Windows.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/C++/C Single File.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C/C Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C/C SDL.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/C/C Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/C++ Starting Kit/C++ - Starting Kit.sublime-build",
+					""
+				],
+				[
+					"Packages/C++ Starting Kit/C++ - Starting Kit.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++ Starting Kit/C++ - Starting Kit.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Console Multiple Files.sublime-build",
+					"Windows"
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					"Windows"
+				]
+			],
+			[
+				"Packages/C++/C++ Console Multiple Files.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Console.sublime-build",
+					"Windows"
+				]
+			],
+			[
+				"Packages/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/MinGW/MinGW-w64.sublime-build",
+					""
+				],
+				[
+					"Packages/MinGW/MinGW-w64.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Makefile.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Windows.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/User/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Windows.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/C++/C++ Windows.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/C++/C++ Console Multiple Files.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Windows.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/C++/C++ Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/Python/Python Console.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Python/Python Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/PythonCmd/PythonCmd.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/PythonCmd/PythonCmd.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/User/Python/Python Console.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/Python/Python Console.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					""
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Automatic"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Run (with args)..."
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Check"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Test"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Test (with args)..."
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Bench"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Document"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Clippy"
+				],
+				[
+					"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+					"Script"
+				]
+			],
+			[
+				"Packages/Rust Enhanced/RustEnhanced.sublime-build",
+				"Automatic"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Rust/Cargo.sublime-build",
+					""
+				],
+				[
+					"Packages/Rust/Cargo.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Rust/Cargo.sublime-build",
+					"Test"
+				],
+				[
+					"Packages/Rust/Cargo.sublime-build",
+					"Bench"
+				],
+				[
+					"Packages/Rust/Cargo.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/Rust/Rust.sublime-build",
+					""
+				],
+				[
+					"Packages/Rust/Rust.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Rust/Rust.sublime-build",
+					"Build & Run"
+				]
+			],
+			[
+				"Packages/Rust/Cargo.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/User/C++/C++ Console.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C++/C++ Makefile.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/C++/C++ Console.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 104.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"rename",
+				"LSP: Rename Symbol"
+			],
+			[
+				"lower",
+				"Convert Case: Lower Case"
+			],
+			[
+				"bookem",
+				"Bookmarks: Toggle"
+			],
+			[
+				"restart",
+				"LSP: Restart Servers"
+			],
+			[
+				"renaem",
+				"LSP: Rename Symbol"
+			],
+			[
+				"new view",
+				"File: New View into File"
+			],
+			[
+				"reanme",
+				"Rename File"
+			],
+			[
+				"",
+				"Arithmetic"
+			],
+			[
+				"arith",
+				"Arithmetic"
+			],
+			[
+				"rust",
+				"Rust: Next Message"
+			],
+			[
+				"remove pac",
+				"Package Control: Remove Package"
+			],
+			[
+				"esac",
+				"StringEncode: Escape regex"
+			],
+			[
+				"install p",
+				"Package Control: Install Package"
+			],
+			[
+				"markdown",
+				"Set Syntax: Markdown"
+			],
+			[
+				"ari",
+				"Arithmetic"
+			],
+			[
+				"arit",
+				"Arithmetic"
+			],
+			[
+				"disable",
+				"Package Control: Disable Package"
+			],
+			[
+				"live",
+				"LiveReload: Enable/disable plug-ins"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"move",
+				"File: Move"
+			],
+			[
+				"enable",
+				"LSP: Enable Language Server Globally"
+			],
+			[
+				"lsp",
+				"LSP: Restart Servers"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"removep",
+				"Package Control: Remove Package"
+			],
+			[
+				"install ",
+				"Package Control: Install Package"
+			],
+			[
+				"rean",
+				"Rename File"
+			],
+			[
+				"ren",
+				"Rename File"
+			],
+			[
+				"reanem",
+				"LSP: Rename Symbol"
+			],
+			[
+				"lsp: enable",
+				"LSP: Enable Language Server Globally"
+			],
+			[
+				"lsp:enable",
+				"LSP: Enable Language Server in Project"
+			],
+			[
+				"lsp: eanble",
+				"LSP: Enable Language Server Globally"
+			],
+			[
+				"set syntaax mark",
+				"Set Syntax: Markdown"
+			],
+			[
+				"lsp enable",
+				"LSP: Enable Language Server Globally"
+			],
+			[
+				"upload",
+				"Sync Settings: Upload"
+			],
+			[
+				"synatx c++",
+				"Set Syntax: C++"
+			],
+			[
+				"TabNine",
+				"⌬ tabnine: Open Configuration"
+			],
+			[
+				"install pack",
+				"Package Control: Install Package"
+			],
+			[
+				"c++",
+				"Set Syntax: C++"
+			],
+			[
+				"syntax: text",
+				"Set Syntax: Plain Text"
+			],
+			[
+				"rena",
+				"LSP: Rename Symbol"
+			],
+			[
+				"renam",
+				"LSP: Rename Symbol"
+			],
+			[
+				"reload",
+				"LiveReload: Enable/disable plug-ins"
+			],
+			[
+				"livereload",
+				"LiveReload: Enable/disable plug-ins"
+			],
+			[
+				"markdwon",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"markdownlive",
+				"MarkdownLivePreview: Open Preview"
+			],
+			[
+				"theme",
+				"UI: Select Theme"
+			],
+			[
+				"preview",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"terminus",
+				"Terminus: Open Default Shell in Tab (View)"
+			],
+			[
+				"enable pack",
+				"Package Control: Enable Package"
+			],
+			[
+				"json",
+				"Set Syntax: JSON"
+			],
+			[
+				"list packages",
+				"Package Control: List Packages"
+			],
+			[
+				"rename s",
+				"LSP: Rename Symbol"
+			],
+			[
+				"time",
+				"Snippet: Time a section of your code"
+			],
+			[
+				"install pac",
+				"Package Control: Install Package"
+			],
+			[
+				"javascrip",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"configura",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"add watch",
+				"Debugger: Add Watch Expression"
+			],
+			[
+				"debugger",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"remove package",
+				"Package Control: Remove Package"
+			],
+			[
+				"debugg",
+				"Debugger: Start"
+			],
+			[
+				"ocnfigu",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"debuggre",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"debug",
+				"Debugger: Stop"
+			],
+			[
+				"install adapter",
+				"Debugger: Install Adapters"
+			],
+			[
+				"configuration",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"remove packa",
+				"Package Control: Remove Package"
+			],
+			[
+				"airth",
+				"Arithmetic"
+			],
+			[
+				"d",
+				"Debugger: Open"
+			],
+			[
+				"increment",
+				"Calculate: Increment"
+			],
+			[
+				"calculate",
+				"Calculate: Increment"
+			],
+			[
+				"calu",
+				"Calculate"
+			],
+			[
+				"reset",
+				"Terminus: Reset"
+			],
+			[
+				"terminal",
+				"Terminus: Open Default Shell in Tab (View)"
+			],
+			[
+				"package control install",
+				"Package Control: Install Package"
+			],
+			[
+				"rename ",
+				"Rename File"
+			],
+			[
+				"layou",
+				"Origami: Restore Saved Layout"
+			],
+			[
+				"origami restore",
+				"Origami: Restore Saved Layout"
+			],
+			[
+				"liverload",
+				"LiveReload: Enable/disable plug-ins"
+			],
+			[
+				"mrakdown",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"format table",
+				"MarkdownTableFormatter: format table"
+			],
+			[
+				"eqd",
+				"Snippet: eqd"
+			],
+			[
+				"origami",
+				"Origami: Restore Saved Layout"
+			],
+			[
+				"format",
+				"MarkdownTableFormatter: format table"
+			],
+			[
+				"formatter",
+				"MarkdownTableFormatter: format table"
+			],
+			[
+				"prevpi",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"previe",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"previ",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"install packa",
+				"Package Control: Install Package"
+			],
+			[
+				"html",
+				"Markdown HTML Preview"
+			],
+			[
+				"INSTALL",
+				"Package Control: Install Package"
+			],
+			[
+				"restore",
+				"Origami: Restore Saved Layout"
+			],
+			[
+				"origami lay",
+				"Origami: Restore Saved Layout"
+			],
+			[
+				"save lay",
+				"Origami: Save Current Layout"
+			],
+			[
+				"pacakge",
+				"Package Control: Remove Package"
+			],
+			[
+				"markdo",
+				"MarkdownLivePreview: Open Preview"
+			],
+			[
+				"inb",
+				"Snippet: inbone"
+			],
+			[
+				"tiem",
+				"Snippet: Time a section of your code"
+			],
+			[
+				"inbone",
+				"Snippet: inbone"
+			],
+			[
+				"packge list",
+				"Package Control: List Packages"
+			],
+			[
+				"enabla",
+				"Package Control: Enable Package"
+			],
+			[
+				"zero",
+				"Snippet: zero inb"
+			],
+			[
+				"Snippet: ",
+				"Snippet: html"
+			],
+			[
+				"package contro: enable",
+				"Package Control: Enable Package"
+			],
+			[
+				"disabl",
+				"LSP: Disable Language Server Globally"
+			],
+			[
+				"download",
+				"Sync Settings: Download"
+			],
+			[
+				"sync",
+				"Sync Settings: Upload"
+			],
+			[
+				"package Control",
+				"Package Control: List Packages"
+			],
+			[
+				"uploa",
+				"Sync Settings: Upload"
+			],
+			[
+				"filedi",
+				"FileDiffs: Menu"
+			],
+			[
+				"install pa",
+				"Package Control: Install Package"
+			],
+			[
+				"list",
+				"Package Control: List Packages"
+			],
+			[
+				"insatll",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"packagecontro",
+				"Package Control: Install Package"
+			],
+			[
+				"settings",
+				"Sync Settings: Edit User Settings"
+			],
+			[
+				"packagedev",
+				"PackageDev: New Theme"
+			],
+			[
+				"down",
+				"Sync Settings: Download"
+			],
+			[
+				"settu",
+				"Sync Settings: Upload"
+			],
+			[
+				"cread",
+				"Sync Settings: Create and Upload"
+			],
+			[
+				"edit use",
+				"Sync Settings: Edit User Settings"
+			],
+			[
+				"setting",
+				"Sync Settings: Edit User Settings"
+			],
+			[
+				"package remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"install package",
+				"Package Control: Install Package"
+			],
+			[
+				"expo",
+				"HexViewer: Export Bin"
+			],
+			[
+				"edit",
+				"HexViewer: Show Hex Edit Panel"
+			],
+			[
+				"expor",
+				"HexViewer: Export Bin"
+			],
+			[
+				"hex",
+				"HexViewer: Show Hex Edit Panel"
+			]
+		],
+		"width": 436.0
+	},
+	"console":
+	{
+		"height": 426.0,
+		"history":
+		[
+			"file_diff_selections",
+			"file_diff_selections()",
+			"sublime.run_command(\"setup_test_environment\")",
+			"setup_test_environment",
+			"sublime.setup_test_environment()",
+			"setup_test_environment()",
+			"view.run_command(\"example\")",
+			"ExampleCommand()",
+			"ExampleCommand",
+			"ExampleCommand()",
+			"<a href=\"revert\">⟲</a>",
+			"view.window().run_command(\"new_file\", {\"name\": \"ass\"})",
+			"view.window().run_command(\"new_file\")",
+			"view.window().new_file()",
+			"import urllib.request,os,hashlib; h = '6f4c264a24d933ce70df5dedcf1dcaee' + 'ebe013ee18cced0ef93d5f746d80ef60'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/D/Workspace/tetris",
+		"/D/Workspace/tetris/gfx",
+		"/D/Workspace/tetris/src"
+	],
+	"file_history":
+	[
+		"/D/Workspace/tetris/src/config.rs",
+		"/D/Workspace/tetris-build/config.toml",
+		"/D/Workspace/tetris/src/vec2.rs",
+		"/D/Workspace/tetris/src/text_builder.rs",
+		"/D/Workspace/tetris/good_config.toml",
+		"/D/Workspace/tetris/target/debug/deps/getrandom-771d8f00cd9d76de.d",
+		"/D/Workspace/tetris/src/game.rs",
+		"/D/Workspace/tetris/src/main.rs",
+		"/D/Workspace/tetris/config.toml",
+		"/D/Workspace/tetris/TOML or JSON for settings.md",
+		"/D/Workspace/tetris/Cargo.toml",
+		"/D/Workspace/tetris/src/block.rs",
+		"/D/Workspace/tetris/Mino translations.md",
+		"/D/Workspace/Romanainfo/Realismul.md",
+		"/D/Workspace/Romanainfo/Romantismul.md",
+		"/D/Workspace/tetris/target/release/tetris.d",
+		"/D/Workspace/tetris/src/transform2.rs",
+		"/D/Stormworks.Build.and.Rescue.v1.0.28/Stormworks.Build.and.Rescue.v1.0.28/SteamConfig.ini",
+		"/D/Workspace/tetris/Resetting game state.md",
+		"/D/Workspace/tetris/src/game_state/mod.rs",
+		"/D/Workspace/tetris/gfx/block.png",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/SideBarEnhancements/Open With/Side Bar.sublime-menu",
+		"/D/Workspace/tetris/src/block_canvas.rs",
+		"/C/Users/Andrei/Desktop/main.rs",
+		"/C/Users/Andrei/AppData/Local/Temp/7zECFD95AE5/main.rs",
+		"/D/Workspace/tetris/src/mino.rs",
+		"/D/Workspace/tetris/Tetris.md",
+		"/D/Workspace/tetris/src/game_state/play.rs",
+		"/D/Workspace/tetris/src/game_state/over.rs",
+		"/D/Workspace/town.txt",
+		"/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
+		"/D/Workspace/tetris/src/well.rs",
+		"/D/Workspace/tetris/src/resource_manager.rs",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/Live_Refresh/live_refresh.py",
+		"/D/Workspace/tetris/src/game_state/game_state_start.rs",
+		"/D/Workspace/tetris/src/resource_manager/ResourceManager.rs",
+		"/D/Workspace/tetris/src/game_state/game_state_play.rs",
+		"/D/Workspace/tetris/Tetrisnt.md",
+		"/D/Workspace/tetris/src/game_state_machine/game_state/game_state_play.rs",
+		"/D/Workspace/tetris/src/game_state_machine/game_state/mod.rs",
+		"/D/Workspace/tetris/src/game_state_machine/game_data.rs",
+		"/D/Workspace/tetris/src/game_state_machine/game_state/game_state_start.rs",
+		"/D/Workspace/tetris/src/game_state_machine/mod.rs",
+		"/D/Workspace/tetris/src/game_state_machine/game_state_start.rs",
+		"/D/Workspace/tetris/src/game_state_play.rs",
+		"/D/Workspace/tetris/src/game_state.rs",
+		"/D/Workspace/tetris/src/game_state_machine/game_state_machine.rs",
+		"/D/Workspace/tetris/tetris.sublime-project",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/FileDiffs/FileDiffs.sublime-settings",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/SideBarEnhancements/Side Bar.sublime-settings",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Side Bar.sublime-settings",
+		"/D/Workspace/indeletniciri curente/apm.rs",
+		"/D/GTA San Andreas/GTA San Andreas/audio/SFX/SPC_EA",
+		"/D/Workspace/Mathsinfo/Integrale elementare.md",
+		"/D/Workspace/indeletniciri curente/apm.in",
+		"/D/Workspace/indeletniciri curente/pakpak.rs",
+		"/D/Workspace/indeletniciri curente/apm.out",
+		"/C/Users/Andrei/Downloads/grader_test10 (1).ok",
+		"/C/Users/Andrei/Downloads/grader_test10 (1).in",
+		"/C/Users/Andrei/Downloads/grader_test9.ok",
+		"/C/Users/Andrei/Downloads/grader_test9.in",
+		"/C/Users/Andrei/Downloads/grader_test6.ok",
+		"/C/Users/Andrei/Downloads/grader_test6.in",
+		"/D/Epic Games/SidMeiersCivilizationVI/DLC/Expansion1/UI/Civilopedia/CivilopediaPage_HistoricMoment.lua",
+		"/D/Epic Games/SidMeiersCivilizationVI/DLC/Expansion1/UI/Civilopedia/CivilopediaPage_Governor.lua",
+		"/D/Workspace/Mathsinfo/test.latex",
+		"/D/Workspace/indeletniciri curente/nani.cpp",
+		"/D/Workspace/indeletniciri curente/radiatie.out",
+		"/D/Workspace/indeletniciri curente/radiatie.in",
+		"/D/Workspace/pseudocod/expression.ps",
+		"/D/Workspace/indeletniciri curente/radiatie_doomed.cpp",
+		"/C/Users/Andrei/Documents/DuckGame/Mods/mods.conf",
+		"/D/Workspace/indeletniciri curente/radiatie.cpp",
+		"/D/Workspace/pseudocod/pseudocompiler.c",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Monokai 2.sublime-color-scheme",
+		"/D/Workspace/indeletniciri curente/apm.cpp",
+		"/D/Workspace/indeletniciri curente/dmin.cpp",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/fori loop.sublime-snippet",
+		"/D/Workspace/indeletniciri curente/disjoint.cpp",
+		"/D/Workspace/indeletniciri curente/disjoint.out",
+		"/D/Workspace/indeletniciri curente/disjoint.in",
+		"/D/Workspace/pseudocod/doc.md",
+		"/D/Workspace/indeletniciri curente/salam.cpp",
+		"/D/Workspace/pseudocod/pseudocompiler_v1.c",
+		"/D/Workspace/indeletniciri curente/gauss.cpp",
+		"/D/Workspace/indeletniciri curente/raza.cpp",
+		"/D/Workspace/indeletniciri curente/1586threeprimenumbers.cpp",
+		"/D/Workspace/indeletniciri curente/fractzii.cpp",
+		"/D/Workspace/indeletniciri curente/.tabnine_root ",
+		"/D/Workspace/indeletniciri curente/pere.cpp",
+		"/D/Workspace/indeletniciri curente/hard_ssc.cpp",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/for loop.sublime-snippet",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/foi loop.sublime-snippet",
+		"/D/Workspace/indeletniciri curente/egal.out",
+		"/D/Workspace/indeletniciri curente/egal.in",
+		"/D/Workspace/indeletniciri curente/egal.cpp",
+		"/D/Workspace/indeletniciri curente/miere.out",
+		"/D/Workspace/indeletniciri curente/miere.in",
+		"/D/Workspace/indeletniciri curente/miere.cpp",
+		"/D/Workspace/indeletniciri curente/ordonare.cpp",
+		"/D/Workspace/indeletniciri curente/br.out",
+		"/D/Workspace/indeletniciri curente/br.in",
+		"/D/Workspace/indeletniciri curente/br.cpp",
+		"/C/Program Files/Sublime Text 3/br.cpp",
+		"/D/Workspace/indeletniciri curente/ordonare.out",
+		"/D/Workspace/indeletniciri curente/ordonare.in",
+		"/D/Workspace/indeletniciri curente/xor1.out",
+		"/D/Workspace/indeletniciri curente/xor1.in",
+		"/D/Workspace/indeletniciri curente/xor1.cpp",
+		"/D/Workspace/indeletniciri curente/degrade.out",
+		"/D/Workspace/indeletniciri curente/degrade.in",
+		"/D/Workspace/indeletniciri curente/degrade.cpp",
+		"/D/Workspace/15-12-2020 IOIT 2/oldercoasta.cpp",
+		"/D/Workspace/15-12-2020 IOIT 2/rollercoaster2.cpp",
+		"/D/Workspace/15-12-2020 IOIT 2/police investigation.cpp",
+		"/C/Users/Andrei/Downloads/delay.cpp",
+		"/D/Workspace/pseudocod/pseudocompiler_v0.c",
+		"/D/Workspace/pseudocod/pseudovm.c",
+		"/D/Workspace/ARCHIVE/pasta serving size chart.md",
+		"/D/Workspace/indeletniciri curente/dmin.out",
+		"/D/Workspace/indeletniciri curente/dmin.in",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/C++ Console.sublime-build",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/LSP.sublime-settings",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/newmd.css",
+		"/D/Workspace/indeletniciri curente/royfloyd.out",
+		"/D/Workspace/indeletniciri curente/royfloyd.in",
+		"/D/Workspace/indeletniciri curente/royfloyd.cpp",
+		"/C/Users/Andrei/Downloads/grader_test5.ok"
+	],
+	"find":
+	{
+		"height": 42.0
+	},
+	"find_in_files":
+	{
+		"height": 622.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"keybinds",
+			"default",
+			"restart",
+			"f12",
+			"player_count",
+			".unwrap()",
+			"Controlcode",
+			"Keycode",
+			"chosen_player_count",
+			"game_mode",
+			"units[0].player.joystick_id",
+			"player_count",
+			"game_mode_text",
+			"unit",
+			"units",
+			"lines_cleared",
+			"level_text",
+			"get_lines_before_next_level",
+			"lines_before_next",
+			"Unit",
+			"Layout",
+			"h_centered_x",
+			"i32",
+			"rect",
+			"MenuLayout",
+			"WellState",
+			"default",
+			"wells",
+			"WellS",
+			"wells",
+			"Weller",
+			"WEeller",
+			"Weller",
+			"queued_minos",
+			"queue",
+			"MinoRng",
+			"SmallRng",
+			"State",
+			"falling",
+			"LineClear",
+			"well.",
+			"{\n",
+			"font",
+			"y",
+			"row",
+			"with_data(block::Data::BLUE)",
+			"MinoType",
+			"falling_mino",
+			"queued",
+			"Mino",
+			"Base",
+			"CTORS",
+			"Down",
+			"print",
+			"system",
+			"player_keybinds",
+			"next_mino",
+			"falling_mino",
+			"&mut ",
+			"default",
+			"period",
+			"percent",
+			"mode = ",
+			"event",
+			"move_direction",
+			"mino_falling_system",
+			"harddrop",
+			"is_button_up",
+			"is_button_down",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"controller",
+			"Controller",
+			"is_button_down",
+			"from_string",
+			"Button",
+			"rot_right",
+			"down",
+			"up",
+			"right",
+			"left",
+			"down",
+			"left",
+			"down",
+			"key",
+			"from_string",
+			"controller",
+			"keyboard",
+			"Button",
+			"pub",
+			": ,",
+			"toml",
+			"Button",
+			"pub",
+			"Keycode",
+			"InputMethod",
+			"keycode",
+			"Keycode",
+			"keycode",
+			"Keycode",
+			"str",
+			","
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"units",
+			"with_default_data()",
+			"CYAN",
+			"\\t"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "src/main.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 33145,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								30535,
+								30535
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 0,
+								"count": 1535,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"lsp_active": true,
+							"lsp_diagnostic_phantom": false,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"spell_check": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 22013.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "Cargo.toml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 429,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								384,
+								384
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TOML/TOML.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/mino.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2521,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								213,
+								213
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/block.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2813,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								962,
+								962
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 326.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 4,
+					"file": "thoughts/TODO.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 51,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								51,
+								51
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 6,
+								"count": 8,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"spell_check": false,
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/config.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3856,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3131,
+								3131
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 0,
+								"count": 161,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"lsp_active": true,
+							"lsp_diagnostic_phantom": false,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"open_with_edit": true,
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2178.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "config.toml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 801,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								778,
+								778
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TOML/TOML.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 378.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1326,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 29.0
+	},
+	"input":
+	{
+		"height": 210.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.551208913317,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.Debugger":
+	{
+		"height": 193.0
+	},
+	"output.diagnostics":
+	{
+		"height": 121.0
+	},
+	"output.exec":
+	{
+		"height": 221.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.hex_viewer_inspector":
+	{
+		"height": 102.0
+	},
+	"output.language servers":
+	{
+		"height": 0.0
+	},
+	"output.markdown":
+	{
+		"height": 192.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"output.references":
+	{
+		"height": 187.0
+	},
+	"pinned_build_system": "",
+	"project": "tetris.sublime-project",
+	"replace":
+	{
+		"height": 54.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"C:\\Users\\Andrei\\AppData\\Roaming\\Sublime Text 3\\Packages\\User\\darkmd.css"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"D:\\Workspace\\tetris\\tetris.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 197.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"Player",
+				"Player"
+			],
+			[
+				"",
+				"FunFactCog"
+			]
+		],
+		"width": 628.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 226.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
