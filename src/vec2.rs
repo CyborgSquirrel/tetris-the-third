@@ -2,6 +2,7 @@
 #![allow(non_camel_case_types)]
 
 use std::ops::{AddAssign,Add,SubAssign,Sub,MulAssign,Mul,DivAssign,Div,Neg};
+use serde::{Serialize,Deserialize};
 
 pub type vec2i = vec2<i32>;
 pub type vec2u = vec2<usize>;
@@ -20,7 +21,7 @@ pub type vec2f = vec2<f64>;
 );
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct vec2<T>{
 	pub x: T,
 	pub y: T,

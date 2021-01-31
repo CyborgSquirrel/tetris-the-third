@@ -29,7 +29,7 @@ use std::net::TcpStream;
 use std::io::{Write, Read};
 
 use serde::{Serialize,Deserialize};
-use bincode::{serialize,deserialize};
+use serde_cbor::{from_reader,to_writer};
 
 type Well = array2d::Array2D<Option<block::Data>>;
 
@@ -145,7 +145,7 @@ fn mino_falling_system(
 	fall_duration: Duration,
 	softdrop_duration: Duration,
 	fall_state: &mut FallState)
--> bool {
+-> (bool, bool) {
 	let fall_duration = match fall_state {
 		FallState::Fall => fall_duration,
 		FallState::Softdrop => softdrop_duration,
@@ -161,15 +161,18 @@ fn mino_falling_system(
 		*fall_countdown = Duration::from_secs(0);
 	}
 	
+	let mut mino_translated = false;
+	
 	while *fall_countdown >= fall_duration {
-		if try_down_mino(falling_mino, well, &mut None) {
+		if try_down_mino(falling_mino, well) {
+			mino_translated = true;
 			*fall_countdown -= fall_duration;
 		}else{
-			return true;
+			return (true, mino_translated);
 		}
 	}
 	
-	false
+	(false, mino_translated)
 }
 
 fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool where F: Fn(&mut Mino) {
@@ -182,24 +185,19 @@ fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool where F: Fn(&m
 	false
 }
 
-fn try_rotl_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
-	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::RotLeft).unwrap()[..]).unwrap();}
+fn try_rotl_mino(mino: &mut Mino, well: &Well) -> bool{
 	try_mutate_mino(mino, well, |mino|mino.rotl())
 }
-fn try_rotr_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
-	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::RotRight).unwrap()[..]).unwrap();}
+fn try_rotr_mino(mino: &mut Mino, well: &Well) -> bool{
 	try_mutate_mino(mino, well, |mino|mino.rotr())
 }
-fn try_left_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
-	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Left).unwrap()[..]).unwrap();}
+fn try_left_mino(mino: &mut Mino, well: &Well) -> bool{
 	try_mutate_mino(mino, well, |mino|mino.left())
 }
-fn try_right_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
-	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Right).unwrap()[..]).unwrap();}
+fn try_right_mino(mino: &mut Mino, well: &Well) -> bool{
 	try_mutate_mino(mino, well, |mino|mino.right())
 }
-fn try_down_mino(mino: &mut Mino, well: &Well, stream: &mut Option<&mut TcpStream>) -> bool{
-	if let Some(stream) = stream {stream.write(&serialize(&GameEvent::Down).unwrap()[..]).unwrap();}
+fn try_down_mino(mino: &mut Mino, well: &Well) -> bool{
 	try_mutate_mino(mino, well, |mino|mino.down())
 }
 
@@ -236,7 +234,7 @@ fn mark_clearable_lines(well: &Well, clearable: &mut Vec<bool>, clearable_count:
 fn create_shadow_mino(mino: &Mino, well: &Well) -> Mino {
 	let mut shadow_mino = mino.clone();
 	shadow_mino.make_shadow();
-	while try_down_mino(&mut shadow_mino, &well, &mut None) {}
+	while try_down_mino(&mut shadow_mino, &well) {}
 	shadow_mino
 }
 
@@ -297,7 +295,9 @@ struct Unit {
 	state: UnitState,
 	queue: VecDeque<Mino>,
 	rng: MinoRng,
-	player: Player,
+	player: PlayerType,
+	
+	falling_mino: Mino,
 	
 	lines_cleared: u32,
 	mode: Mode,
@@ -307,13 +307,13 @@ struct Unit {
 }
 
 impl Unit {
-	fn new(mode: Mode, joystick_id: Option<u32>) -> Self {
+	fn new(mode: Mode, player: PlayerType) -> Self {
 		let mut rng = MinoRng::fair();
 		let well = Well::filled_with(None, 10, 20);
 	    Unit {
 	    	animate_line: vec![false; 20],
 	    	state: UnitState::Play,
-	    	player: Player::new(rng.generate_centered(&well), joystick_id),
+	    	player,
 	    	queue: {
 	    		let mut queue = VecDeque::with_capacity(5);
 	    		for _ in 0..5 {
@@ -321,6 +321,7 @@ impl Unit {
 	    		}
 	    		queue
 	    	},
+	    	falling_mino: rng.generate_centered(&well),
 	    	// fall_duration: get_fall_duration(1),
 	    	can_store_mino: true,
 	    	stored_mino: None,
@@ -394,14 +395,13 @@ struct Player {
 	fall_countdown: Duration,
 	move_repeat_countdown: Duration,
 	
-	falling_mino: Mino,
 	fall_duration: Duration,
 	
 	joystick_id: Option<u32>,
 }
 
 impl Player {
-	fn new(falling_mino: Mino, joystick_id: Option<u32>) -> Self {
+	fn new(joystick_id: Option<u32>) -> Self {
 	    Player {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
@@ -413,12 +413,20 @@ impl Player {
 			fall_countdown: Duration::from_secs(0),
 			move_repeat_countdown: Duration::from_secs(0),
 			
-			falling_mino,
 			fall_duration: get_fall_duration(1),
 			
 			joystick_id,
 	    }
 	}
+}
+
+struct ClientPlayer {
+	stream: TcpStream,
+}
+
+enum PlayerType {
+	Host(Player),
+	Client(ClientPlayer),
 }
 
 fn is_key_down(event: &Event, key: Option<Keycode>) -> bool {
@@ -585,52 +593,12 @@ fn update_player(
 	}
 }
 
-fn append_player_events_to_queue(player: &mut Player, queue: &mut VecDeque<GameEvent>) {
-	let _ = match player.rot_direction {
-		RotDirection::Left => try_rotl_mino(falling_mino, &well, stream),
-		RotDirection::Right => try_rotr_mino(falling_mino, &well, stream),
-		RotDirection::None => false,
-	};
-	player.rot_direction = RotDirection::None;
-	
-	if MoveState::Instant == player.move_state {
-		let _ = match player.move_direction{
-			MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-			MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-			_ => false, // oh no
-		};
-		player.move_repeat_countdown = Duration::from_secs(0);
-		player.move_state = MoveState::Prepeat;
-	}
-	if MoveState::Prepeat == player.move_state {
-		if player.move_repeat_countdown >= move_prepeat_duration {
-			player.move_repeat_countdown -= move_prepeat_duration;
-			let _ = match player.move_direction{
-				MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-				MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-				_ => false, // oh no
-			};
-			player.move_state = MoveState::Repeat;
-		}
-	}
-	if MoveState::Repeat == player.move_state {
-		while player.move_repeat_countdown >= move_repeat_duration {
-			player.move_repeat_countdown -= move_repeat_duration;
-			let _ = match player.move_direction{
-				MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-				MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-				_ => false, // oh no
-			};
-		}
-	}
-}
-
 #[derive(Default)]
 struct Layout {
 	x: i32,
 	y: i32,
-	width: u32,
-	expected_width: u32,
+	width: i32,
+	expected_width: i32,
 }
 
 impl Layout {
@@ -667,22 +635,21 @@ struct StartLayout {
 	width: u32
 }
 
-enum StartState {
-	ChangeMode,
-	ChangePlayers,
-}
+use vec2::vec2f;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[allow(dead_code)]
+#[derive(Debug, Serialize, Deserialize)]
 enum GameEvent {
-	Left = 0,
-	Right,
-	Down,
-	RotLeft,
-	RotRight,
-	AddToWell,
-	GenerateNew,
-	Store,
+	TranslateMino {
+		origin: vec2f,
+		blocks: [vec2i; 4],
+	},
+	AddMinoToWell,
+	GenerateMino {
+		mino: Mino,
+	},
+	StoreMino {
+		generated_mino: Option<Mino>,
+	},
 }
 
 impl StartLayout {
@@ -758,30 +725,10 @@ fn main() {
 	let fps: u32 = 60;
 	let dpf: Duration = Duration::from_secs(1) / fps;
 	
-	let mut start_state = StartState::ChangeMode;
-	
-	let mut player_count = 1;
-	let player_count_text = [
-		TextBuilder::new("1 Player".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("2 Players".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("3 Players".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("4 Players".to_string(), Color::WHITE).build(&font, &texture_creator),
-	];
-	let selected_player_count_text = [
-		TextBuilder::new("<1 Player>".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("<2 Players>".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("<3 Players>".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("<4 Players>".to_string(), Color::WHITE).build(&font, &texture_creator),
-	];
-	
 	let mut chosen_game_mode: usize = 0;
 	let game_mode_text = [
 		TextBuilder::new("Marathon".to_string(),Color::WHITE).build(&font, &texture_creator),
 		TextBuilder::new("Sprint".to_string(), Color::WHITE).build(&font, &texture_creator),
-	];
-	let selected_game_mode_text = [
-		TextBuilder::new("<Marathon>".to_string(),Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("<Sprint>".to_string(), Color::WHITE).build(&font, &texture_creator),
 	];
 	
 	#[derive(Debug)]
@@ -827,6 +774,8 @@ fn main() {
 	let move_prepeat_duration = Duration::from_secs_f64(0.15);
 	let move_repeat_duration = Duration::from_secs_f64(0.05);
 	
+	let mut players = Vec::<PlayerType>::new();
+	
 	let mut units = Vec::new();
 	
 	let block_canvas = block::Canvas::new(&texture);
@@ -859,7 +808,9 @@ fn main() {
 			
 			if let State::Play = state {
 				for (Unit{player,..}, config) in units.iter_mut().zip(config.players.iter_mut()) {
-					update_player(player, config, &event);
+					if let PlayerType::Host(player) = player {
+						update_player(player, config, &event);
+					}
 				}
 			}
 			
@@ -883,11 +834,8 @@ fn main() {
 					];
 					
 					units.clear();
-					for _ in 0..player_count {
-						units.push(Unit::new(game_mode_ctors[chosen_game_mode](), None));
-					}
-					for (Unit{player,..}, controller) in units.iter_mut().zip(controllers.iter()) {
-						player.joystick_id = Some(controller.instance_id());
+					for player in players.drain(..) {
+						units.push(Unit::new(game_mode_ctors[chosen_game_mode](), player));
 					}
 					
 					state = State::Play;
@@ -911,43 +859,16 @@ fn main() {
 			if let State::Start = state {
 				let keybinds = &mut config.players[0];
 				
-				match start_state {
-					StartState::ChangeMode => {
-						if is_key_down(&event, keybinds.left) ||
-						is_key_down(&event, keybinds.left_alt) ||
-						is_controlcode_down(&event, &mut keybinds.controller_left, None) {
-							chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
-						}
-						
-						if is_key_down(&event, keybinds.right) ||
-						is_key_down(&event, keybinds.right_alt) ||
-						is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-							chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
-						}
-						
-						if is_key_down(&event, Some(Keycode::S)) {
-							start_state = StartState::ChangePlayers;
-						}
-					}
-					StartState::ChangePlayers => {
-						if is_key_down(&event, keybinds.left) ||
-						is_key_down(&event, keybinds.left_alt) ||
-						is_controlcode_down(&event, &mut keybinds.controller_left, None) {
-							player_count -= 1;
-							player_count = max(player_count, 1);
-						}
-						
-						if is_key_down(&event, keybinds.right) ||
-						is_key_down(&event, keybinds.right_alt) ||
-						is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-							player_count += 1;
-							player_count = min(player_count, 3);
-						}
-						
-						if is_key_down(&event, Some(Keycode::W)) {
-							start_state = StartState::ChangeMode;
-						}
-					}
+				if is_key_down(&event, keybinds.left) ||
+				is_key_down(&event, keybinds.left_alt) ||
+				is_controlcode_down(&event, &mut keybinds.controller_left, None) {
+					chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
+				}
+				
+				if is_key_down(&event, keybinds.right) ||
+				is_key_down(&event, keybinds.right_alt) ||
+				is_controlcode_down(&event, &mut keybinds.controller_right, None) {
+					chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
 				}
 				
 				if is_key_down(&event, Some(Keycode::Q)) {
@@ -955,15 +876,10 @@ fn main() {
 				}
 				
 				if is_key_down(&event, Some(Keycode::Return)) {
-					for _ in 0..player_count {
-						units.push(Unit::new(game_mode_ctors[chosen_game_mode](), None));
-					}
-					for (Unit{player,..}, controller) in units.iter_mut().zip(controllers.iter()) {
-						player.joystick_id = Some(controller.instance_id());
-					}
 					network_state = match selected_network_state {
 						0 => {
 							state = State::Play;
+							units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Host(Player::new(None))));
 							NetworkState::Offline
 						}
 						1 => {
@@ -986,6 +902,7 @@ fn main() {
 								.expect("Couldn't set stream to be non-blocking");
 							
 							state = State::LobbyClient;
+							units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Host(Player::new(None))));
 							
 							NetworkState::Client {
 								stream
@@ -1001,122 +918,206 @@ fn main() {
 		match state {
 			State::Play => {
 				for ((Unit{well,state,queue,rng,animate_line,player,lines_cleared,mode,
-					stored_mino, can_store_mino},lines_cleared_text),level_text) in
+					stored_mino, can_store_mino, falling_mino},lines_cleared_text),level_text) in
 					units.iter_mut().zip(lines_cleared_text.iter_mut()).zip(level_text.iter_mut()) {
 					match state {
 						UnitState::Play => {
-							let ref mut falling_mino = player.falling_mino;
 							
-							if player.store && *can_store_mino {
-								*can_store_mino = false;
-								player.store = false;
-								player.fall_countdown = Duration::from_secs(0);
-								reset_mino(falling_mino);
-								if let Some(stored_mino) = stored_mino {
-									swap(stored_mino, falling_mino);
-								}else{
-									let mut next_mino = queue.pop_front().unwrap();
-									swap(&mut next_mino, falling_mino);
-									*stored_mino = Some(next_mino);
-									queue.push_back(rng.generate());
-								}
-								center_mino(falling_mino, &well);
-							}
+							match player {
+								PlayerType::Host(player) => {
 							
-							let stream = &mut match network_state {
-								NetworkState::Client{ref mut stream} => Some(stream),
-								_ => None,
-							};
-							
-							let _ = match player.rot_direction {
-								RotDirection::Left => try_rotl_mino(falling_mino, &well, stream),
-								RotDirection::Right => try_rotr_mino(falling_mino, &well, stream),
-								RotDirection::None => false,
-							};
-							player.rot_direction = RotDirection::None;
-							
-							if MoveState::Instant == player.move_state {
-								let _ = match player.move_direction{
-									MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-									MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-									_ => false, // oh no
-								};
-								player.move_repeat_countdown = Duration::from_secs(0);
-								player.move_state = MoveState::Prepeat;
-							}
-							if MoveState::Prepeat == player.move_state {
-								if player.move_repeat_countdown >= move_prepeat_duration {
-									player.move_repeat_countdown -= move_prepeat_duration;
-									let _ = match player.move_direction{
-										MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-										MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-										_ => false, // oh no
-									};
-									player.move_state = MoveState::Repeat;
-								}
-							}
-							if MoveState::Repeat == player.move_state {
-								while player.move_repeat_countdown >= move_repeat_duration {
-									player.move_repeat_countdown -= move_repeat_duration;
-									let _ = match player.move_direction{
-										MoveDirection::Left => try_left_mino(falling_mino, &well, stream),
-										MoveDirection::Right => try_right_mino(falling_mino, &well, stream),
-										_ => false, // oh no
-									};
-								}
-							}
-						
-							let add_mino = mino_falling_system(
-								falling_mino, &well,
-								&mut player.fall_countdown,
-								player.fall_duration, softdrop_duration,
-								&mut player.fall_state);
-							if add_mino {
-								let can_add = mino_fits_in_well(&falling_mino, &well);
-								if !can_add {
-									*state = UnitState::Over;
-								}else{
-									*can_store_mino = true;
-									add_mino_to_well(&falling_mino, well);
-									player.fall_countdown = Duration::from_secs(0);
-									
-									let mut clearable_lines = 0;
-									mark_clearable_lines(&well, animate_line, &mut clearable_lines);
-									
-									if clearable_lines != 0 {
-										*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+									if player.store && *can_store_mino {
 										
-										*lines_cleared += clearable_lines;
-										*lines_cleared_text =
-											create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+										*can_store_mino = false;
+										player.store = false;
+										player.fall_countdown = Duration::from_secs(0);
+										reset_mino(falling_mino);
+										if let Some(stored_mino) = stored_mino {
+											swap(stored_mino, falling_mino);
 										
-										if let Mode::Marathon{level,lines_before_next_level,..} = mode {
-											*lines_before_next_level -= clearable_lines as i32;
-											let level_changed = *lines_before_next_level <= 0;
-											while *lines_before_next_level <= 0 {
-												*level += 1;
-												*lines_before_next_level +=
-													get_lines_before_next_level(*level) as i32;
+											match network_state {
+												NetworkState::Client{ref mut stream} => {
+													to_writer(stream, &GameEvent::StoreMino{generated_mino:None})
+														.expect("Couldn't write to stream");
+												}
+												_ => {}
 											}
-										
-											if level_changed {
-												*level_text =
-													create_level_text(*level, &font, &texture_creator);
-												player.fall_duration = get_fall_duration(*level);
+										}else{
+											let mut next_mino = queue.pop_front().unwrap();
+											swap(&mut next_mino, falling_mino);
+											*stored_mino = Some(next_mino);
+											queue.push_back(rng.generate());
+											match network_state {
+												NetworkState::Client{ref mut stream} => {
+													to_writer(stream, &GameEvent::StoreMino{generated_mino:Some(falling_mino.clone())})
+														.expect("Couldn't write to stream");
+												}
+												_ => {}
 											}
+										}
+										center_mino(falling_mino, &well);
+									}
+									
+									let mut mino_translated = false;
+									
+									mino_translated |= match player.rot_direction {
+										RotDirection::Left => try_rotl_mino(falling_mino, &well),
+										RotDirection::Right => try_rotr_mino(falling_mino, &well),
+										RotDirection::None => false,
+									};
+									player.rot_direction = RotDirection::None;
+									
+									if MoveState::Instant == player.move_state {
+										mino_translated |= match player.move_direction{
+											MoveDirection::Left => try_left_mino(falling_mino, &well),
+											MoveDirection::Right => try_right_mino(falling_mino, &well),
+											_ => false, // oh no
+										};
+										player.move_repeat_countdown = Duration::from_secs(0);
+										player.move_state = MoveState::Prepeat;
+									}
+									if MoveState::Prepeat == player.move_state {
+										if player.move_repeat_countdown >= move_prepeat_duration {
+											player.move_repeat_countdown -= move_prepeat_duration;
+											mino_translated |= match player.move_direction{
+												MoveDirection::Left => try_left_mino(falling_mino, &well),
+												MoveDirection::Right => try_right_mino(falling_mino, &well),
+												_ => false, // oh no
+											};
+											player.move_state = MoveState::Repeat;
+										}
+									}
+									if MoveState::Repeat == player.move_state {
+										while player.move_repeat_countdown >= move_repeat_duration {
+											player.move_repeat_countdown -= move_repeat_duration;
+											mino_translated |= match player.move_direction{
+												MoveDirection::Left => try_left_mino(falling_mino, &well),
+												MoveDirection::Right => try_right_mino(falling_mino, &well),
+												_ => false, // oh no
+											};
+										}
+									}
+								
+									let (add_mino, mino_translated_while_falling) = mino_falling_system(
+										falling_mino, &well,
+										&mut player.fall_countdown,
+										player.fall_duration, softdrop_duration,
+										&mut player.fall_state);
+									
+									mino_translated |= mino_translated_while_falling;
+									
+									if mino_translated {
+										match network_state {
+											NetworkState::Client{ref mut stream} => {
+												// stream.write(
+												// 	&serialize(&GameEvent::TranslateMino{
+												// 		origin: falling_mino.origin,
+												// 		blocks: falling_mino.blocks,
+												// 	}).unwrap()[..]
+												// ).expect("Couldn't send event");
+											}
+											_ => {}
 										}
 									}
 									
-									*falling_mino = queue.pop_front().unwrap();
-									center_mino(falling_mino, &well);
+									if add_mino {
+										
+										match network_state {
+											NetworkState::Client{ref mut stream} => {
+												// stream.write(
+												// 	&serialize(&GameEvent::AddMinoToWell).unwrap()[..]
+												// ).expect("Couldn't send event");
+											}
+											_ => {}
+										}
+										
+										let can_add = mino_fits_in_well(&falling_mino, &well);
+										if !can_add {
+											*state = UnitState::Over;
+										}else{
+											*can_store_mino = true;
+											add_mino_to_well(&falling_mino, well);
+											player.fall_countdown = Duration::from_secs(0);
+											
+											let mut clearable_lines = 0;
+											mark_clearable_lines(&well, animate_line, &mut clearable_lines);
+											
+											if clearable_lines != 0 {
+												*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+												
+												*lines_cleared += clearable_lines;
+												*lines_cleared_text =
+													create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+												
+												if let Mode::Marathon{level,lines_before_next_level,..} = mode {
+													*lines_before_next_level -= clearable_lines as i32;
+													let level_changed = *lines_before_next_level <= 0;
+													while *lines_before_next_level <= 0 {
+														*level += 1;
+														*lines_before_next_level +=
+															get_lines_before_next_level(*level) as i32;
+													}
+												
+													if level_changed {
+														*level_text =
+															create_level_text(*level, &font, &texture_creator);
+														player.fall_duration = get_fall_duration(*level);
+													}
+												}
+											}
+											
+											*falling_mino = queue.pop_front().unwrap();
+											match network_state {
+												NetworkState::Client{ref mut stream} => {
+													// stream.write(
+													// 	&serialize(&GameEvent::GenerateMino{
+													// 		mino: falling_mino.clone(),
+													// 	}).unwrap()[..]
+													// ).expect("Couldn't send event");
+												}
+												_ => {}
+											}
+											center_mino(falling_mino, &well);
+											
+											queue.push_back(rng.generate());
+										}
+									}
 									
-									queue.push_back(rng.generate());
+									player.fall_countdown += dpf;
+									if MoveState::Still != player.move_state {
+										player.move_repeat_countdown += dpf;
+									}
 								}
-							}
-							
-							player.fall_countdown += dpf;
-							if MoveState::Still != player.move_state {
-								player.move_repeat_countdown += dpf;
+								PlayerType::Client(player) => {
+									while let Ok(event) = from_reader(&mut player.stream){
+										match event {
+											GameEvent::TranslateMino {origin, blocks} => {
+												falling_mino.origin = origin;
+												falling_mino.blocks = blocks;
+											}
+											GameEvent::AddMinoToWell => {
+												add_mino_to_well(falling_mino, well);
+											}
+											GameEvent::GenerateMino {mino} => {
+												*falling_mino = mino;
+												center_mino(falling_mino, &well);
+											}
+											GameEvent::StoreMino {generated_mino} => {
+												if *can_store_mino {
+													*can_store_mino = false;
+													reset_mino(falling_mino);
+													if let Some(stored_mino) = stored_mino {
+														swap(stored_mino, falling_mino);
+													}else if let Some(mut generated_mino) = generated_mino{
+														swap(&mut generated_mino, falling_mino);
+														*stored_mino = Some(generated_mino);
+													}
+													center_mino(falling_mino, &well);
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 						
@@ -1167,14 +1168,16 @@ fn main() {
 			State::LobbyHost => {
 				if let NetworkState::Host {listener, streams} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
-						streams.push(incoming.0);
+						players.push(PlayerType::Client(ClientPlayer{stream:incoming.0}));
 						println!("Connection established");
 					}
 					
-					for stream in streams {
-						let mut buffer = [0;16];
-						if stream.read(&mut buffer).is_ok() {
-							println!("{:?}", deserialize::<GameEvent>(&buffer));
+					for player in players.iter_mut() {
+						if let PlayerType::Client(ClientPlayer{stream}) = player {
+							let x = from_reader::<GameEvent,_>(stream);
+							if let Ok(x) = x {
+								println!("{:?}", x);
+							}
 						}
 					}
 					
@@ -1220,28 +1223,11 @@ fn main() {
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
-			let game_mode_text = if let StartState::ChangeMode = start_state {
-				&selected_game_mode_text[chosen_game_mode]
-			}else {
-				&game_mode_text[chosen_game_mode]
-			};
+			let game_mode_text =
+				&game_mode_text[chosen_game_mode];
 			let TextureQuery {width, height, ..} = game_mode_text.query();
 			let _ = canvas.copy(
 				&game_mode_text,
-				Rect::new(0, 0, width, height),
-				Rect::new(layout.centered_x(width), layout.y, width, height));
-			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let player_count_text = if let StartState::ChangePlayers = start_state {
-				&selected_player_count_text[player_count-1]
-			}else {
-				&player_count_text[player_count-1]
-			};
-			let TextureQuery {width, height, ..} = player_count_text.query();
-			let _ = canvas.copy(
-				&player_count_text,
 				Rect::new(0, 0, width, height),
 				Rect::new(layout.centered_x(width), layout.y, width, height));
 			
@@ -1268,10 +1254,10 @@ fn main() {
 			
 			let mut layout = Layout {
 				x:0,y:0,
-				width:window_rect.width(),expected_width:(4*30+15+10*30+15+4*30+15) * units.len() as u32 - 15
+				width:window_rect.width() as i32,expected_width:(4*30+15+10*30+15+4*30+15) * units.len() as i32 - 15
 			};
 			
-			for ((Unit{well,queue,animate_line,player,stored_mino,state,..},lines_cleared_text),level_text)
+			for ((Unit{well,queue,animate_line,stored_mino,state,falling_mino,..},lines_cleared_text),level_text)
 			in units.iter().zip(lines_cleared_text.iter()).zip(level_text.iter_mut()) {
 				layout.row_margin(15);
 				
@@ -1302,9 +1288,9 @@ fn main() {
 				layout.row_margin(15);
 				
 				block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
-				let shadow_mino = create_shadow_mino(&player.falling_mino, &well);
+				let shadow_mino = create_shadow_mino(falling_mino, &well);
 				block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
-				block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &player.falling_mino);
+				block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
 				
 				layout.col(10*30);
 				layout.col_margin(15);

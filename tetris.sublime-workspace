@@ -4,6 +4,34 @@
 		"selected_items":
 		[
 			[
+				"genera",
+				"generated_mino\t  Option<Mino>"
+			],
+			[
+				"fall",
+				"falling_mino\t  Mino"
+			],
+			[
+				"Player",
+				"PlayerType\t  Enum"
+			],
+			[
+				"Tcp",
+				"TcpStream\t  Struct"
+			],
+			[
+				"mino",
+				"mino_translated_while_falling\t  bool"
+			],
+			[
+				"bl",
+				"blocks\t  [vec2<i32>; _]"
+			],
+			[
+				"CL",
+				"Clone, Copy\t  EnumMember"
+			],
+			[
 				"R",
 				"Right\t  ()"
 			],
@@ -42,10 +70,6 @@
 			[
 				"T",
 				"TcpListener\t  Struct"
-			],
-			[
-				"Tcp",
-				"TcpListener"
 			],
 			[
 				"TC",
@@ -228,10 +252,6 @@
 				"mino\t  Module"
 			],
 			[
-				"mino",
-				"Mino\t  Struct"
-			],
-			[
 				"even",
 				"event_axis\t  &Axis"
 			],
@@ -250,10 +270,6 @@
 			[
 				"joys",
 				"joystick_id\t  Option<u32>"
-			],
-			[
-				"fall",
-				"falling_mino\t  &mut Mino"
 			],
 			[
 				"into",
@@ -476,10 +492,6 @@
 				"create_lines_cleared_text(…)\t  fn create_lines_cleared_text<'a>(lines_cleared: u32, font: &sdl2::ttf::Font, texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>) -> sdl2::render::Texture<'a>"
 			],
 			[
-				"bl",
-				"blended(…)\t  pub fn blended<'b, T>(self, color: T) -> FontResult<Surface<'b>>\nwhere T: Into<Color>"
-			],
-			[
 				"create",
 				"create_text_texture(…)\t  fn create_text_texture<'a>(text: &str, font: &sdl2::ttf::Font, texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>) -> sdl2::render::Texture<'a>"
 			],
@@ -502,18 +514,6 @@
 			[
 				"ep",
 				"expect(…)\t  pub fn expect(self, msg: &str) -> T"
-			],
-			[
-				"Dp",
-				"DPadRight\t  ()"
-			],
-			[
-				"co",
-				"controller\t  Module"
-			],
-			[
-				"div",
-				"div_f64\t  pub const fn div_f64(self, rhs: f64) -> Duration"
 			]
 		]
 	},
@@ -532,25 +532,7 @@
 			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 36525,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/mino.rs",
-			"settings":
-			{
-				"buffer_size": 2521,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/block.rs",
-			"settings":
-			{
-				"buffer_size": 2813,
+				"buffer_size": 36819,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -559,10 +541,27 @@
 			"file": "thoughts/TODO.md",
 			"settings":
 			{
-				"buffer_size": 249,
+				"buffer_size": 62,
 				"encoding": "UTF-8",
-				"line_ending": "Windows",
-				"name": "TODO"
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/mino.rs",
+			"settings":
+			{
+				"buffer_size": 2581,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/block.rs",
+			"settings":
+			{
+				"buffer_size": 2873,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
 			}
 		},
 		{
@@ -580,14 +579,6 @@
 			{
 				"buffer_size": 801,
 				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
-			"settings":
-			{
-				"buffer_size": 1326,
 				"line_ending": "Windows"
 			}
 		}
@@ -1160,6 +1151,26 @@
 		"selected_items":
 		[
 			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"remove packa",
+				"Package Control: Remove Package"
+			],
+			[
+				"list packa",
+				"Package Control: List Packages"
+			],
+			[
+				"list",
+				"Package Control: List Packages"
+			],
+			[
+				"set syntax rust",
+				"Set Syntax: Rust"
+			],
+			[
 				"restart",
 				"LSP: Restart Servers"
 			],
@@ -1234,10 +1245,6 @@
 			[
 				"live",
 				"LiveReload: Enable/disable plug-ins"
-			],
-			[
-				"install",
-				"Package Control: Install Package"
 			],
 			[
 				"move",
@@ -1424,10 +1431,6 @@
 				"Debugger: Add or Select Configuration"
 			],
 			[
-				"remove packa",
-				"Package Control: Remove Package"
-			],
-			[
 				"airth",
 				"Arithmetic"
 			],
@@ -1608,10 +1611,6 @@
 				"Package Control: Install Package"
 			],
 			[
-				"list",
-				"Package Control: List Packages"
-			],
-			[
 				"insatll",
 				"Package Control: Install Package"
 			],
@@ -1662,14 +1661,6 @@
 			[
 				"expo",
 				"HexViewer: Export Bin"
-			],
-			[
-				"edit",
-				"HexViewer: Show Hex Edit Panel"
-			],
-			[
-				"expor",
-				"HexViewer: Export Bin"
 			]
 		],
 		"width": 436.0
@@ -1707,12 +1698,15 @@
 	},
 	"expanded_folders":
 	[
-		"/D/Workspace/tetris",
-		"/D/Workspace/tetris/gfx",
-		"/D/Workspace/tetris/src"
+		"/C/Users/Andrei/Desktop/Workspace/tetris",
+		"/C/Users/Andrei/Desktop/Workspace/tetris/src"
 	],
 	"file_history":
 	[
+		"/C/Users/Andrei/Desktop/Workspace/tetris/src/vec2.rs",
+		"/C/Users/Andrei/AppData/Local/Temp/Rar$DRa0.409/RustEnhanced.sublime-syntax",
+		"/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
+		"/C/Users/Andrei/Desktop/Workspace/tetris/thoughts/TODO.md",
 		"/D/Workspace/tetris/thoughts/Networking.md",
 		"/D/Workspace/tetris/thoughts/TCP vs UDP",
 		"/D/Workspace/tetris/src/main.rs",
@@ -1745,7 +1739,6 @@
 		"/D/Workspace/tetris/src/game_state/play.rs",
 		"/D/Workspace/tetris/src/game_state/over.rs",
 		"/D/Workspace/town.txt",
-		"/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
 		"/D/Workspace/tetris/src/well.rs",
 		"/D/Workspace/tetris/src/resource_manager.rs",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/Live_Refresh/live_refresh.py",
@@ -1837,14 +1830,11 @@
 		"/D/Workspace/indeletniciri curente/dmin.out",
 		"/D/Workspace/indeletniciri curente/dmin.in",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/C++ Console.sublime-build",
-		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/LSP.sublime-settings",
-		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/newmd.css",
-		"/D/Workspace/indeletniciri curente/royfloyd.out",
-		"/D/Workspace/indeletniciri curente/royfloyd.in"
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/LSP.sublime-settings"
 	],
 	"find":
 	{
-		"height": 44.0
+		"height": 40.6666666667
 	},
 	"find_in_files":
 	{
@@ -1859,6 +1849,12 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"State::LobbyClient",
+			"GamerEvent",
+			"GameEvent",
+			", stream",
+			"if let Some(stream)",
+			", stream: &mut Option<&mut TcpStream>",
 			"LobbyHost",
 			"i32",
 			"TcpStream",
@@ -1980,13 +1976,7 @@
 			"left",
 			"down",
 			"left",
-			"down",
-			"key",
-			"from_string",
-			"controller",
-			"keyboard",
-			"Button",
-			"pub"
+			"down"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2110,7 +2100,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 5,
 					"type": "text"
 				},
 				{
@@ -2119,15 +2109,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 36525,
+						"buffer_size": 36819,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								15321,
-								15321
+								22399,
+								22399
 							]
 						],
 						"settings":
@@ -2155,8 +2145,8 @@
 								{
 									"1":
 									[
-										15344,
-										15345
+										22460,
+										22461
 									]
 								},
 								"icon":
@@ -2171,8 +2161,8 @@
 								{
 									"1":
 									[
-										15261,
-										15262
+										22151,
+										22152
 									]
 								},
 								"unmatched":
@@ -2181,11 +2171,21 @@
 							},
 							"bracket_highlighter.regions":
 							[
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
@@ -2196,31 +2196,6 @@
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
 								"bh_round",
 								"bh_round_center",
 								"bh_round_open",
@@ -2231,11 +2206,26 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
 								"bh_single_quote",
 								"bh_single_quote_center",
 								"bh_single_quote_open",
 								"bh_single_quote_close",
-								"bh_single_quote_content"
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2247,7 +2237,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 13617.0,
+						"translation.y": 16698.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
@@ -2255,19 +2245,121 @@
 				},
 				{
 					"buffer": 2,
-					"file": "src/mino.rs",
+					"file": "thoughts/TODO.md",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2521,
+						"buffer_size": 62,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1206,
-								1206
+								62,
+								62
+							]
+						],
+						"settings":
+						{
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+								},
+								"icon":
+								{
+								},
+								"open":
+								{
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content"
+							],
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/mino.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2581,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								159,
+								159
 							]
 						],
 						"settings":
@@ -2286,8 +2378,139 @@
 								{
 									"1":
 									[
-										1208,
-										1209
+										159,
+										160
+									]
+								},
+								"icon":
+								{
+									"1":
+									[
+										"Packages/BracketHighlighter/icons/round_bracket.png",
+										"region.yellowish"
+									]
+								},
+								"open":
+								{
+									"1":
+									[
+										122,
+										123
+									]
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content"
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/block.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2873,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								498,
+								498
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+									"1":
+									[
+										519,
+										520
 									]
 								},
 								"icon":
@@ -2302,8 +2525,8 @@
 								{
 									"1":
 									[
-										1173,
-										1174
+										492,
+										493
 									]
 								},
 								"unmatched":
@@ -2312,31 +2535,21 @@
 							},
 							"bracket_highlighter.regions":
 							[
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
 								"bh_round",
 								"bh_round_center",
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2347,26 +2560,36 @@
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
 								"bh_curly",
 								"bh_curly_center",
 								"bh_curly_open",
 								"bh_curly_close",
 								"bh_curly_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content"
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2376,156 +2599,6 @@
 							"show_definitions": false,
 							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
 							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 822.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/block.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2813,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								962,
-								962
-							]
-						],
-						"settings":
-						{
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 326.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 4,
-					"file": "thoughts/TODO.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 249,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								236,
-								236
-							]
-						],
-						"settings":
-						{
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content"
-							],
-							"spell_check": false,
-							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -2560,6 +2633,95 @@
 									"selector": "source.rust"
 								}
 							],
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+									"1":
+									[
+										3216,
+										3217
+									]
+								},
+								"icon":
+								{
+									"1":
+									[
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
+									]
+								},
+								"open":
+								{
+									"1":
+									[
+										1241,
+										1242
+									]
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content"
+							],
 							"lsp_active": true,
 							"lsp_diagnostic_phantom": false,
 							"lsp_language":
@@ -2567,11 +2729,12 @@
 								"rust-analyzer": "rust"
 							},
 							"open_with_edit": true,
+							"show_definitions": false,
 							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1976.0,
+						"translation.y": 236.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 4,
@@ -2602,36 +2765,7 @@
 						"translation.y": 378.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "/D/Workspace/indeletniciri curente/Trying to learn the rust.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1326,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]
@@ -2639,7 +2773,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 32.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -2654,18 +2788,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.76772677046,
 			1.0
 		],
 		"rows":
@@ -2681,7 +2808,7 @@
 	},
 	"output.diagnostics":
 	{
-		"height": 151.0
+		"height": 85.0
 	},
 	"output.exec":
 	{
@@ -2715,7 +2842,7 @@
 	"project": "tetris.sublime-project",
 	"replace":
 	{
-		"height": 60.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":

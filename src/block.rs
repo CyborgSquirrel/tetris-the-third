@@ -1,6 +1,7 @@
 use crate::vec2i;
+use serde::{Serialize,Deserialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Data {
 	texture_pos: vec2i,
 }

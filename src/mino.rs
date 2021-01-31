@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 use crate::vec2::{vec2f,vec2i};
 use crate::block::Data;
+use serde::{Serialize,Deserialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Mino {
 	pub origin: vec2f,
 	pub rotation: i32,
