@@ -19,6 +19,7 @@ pub mod mino;
 pub mod block;
 pub mod text_builder;
 pub mod config;
+pub mod lenio;
 use vec2::vec2i;
 use text_builder::TextBuilder;
 use config::Config;
@@ -26,10 +27,10 @@ use config::Config;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
-use std::io::{Write, Read};
+use lenio::{LenReader,LenWriter};
 
 use serde::{Serialize,Deserialize};
-use serde_cbor::{from_reader,to_writer};
+use bincode::{serialize,deserialize};
 
 type Well = array2d::Array2D<Option<block::Data>>;
 
@@ -421,7 +422,8 @@ impl Player {
 }
 
 struct ClientPlayer {
-	stream: TcpStream,
+	// stream: TcpStream,
+	stream: LenReader<TcpStream>,
 }
 
 enum PlayerType {
@@ -937,8 +939,8 @@ fn main() {
 										
 											match network_state {
 												NetworkState::Client{ref mut stream} => {
-													to_writer(stream, &GameEvent::StoreMino{generated_mino:None})
-														.expect("Couldn't write to stream");
+													// to_writer(stream, &GameEvent::StoreMino{generated_mino:None})
+													// 	.expect("Couldn't write to stream");
 												}
 												_ => {}
 											}
@@ -949,8 +951,8 @@ fn main() {
 											queue.push_back(rng.generate());
 											match network_state {
 												NetworkState::Client{ref mut stream} => {
-													to_writer(stream, &GameEvent::StoreMino{generated_mino:Some(falling_mino.clone())})
-														.expect("Couldn't write to stream");
+													// to_writer(stream, &GameEvent::StoreMino{generated_mino:Some(falling_mino.clone())})
+													// 	.expect("Couldn't write to stream");
 												}
 												_ => {}
 											}
@@ -1089,34 +1091,34 @@ fn main() {
 									}
 								}
 								PlayerType::Client(player) => {
-									while let Ok(event) = from_reader(&mut player.stream){
-										match event {
-											GameEvent::TranslateMino {origin, blocks} => {
-												falling_mino.origin = origin;
-												falling_mino.blocks = blocks;
-											}
-											GameEvent::AddMinoToWell => {
-												add_mino_to_well(falling_mino, well);
-											}
-											GameEvent::GenerateMino {mino} => {
-												*falling_mino = mino;
-												center_mino(falling_mino, &well);
-											}
-											GameEvent::StoreMino {generated_mino} => {
-												if *can_store_mino {
-													*can_store_mino = false;
-													reset_mino(falling_mino);
-													if let Some(stored_mino) = stored_mino {
-														swap(stored_mino, falling_mino);
-													}else if let Some(mut generated_mino) = generated_mino{
-														swap(&mut generated_mino, falling_mino);
-														*stored_mino = Some(generated_mino);
-													}
-													center_mino(falling_mino, &well);
-												}
-											}
-										}
-									}
+									// while let Ok(event) = from_reader(&mut player.stream){
+									// 	match event {
+									// 		GameEvent::TranslateMino {origin, blocks} => {
+									// 			falling_mino.origin = origin;
+									// 			falling_mino.blocks = blocks;
+									// 		}
+									// 		GameEvent::AddMinoToWell => {
+									// 			add_mino_to_well(falling_mino, well);
+									// 		}
+									// 		GameEvent::GenerateMino {mino} => {
+									// 			*falling_mino = mino;
+									// 			center_mino(falling_mino, &well);
+									// 		}
+									// 		GameEvent::StoreMino {generated_mino} => {
+									// 			if *can_store_mino {
+									// 				*can_store_mino = false;
+									// 				reset_mino(falling_mino);
+									// 				if let Some(stored_mino) = stored_mino {
+									// 					swap(stored_mino, falling_mino);
+									// 				}else if let Some(mut generated_mino) = generated_mino{
+									// 					swap(&mut generated_mino, falling_mino);
+									// 					*stored_mino = Some(generated_mino);
+									// 				}
+									// 				center_mino(falling_mino, &well);
+									// 			}
+									// 		}
+									// 	}
+									// }
 								}
 							}
 						}
@@ -1168,16 +1170,16 @@ fn main() {
 			State::LobbyHost => {
 				if let NetworkState::Host {listener, streams} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
-						players.push(PlayerType::Client(ClientPlayer{stream:incoming.0}));
+						players.push(PlayerType::Client(ClientPlayer{stream:LenReader::new(incoming.0)}));
 						println!("Connection established");
 					}
 					
 					for player in players.iter_mut() {
 						if let PlayerType::Client(ClientPlayer{stream}) = player {
-							let x = from_reader::<GameEvent,_>(stream);
-							if let Ok(x) = x {
-								println!("{:?}", x);
-							}
+							// let x = from_reader::<GameEvent,_>(stream);
+							// if let Ok(x) = x {
+							// 	println!("{:?}", x);
+							// }
 						}
 					}
 					
