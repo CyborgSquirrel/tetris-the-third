@@ -1,16 +1,12 @@
 [[players]]
 [players.controls.keyboard]
 left = "a"
-left_alt = ""
 right = "d"
-right_alt = ""
 
 rot_left = "q"
 rot_right = "e"
-rot_right_alt = ""
 
 softdrop = "s"
-softdrop_alt = ""
 harddrop = "space"
 
 store = "tab"
@@ -28,22 +24,45 @@ harddrop = "a"
 store = "righttrigger"
 
 [[players]]
-[players.controls.keyboard]
-left = "left"
-left_alt = ""
-right = "right"
-right_alt = ""
+# [players.controls.keyboard]
+# left = "left"
+# left_alt = ""
+# right = "right"
+# right_alt = ""
 
-rot_left = ""
-rot_right = ""
-rot_right_alt = "up"
+# rot_right_alt = "up"
 
-softdrop = ""
-softdrop_alt = "down"
-harddrop = "right shift"
+# softdrop_alt = "down"
+# harddrop = "right shift"
 
-store = "return"
+# store = "return"
 
+[players.controls.controller]
+left = "dpleft"
+right = "dpright"
+
+rot_left = "leftshoulder"
+rot_right = "rightshoulder"
+
+softdrop = "dpdown"
+harddrop = "a"
+
+store = "righttrigger"
+
+[[players]]
+[players.controls.controller]
+left = "dpleft"
+right = "dpright"
+
+rot_left = "leftshoulder"
+rot_right = "rightshoulder"
+
+softdrop = "dpdown"
+harddrop = "a"
+
+store = "righttrigger"
+
+[[players]]
 [players.controls.controller]
 left = "dpleft"
 right = "dpright"

@@ -23,6 +23,7 @@ impl Controlcode {
 	}
 }
 
+#[derive(Default)]
 pub struct Player {
 	pub left: Option<Keycode>,
 	pub left_alt: Option<Keycode>,
@@ -53,34 +54,44 @@ pub struct Player {
 
 impl Player {
 	fn from_toml(toml: &Value) -> Self {
-		let keyboard = &toml["keyboard"];
-		let left = Keycode::from_name(keyboard["left"].as_str().unwrap());
-		let left_alt = Keycode::from_name(keyboard["left_alt"].as_str().unwrap());
-		let right = Keycode::from_name(keyboard["right"].as_str().unwrap());
-		let right_alt = Keycode::from_name(keyboard["right_alt"].as_str().unwrap());
+		fn get_as_str<'a>(toml: &'a Value, key: &str) -> Option<&'a str>{
+			toml.get(key).and_then(toml::Value::as_str)
+		}
 		
-		let rot_left = Keycode::from_name(keyboard["rot_left"].as_str().unwrap());
-		let rot_right = Keycode::from_name(keyboard["rot_right"].as_str().unwrap());
-		let rot_right_alt = Keycode::from_name(keyboard["rot_right_alt"].as_str().unwrap());
+		let controls = &toml["controls"];
 		
-		let softdrop = Keycode::from_name(keyboard["softdrop"].as_str().unwrap());
-		let softdrop_alt = Keycode::from_name(keyboard["softdrop_alt"].as_str().unwrap());
-		let harddrop = Keycode::from_name(keyboard["harddrop"].as_str().unwrap());
+		let keyboard = &controls.get("keyboard");
+		let get_as_keycode = |key|keyboard.and_then(|v|get_as_str(v, key)).and_then(Keycode::from_name);
 		
-		let store = Keycode::from_name(keyboard["store"].as_str().unwrap());
+		let left = get_as_keycode("left");
+		let left_alt = get_as_keycode("left_alt");
+		let right = get_as_keycode("right");
+		let right_alt = get_as_keycode("right_alt");
+		
+		let rot_left = get_as_keycode("rot_left");
+		let rot_right = get_as_keycode("rot_right");
+		let rot_right_alt = get_as_keycode("rot_right_alt");
+		
+		let softdrop = get_as_keycode("softdrop");
+		let softdrop_alt = get_as_keycode("softdrop_alt");
+		let harddrop = get_as_keycode("harddrop");
+		
+		let store = get_as_keycode("store");
 		
 		
-		let controller = &toml["controller"];
-		let controller_left = Controlcode::from_name(controller["left"].as_str().unwrap());
-		let controller_right = Controlcode::from_name(controller["right"].as_str().unwrap());
+		let controller = &controls.get("controller");
+		let get_as_controlcode = |key|controller.and_then(|v|get_as_str(v, key)).and_then(Controlcode::from_name);
+		
+		let controller_left = get_as_controlcode("left");
+		let controller_right = get_as_controlcode("right");
 
-		let controller_rot_left = Controlcode::from_name(controller["rot_left"].as_str().unwrap());
-		let controller_rot_right = Controlcode::from_name(controller["rot_right"].as_str().unwrap());
+		let controller_rot_left = get_as_controlcode("rot_left");
+		let controller_rot_right = get_as_controlcode("rot_right");
 
-		let controller_softdrop = Controlcode::from_name(controller["softdrop"].as_str().unwrap());
-		let controller_harddrop = Controlcode::from_name(controller["harddrop"].as_str().unwrap());
+		let controller_softdrop = get_as_controlcode("softdrop");
+		let controller_harddrop = get_as_controlcode("harddrop");
 		
-		let controller_store = Controlcode::from_name(controller["store"].as_str().unwrap());
+		let controller_store = get_as_controlcode("store");
 		
 		Player {
 			left,
@@ -113,7 +124,7 @@ impl Player {
 }
 
 pub struct Config {
-	pub players: [Player;2],
+	pub players: [Player;4],
 }
 
 impl Config {
@@ -129,10 +140,13 @@ impl Config {
 		let value = string.parse::<Value>().unwrap();
 		
 		let players = &value["players"].as_array().unwrap();
+		let player_from_toml = |index|players.get(index).map(|v|Player::from_toml(v)).unwrap_or_default();
 		
 		let players = [
-			Player::from_toml(&players[0]["controls"]),
-			Player::from_toml(&players[1]["controls"]),
+			player_from_toml(0),
+			player_from_toml(1),
+			player_from_toml(2),
+			player_from_toml(3),
 		];
 		
 		Config {

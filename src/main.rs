@@ -399,10 +399,11 @@ struct Player {
 	fall_duration: Duration,
 	
 	joystick_id: Option<u32>,
+	config_id: usize,
 }
 
 impl Player {
-	fn new(joystick_id: Option<u32>) -> Self {
+	fn new(config_id: usize, joystick_id: Option<u32>) -> Self {
 	    Player {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
@@ -417,6 +418,7 @@ impl Player {
 			fall_duration: get_fall_duration(1),
 			
 			joystick_id,
+			config_id,
 	    }
 	}
 }
@@ -427,8 +429,8 @@ struct ClientPlayer {
 }
 
 enum PlayerType {
-	Host(Player),
-	Client(ClientPlayer),
+	Local(Player),
+	Network(ClientPlayer),
 }
 
 fn is_key_down(event: &Event, key: Option<Keycode>) -> bool {
@@ -640,7 +642,7 @@ struct StartLayout {
 use vec2::vec2f;
 
 #[derive(Debug, Serialize, Deserialize)]
-enum GameEvent {
+enum NetworkEvent {
 	TranslateMino {
 		origin: vec2f,
 		blocks: [vec2i; 4],
@@ -689,6 +691,7 @@ fn main() {
 	}
 	
 	let mut config = Config::from_file();
+	let mut configs = (0..4usize).cycle();
 	
 	let window_rect = video_subsystem.display_bounds(0).unwrap();
 	
@@ -724,6 +727,22 @@ fn main() {
 		.with_wrap(10*30)
 		.build(&font, &texture_creator);
 	
+	let host_start_text = TextBuilder::new("Press enter to start game".to_string(), Color::WHITE)
+		.with_wrap(window_rect.width() as u32)
+		.build(&font, &texture_creator);
+	
+	let local_player_text = TextBuilder::new("Local player".to_string(), Color::WHITE)
+		.build(&font, &texture_creator);
+	let network_player_text = TextBuilder::new("Network player".to_string(), Color::WHITE)
+		.build(&font, &texture_creator);
+	
+	let get_player_text = |player: &PlayerType| -> &sdl2::render::Texture{
+		match player {
+			PlayerType::Local(..) => &local_player_text,
+			PlayerType::Network(..) => &network_player_text,
+		}
+	};
+	
 	let fps: u32 = 60;
 	let dpf: Duration = Duration::from_secs(1) / fps;
 	
@@ -741,7 +760,7 @@ fn main() {
 			streams: Vec<TcpStream>,
 		},
 		Client {
-			stream: TcpStream,
+			stream: LenWriter<TcpStream>,
 		},
 	}
 	
@@ -778,7 +797,7 @@ fn main() {
 	
 	let mut players = Vec::<PlayerType>::new();
 	
-	let mut units = Vec::new();
+	let mut units: Vec<Unit> = Vec::new();
 	
 	let block_canvas = block::Canvas::new(&texture);
 	
@@ -808,111 +827,122 @@ fn main() {
 				_ => (),
 			};
 			
-			if let State::Play = state {
-				for (Unit{player,..}, config) in units.iter_mut().zip(config.players.iter_mut()) {
-					if let PlayerType::Host(player) = player {
-						update_player(player, config, &event);
+			match state {
+				State::Play | State::Pause => {
+					if let State::Play = state {
+						for Unit{player,..} in units.iter_mut() {
+							if let PlayerType::Local(player) = player {
+								update_player(player, &mut config.players[player.config_id], &event);
+							}
+						}
 					}
-				}
-			}
+					match event{
+						// Not adding restart keybind for now
+						Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..}
+							=> if let State::Pause | State::Over = state {
+							lines_cleared_text = [
+								create_lines_cleared_text(0, &font, &texture_creator),
+								create_lines_cleared_text(0, &font, &texture_creator),
+								create_lines_cleared_text(0, &font, &texture_creator),
+								create_lines_cleared_text(0, &font, &texture_creator),
+							];
+							
 			
-			match event{
-				// Not adding restart keybind for now
-				Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..}
-					=> if let State::Pause | State::Over = state {
-					lines_cleared_text = [
-						create_lines_cleared_text(0, &font, &texture_creator),
-						create_lines_cleared_text(0, &font, &texture_creator),
-						create_lines_cleared_text(0, &font, &texture_creator),
-						create_lines_cleared_text(0, &font, &texture_creator),
-					];
-					
-	
-					level_text = [
-						create_level_text(1, &font, &texture_creator),
-						create_level_text(1, &font, &texture_creator),
-						create_level_text(1, &font, &texture_creator),
-						create_level_text(1, &font, &texture_creator),
-					];
-					
-					units.clear();
-					for player in players.drain(..) {
-						units.push(Unit::new(game_mode_ctors[chosen_game_mode](), player));
-					}
-					
-					state = State::Play;
-					prev_state = None;
-					
-					stopwatch = Duration::from_secs(0);
-				}
-				
-				// Deliberately not adding custom pause keybind
-				Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
-				Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..}
-					=> match state {
-						State::Pause => {state = prev_state.unwrap_or(State::Play); prev_state = None;},
-						State::Over => (),
-						other => {state = State::Pause;prev_state = Some(other);},
-					}
-				
-				_ => ()
-			};
-			
-			if let State::Start = state {
-				let keybinds = &mut config.players[0];
-				
-				if is_key_down(&event, keybinds.left) ||
-				is_key_down(&event, keybinds.left_alt) ||
-				is_controlcode_down(&event, &mut keybinds.controller_left, None) {
-					chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
-				}
-				
-				if is_key_down(&event, keybinds.right) ||
-				is_key_down(&event, keybinds.right_alt) ||
-				is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-					chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
-				}
-				
-				if is_key_down(&event, Some(Keycode::Q)) {
-					selected_network_state = network_states.next().unwrap();
-				}
-				
-				if is_key_down(&event, Some(Keycode::Return)) {
-					network_state = match selected_network_state {
-						0 => {
+							level_text = [
+								create_level_text(1, &font, &texture_creator),
+								create_level_text(1, &font, &texture_creator),
+								create_level_text(1, &font, &texture_creator),
+								create_level_text(1, &font, &texture_creator),
+							];
+							
+							units.clear();
+							for player in players.drain(..) {
+								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), player));
+							}
+							
 							state = State::Play;
-							units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Host(Player::new(None))));
-							NetworkState::Offline
+							prev_state = None;
+							
+							stopwatch = Duration::from_secs(0);
 						}
-						1 => {
-							let listener = TcpListener::bind("127.0.0.1:4141")
-								.expect("Couldn't bind listener");
-							listener.set_nonblocking(true)
-								.expect("Couldn't set listener to be non-blocking");
-							
-							state = State::LobbyHost;
-							
-							NetworkState::Host {
-								listener,
-								streams: Vec::new(),
+						
+						// Deliberately not adding custom pause keybind
+						Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
+						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..}
+							=> match state {
+								State::Pause => {state = prev_state.unwrap_or(State::Play); prev_state = None;},
+								State::Over => (),
+								other => {state = State::Pause;prev_state = Some(other);},
 							}
-						}
-						2 => {
-							let stream = TcpStream::connect("127.0.0.1:4141")
-								.expect("Couldn't connect stream");
-							stream.set_nonblocking(true)
-								.expect("Couldn't set stream to be non-blocking");
-							
-							state = State::LobbyClient;
-							units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Host(Player::new(None))));
-							
-							NetworkState::Client {
-								stream
+						
+						_ => ()
+					};
+				}
+				State::Start => {
+					let keybinds = &mut config.players[0];
+					
+					if is_key_down(&event, keybinds.left) ||
+					is_key_down(&event, keybinds.left_alt) ||
+					is_controlcode_down(&event, &mut keybinds.controller_left, None) {
+						chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
+					}
+					
+					if is_key_down(&event, keybinds.right) ||
+					is_key_down(&event, keybinds.right_alt) ||
+					is_controlcode_down(&event, &mut keybinds.controller_right, None) {
+						chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
+					}
+					
+					if is_key_down(&event, Some(Keycode::Q)) {
+						selected_network_state = network_states.next().unwrap();
+					}
+					
+					if is_key_down(&event, Some(Keycode::Return)) {
+						network_state = match selected_network_state {
+							0 => {
+								state = State::Play;
+								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+								NetworkState::Offline
 							}
+							1 => {
+								let listener = TcpListener::bind("127.0.0.1:4141")
+									.expect("Couldn't bind listener");
+								listener.set_nonblocking(true)
+									.expect("Couldn't set listener to be non-blocking");
+								
+								state = State::LobbyHost;
+								
+								NetworkState::Host {
+									listener,
+									streams: Vec::new(),
+								}
+							}
+							2 => {
+								let stream = TcpStream::connect("127.0.0.1:4141")
+									.expect("Couldn't connect stream");
+								stream.set_nonblocking(true)
+									.expect("Couldn't set stream to be non-blocking");
+								
+								state = State::LobbyClient;
+								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+								
+								NetworkState::Client {
+									stream: LenWriter::new(stream),
+								}
+							}
+							_ => {panic!()}
 						}
-						_ => {panic!()}
 					}
 				}
+				State::LobbyHost => {
+					if is_key_down(&event, Some(Keycode::Return)) {
+						state = State::Play;
+					}
+					if is_key_down(&event, Some(Keycode::Q)) {
+						units.push(Unit::new(Mode::default_marathon(), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+					}
+				}
+				_ => {}
 			}
 		}
 		
@@ -926,7 +956,7 @@ fn main() {
 						UnitState::Play => {
 							
 							match player {
-								PlayerType::Host(player) => {
+								PlayerType::Local(player) => {
 							
 									if player.store && *can_store_mino {
 										
@@ -939,8 +969,9 @@ fn main() {
 										
 											match network_state {
 												NetworkState::Client{ref mut stream} => {
-													// to_writer(stream, &GameEvent::StoreMino{generated_mino:None})
-													// 	.expect("Couldn't write to stream");
+													stream.write(
+														serialize(&NetworkEvent::StoreMino{generated_mino:None}).unwrap()
+													).expect("Couldn't write to stream");
 												}
 												_ => {}
 											}
@@ -951,8 +982,9 @@ fn main() {
 											queue.push_back(rng.generate());
 											match network_state {
 												NetworkState::Client{ref mut stream} => {
-													// to_writer(stream, &GameEvent::StoreMino{generated_mino:Some(falling_mino.clone())})
-													// 	.expect("Couldn't write to stream");
+													stream.write(
+														serialize(&NetworkEvent::StoreMino{generated_mino:Some(falling_mino.clone())}).unwrap()
+													).expect("Couldn't write to stream");
 												}
 												_ => {}
 											}
@@ -1011,12 +1043,12 @@ fn main() {
 									if mino_translated {
 										match network_state {
 											NetworkState::Client{ref mut stream} => {
-												// stream.write(
-												// 	&serialize(&GameEvent::TranslateMino{
-												// 		origin: falling_mino.origin,
-												// 		blocks: falling_mino.blocks,
-												// 	}).unwrap()[..]
-												// ).expect("Couldn't send event");
+												stream.write(
+													serialize(&NetworkEvent::TranslateMino{
+														origin: falling_mino.origin,
+														blocks: falling_mino.blocks,
+													}).unwrap()
+												).expect("Couldn't send event");
 											}
 											_ => {}
 										}
@@ -1026,9 +1058,9 @@ fn main() {
 										
 										match network_state {
 											NetworkState::Client{ref mut stream} => {
-												// stream.write(
-												// 	&serialize(&GameEvent::AddMinoToWell).unwrap()[..]
-												// ).expect("Couldn't send event");
+												stream.write(
+													serialize(&NetworkEvent::AddMinoToWell).unwrap()
+												).expect("Couldn't send event");
 											}
 											_ => {}
 										}
@@ -1071,11 +1103,11 @@ fn main() {
 											*falling_mino = queue.pop_front().unwrap();
 											match network_state {
 												NetworkState::Client{ref mut stream} => {
-													// stream.write(
-													// 	&serialize(&GameEvent::GenerateMino{
-													// 		mino: falling_mino.clone(),
-													// 	}).unwrap()[..]
-													// ).expect("Couldn't send event");
+													stream.write(
+														serialize(&NetworkEvent::GenerateMino{
+															mino: falling_mino.clone(),
+														}).unwrap()
+													).expect("Couldn't send event");
 												}
 												_ => {}
 											}
@@ -1090,35 +1122,53 @@ fn main() {
 										player.move_repeat_countdown += dpf;
 									}
 								}
-								PlayerType::Client(player) => {
-									// while let Ok(event) = from_reader(&mut player.stream){
-									// 	match event {
-									// 		GameEvent::TranslateMino {origin, blocks} => {
-									// 			falling_mino.origin = origin;
-									// 			falling_mino.blocks = blocks;
-									// 		}
-									// 		GameEvent::AddMinoToWell => {
-									// 			add_mino_to_well(falling_mino, well);
-									// 		}
-									// 		GameEvent::GenerateMino {mino} => {
-									// 			*falling_mino = mino;
-									// 			center_mino(falling_mino, &well);
-									// 		}
-									// 		GameEvent::StoreMino {generated_mino} => {
-									// 			if *can_store_mino {
-									// 				*can_store_mino = false;
-									// 				reset_mino(falling_mino);
-									// 				if let Some(stored_mino) = stored_mino {
-									// 					swap(stored_mino, falling_mino);
-									// 				}else if let Some(mut generated_mino) = generated_mino{
-									// 					swap(&mut generated_mino, falling_mino);
-									// 					*stored_mino = Some(generated_mino);
-									// 				}
-									// 				center_mino(falling_mino, &well);
-									// 			}
-									// 		}
-									// 	}
-									// }
+								PlayerType::Network(player) => {
+									while let Ok(Ok(event)) = player.stream.read().map(deserialize::<NetworkEvent>){
+										match event {
+											NetworkEvent::TranslateMino {origin, blocks} => {
+												falling_mino.origin = origin;
+												falling_mino.blocks = blocks;
+											}
+											NetworkEvent::AddMinoToWell => {
+												let can_add = mino_fits_in_well(&falling_mino, &well);
+												if !can_add {
+													*state = UnitState::Over;
+												}else{
+													*can_store_mino = true;
+													add_mino_to_well(&falling_mino, well);
+													
+													let mut clearable_lines = 0;
+													mark_clearable_lines(&well, animate_line, &mut clearable_lines);
+													
+													if clearable_lines != 0 {
+														*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+														
+														*lines_cleared += clearable_lines;
+														*lines_cleared_text =
+															create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+														
+													}
+												}
+											}
+											NetworkEvent::GenerateMino {mino} => {
+												*falling_mino = mino;
+												center_mino(falling_mino, &well);
+											}
+											NetworkEvent::StoreMino {generated_mino} => {
+												if *can_store_mino {
+													*can_store_mino = false;
+													reset_mino(falling_mino);
+													if let Some(stored_mino) = stored_mino {
+														swap(stored_mino, falling_mino);
+													}else if let Some(mut generated_mino) = generated_mino{
+														swap(&mut generated_mino, falling_mino);
+														*stored_mino = Some(generated_mino);
+													}
+													center_mino(falling_mino, &well);
+												}
+											}
+										}
+									}
 								}
 							}
 						}
@@ -1170,19 +1220,9 @@ fn main() {
 			State::LobbyHost => {
 				if let NetworkState::Host {listener, streams} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
-						players.push(PlayerType::Client(ClientPlayer{stream:LenReader::new(incoming.0)}));
+						units.push(Unit::new(Mode::default_marathon(), PlayerType::Network(ClientPlayer{stream:LenReader::new(incoming.0)})));
 						println!("Connection established");
 					}
-					
-					for player in players.iter_mut() {
-						if let PlayerType::Client(ClientPlayer{stream}) = player {
-							// let x = from_reader::<GameEvent,_>(stream);
-							// if let Ok(x) = x {
-							// 	println!("{:?}", x);
-							// }
-						}
-					}
-					
 				}else {
 					panic!();
 				}
@@ -1249,6 +1289,21 @@ fn main() {
 				Rect::new(layout.centered_x(width), layout.y, width, height));
 			
 		}else if let State::LobbyHost {..} = state {
+			
+			let TextureQuery {width, height, ..} = host_start_text.query();
+			let _ = canvas.copy(
+				&host_start_text,
+				Rect::new(0, 0, width, height),
+				Rect::new(0, 0, width, height));
+			
+			for (i, Unit{player,..}) in (0..).zip(&units) {
+				let player_text = get_player_text(player);
+				let TextureQuery {width, height, ..} = player_text.query();
+				let _ = canvas.copy(
+					&player_text,
+					Rect::new(0, 0, width, height),
+					Rect::new(0, 30+i*(32+8), width, height));
+			}
 			
 		}else if let State::LobbyClient {..} = state {
 			
