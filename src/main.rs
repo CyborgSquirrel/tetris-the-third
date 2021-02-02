@@ -13,6 +13,8 @@ use std::collections::VecDeque;
 use std::mem::swap;
 use std::cmp::{max,min};
 
+use itertools::izip;
+
 #[macro_use]
 pub mod vec2;
 pub mod mino;
@@ -27,7 +29,7 @@ use config::Config;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
-use lenio::{LenReader,LenWriter};
+use lenio::LenIO;
 
 use serde::{Serialize,Deserialize};
 use bincode::{serialize,deserialize};
@@ -424,8 +426,7 @@ impl Player {
 }
 
 struct ClientPlayer {
-	// stream: TcpStream,
-	stream: LenReader<TcpStream>,
+	stream_id: usize,
 }
 
 enum PlayerType {
@@ -643,6 +644,19 @@ use vec2::vec2f;
 
 #[derive(Debug, Serialize, Deserialize)]
 enum NetworkEvent {
+	UnitEvent {
+		unit_id: usize,
+		event: UnitEvent,
+	},
+	InitPlayers {
+		count: usize,
+	},
+	AddPlayer,
+	StartGame,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+enum UnitEvent {
 	TranslateMino {
 		origin: vec2f,
 		blocks: [vec2i; 4],
@@ -757,11 +771,29 @@ fn main() {
 		Offline,
 		Host {
 			listener: TcpListener,
-			streams: Vec<TcpStream>,
+			streams: Vec<LenIO<TcpStream>>,
 		},
 		Client {
-			stream: LenWriter<TcpStream>,
+			stream: LenIO<TcpStream>,
 		},
+	}
+	
+	impl NetworkState {
+		fn broadcast_event(&mut self, event: &NetworkEvent) {
+			use NetworkState::*;
+			match self {
+				Offline => {},
+				Host {streams,..} => {
+					let event = &serialize(event).unwrap();
+					for stream in streams {
+						stream.write(event).unwrap();
+					}
+				}
+				Client {stream} => {
+					stream.write(&serialize(event).unwrap()).unwrap();
+				}
+			}
+		}
 	}
 	
 	let mut network_states = (0..3i32).cycle();
@@ -922,12 +954,14 @@ fn main() {
 									.expect("Couldn't connect stream");
 								stream.set_nonblocking(true)
 									.expect("Couldn't set stream to be non-blocking");
+								let mut stream = LenIO::new(stream);
 								
 								state = State::LobbyClient;
 								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+								stream.write(&serialize(&NetworkEvent::AddPlayer).unwrap()).unwrap();
 								
 								NetworkState::Client {
-									stream: LenWriter::new(stream),
+									stream,
 								}
 							}
 							_ => {panic!()}
@@ -936,22 +970,155 @@ fn main() {
 				}
 				State::LobbyHost => {
 					if is_key_down(&event, Some(Keycode::Return)) {
+						network_state.broadcast_event(&NetworkEvent::StartGame);
 						state = State::Play;
 					}
 					if is_key_down(&event, Some(Keycode::Q)) {
 						units.push(Unit::new(Mode::default_marathon(), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+						if let NetworkState::Host{streams,..} = &mut network_state {
+							let event = serialize(&NetworkEvent::AddPlayer).unwrap();
+							for stream in streams {
+								stream.write(&event).unwrap();
+							}
+						}
 					}
 				}
 				_ => {}
 			}
 		}
 		
+		// @network
+		match network_state {
+			NetworkState::Offline => {}
+			NetworkState::Host {ref mut streams,..} => {
+				for i in 0..streams.len() {
+					while let Ok(Ok(event)) = streams[i].read().map(deserialize::<NetworkEvent>) {
+						for j in 0..streams.len() {
+							if i == j {continue;}
+							streams[j].write(&serialize(&event).unwrap()).unwrap();
+						}
+						match event {
+							NetworkEvent::UnitEvent {unit_id, event} => {
+								let Unit{falling_mino,player,well,can_store_mino,state,lines_cleared,animate_line,stored_mino,..} = &mut units[unit_id];
+								match event {
+									UnitEvent::TranslateMino {origin, blocks} => {
+										falling_mino.origin = origin;
+										falling_mino.blocks = blocks;
+									}
+									UnitEvent::AddMinoToWell => {
+										let can_add = mino_fits_in_well(&falling_mino, &well);
+										if !can_add {
+											*state = UnitState::Over;
+										}else{
+											*can_store_mino = true;
+											add_mino_to_well(&falling_mino, well);
+											
+											let mut clearable_lines = 0;
+											mark_clearable_lines(&well, animate_line, &mut clearable_lines);
+											
+											if clearable_lines != 0 {
+												*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+												
+												*lines_cleared += clearable_lines;
+												
+											}
+										}
+									}
+									UnitEvent::GenerateMino {mino} => {
+										*falling_mino = mino;
+										center_mino(falling_mino, &well);
+									}
+									UnitEvent::StoreMino {generated_mino} => {
+										if *can_store_mino {
+											*can_store_mino = false;
+											reset_mino(falling_mino);
+											if let Some(stored_mino) = stored_mino {
+												swap(stored_mino, falling_mino);
+											}else if let Some(mut generated_mino) = generated_mino{
+												swap(&mut generated_mino, falling_mino);
+												*stored_mino = Some(generated_mino);
+											}
+											center_mino(falling_mino, &well);
+										}
+									}
+								}
+							}
+							NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),PlayerType::Network(ClientPlayer{stream_id:0})))}
+							NetworkEvent::StartGame => {} //only host gets to start game
+							NetworkEvent::InitPlayers {..} => {} //host already has players initted
+						}
+					}
+				}
+			}
+			NetworkState::Client {ref mut stream} => {
+				while let Ok(Ok(event)) = stream.read().map(deserialize::<NetworkEvent>) {
+					match event {
+						NetworkEvent::UnitEvent {unit_id, event} => {
+							let Unit{falling_mino,player,well,can_store_mino,state,lines_cleared,animate_line,stored_mino,..} = &mut units[unit_id];
+							match event {
+								UnitEvent::TranslateMino {origin, blocks} => {
+									falling_mino.origin = origin;
+									falling_mino.blocks = blocks;
+								}
+								UnitEvent::AddMinoToWell => {
+									let can_add = mino_fits_in_well(&falling_mino, &well);
+									if !can_add {
+										*state = UnitState::Over;
+									}else{
+										*can_store_mino = true;
+										add_mino_to_well(&falling_mino, well);
+										
+										let mut clearable_lines = 0;
+										mark_clearable_lines(&well, animate_line, &mut clearable_lines);
+										
+										if clearable_lines != 0 {
+											*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+											
+											*lines_cleared += clearable_lines;
+											
+										}
+									}
+								}
+								UnitEvent::GenerateMino {mino} => {
+									*falling_mino = mino;
+									center_mino(falling_mino, &well);
+								}
+								UnitEvent::StoreMino {generated_mino} => {
+									if *can_store_mino {
+										*can_store_mino = false;
+										reset_mino(falling_mino);
+										if let Some(stored_mino) = stored_mino {
+											swap(stored_mino, falling_mino);
+										}else if let Some(mut generated_mino) = generated_mino{
+											swap(&mut generated_mino, falling_mino);
+											*stored_mino = Some(generated_mino);
+										}
+										center_mino(falling_mino, &well);
+									}
+								}
+							}
+						}
+						NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),PlayerType::Network(ClientPlayer{stream_id:0})))}
+						NetworkEvent::StartGame => {state = State::Play}
+						NetworkEvent::InitPlayers {count} => {
+							let mut inited_units = Vec::new();
+							for _ in 0..count {
+								inited_units.push(Unit::new(Mode::default_marathon(), PlayerType::Network(ClientPlayer{stream_id:0})));
+							}
+							inited_units.append(&mut units);
+							units = inited_units;
+						}
+					}
+				}
+			}
+		}
+		
 		// @update
 		match state {
 			State::Play => {
-				for ((Unit{well,state,queue,rng,animate_line,player,lines_cleared,mode,
-					stored_mino, can_store_mino, falling_mino},lines_cleared_text),level_text) in
-					units.iter_mut().zip(lines_cleared_text.iter_mut()).zip(level_text.iter_mut()) {
+				for (unit_id,Unit{well,state,queue,rng,animate_line,player,lines_cleared,mode,
+					stored_mino, can_store_mino, falling_mino},lines_cleared_text,level_text) in
+					izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
 					match state {
 						UnitState::Play => {
 							
@@ -966,28 +1133,17 @@ fn main() {
 										reset_mino(falling_mino);
 										if let Some(stored_mino) = stored_mino {
 											swap(stored_mino, falling_mino);
-										
-											match network_state {
-												NetworkState::Client{ref mut stream} => {
-													stream.write(
-														serialize(&NetworkEvent::StoreMino{generated_mino:None}).unwrap()
-													).expect("Couldn't write to stream");
-												}
-												_ => {}
-											}
+											network_state.broadcast_event(
+												&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::StoreMino{generated_mino:None}}
+											);
 										}else{
 											let mut next_mino = queue.pop_front().unwrap();
 											swap(&mut next_mino, falling_mino);
 											*stored_mino = Some(next_mino);
 											queue.push_back(rng.generate());
-											match network_state {
-												NetworkState::Client{ref mut stream} => {
-													stream.write(
-														serialize(&NetworkEvent::StoreMino{generated_mino:Some(falling_mino.clone())}).unwrap()
-													).expect("Couldn't write to stream");
-												}
-												_ => {}
-											}
+											network_state.broadcast_event(
+												&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::StoreMino{generated_mino:Some(falling_mino.clone())}}
+											);
 										}
 										center_mino(falling_mino, &well);
 									}
@@ -1041,29 +1197,19 @@ fn main() {
 									mino_translated |= mino_translated_while_falling;
 									
 									if mino_translated {
-										match network_state {
-											NetworkState::Client{ref mut stream} => {
-												stream.write(
-													serialize(&NetworkEvent::TranslateMino{
-														origin: falling_mino.origin,
-														blocks: falling_mino.blocks,
-													}).unwrap()
-												).expect("Couldn't send event");
-											}
-											_ => {}
-										}
+										network_state.broadcast_event(
+											&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
+												origin: falling_mino.origin,
+												blocks: falling_mino.blocks,
+											}}
+										);
 									}
 									
 									if add_mino {
 										
-										match network_state {
-											NetworkState::Client{ref mut stream} => {
-												stream.write(
-													serialize(&NetworkEvent::AddMinoToWell).unwrap()
-												).expect("Couldn't send event");
-											}
-											_ => {}
-										}
+										network_state.broadcast_event(
+											&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::AddMinoToWell}
+										);
 										
 										let can_add = mino_fits_in_well(&falling_mino, &well);
 										if !can_add {
@@ -1101,16 +1247,11 @@ fn main() {
 											}
 											
 											*falling_mino = queue.pop_front().unwrap();
-											match network_state {
-												NetworkState::Client{ref mut stream} => {
-													stream.write(
-														serialize(&NetworkEvent::GenerateMino{
-															mino: falling_mino.clone(),
-														}).unwrap()
-													).expect("Couldn't send event");
-												}
-												_ => {}
-											}
+											network_state.broadcast_event(
+												&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::GenerateMino{
+													mino: falling_mino.clone(),
+												}}
+											);
 											center_mino(falling_mino, &well);
 											
 											queue.push_back(rng.generate());
@@ -1122,54 +1263,7 @@ fn main() {
 										player.move_repeat_countdown += dpf;
 									}
 								}
-								PlayerType::Network(player) => {
-									while let Ok(Ok(event)) = player.stream.read().map(deserialize::<NetworkEvent>){
-										match event {
-											NetworkEvent::TranslateMino {origin, blocks} => {
-												falling_mino.origin = origin;
-												falling_mino.blocks = blocks;
-											}
-											NetworkEvent::AddMinoToWell => {
-												let can_add = mino_fits_in_well(&falling_mino, &well);
-												if !can_add {
-													*state = UnitState::Over;
-												}else{
-													*can_store_mino = true;
-													add_mino_to_well(&falling_mino, well);
-													
-													let mut clearable_lines = 0;
-													mark_clearable_lines(&well, animate_line, &mut clearable_lines);
-													
-													if clearable_lines != 0 {
-														*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
-														
-														*lines_cleared += clearable_lines;
-														*lines_cleared_text =
-															create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
-														
-													}
-												}
-											}
-											NetworkEvent::GenerateMino {mino} => {
-												*falling_mino = mino;
-												center_mino(falling_mino, &well);
-											}
-											NetworkEvent::StoreMino {generated_mino} => {
-												if *can_store_mino {
-													*can_store_mino = false;
-													reset_mino(falling_mino);
-													if let Some(stored_mino) = stored_mino {
-														swap(stored_mino, falling_mino);
-													}else if let Some(mut generated_mino) = generated_mino{
-														swap(&mut generated_mino, falling_mino);
-														*stored_mino = Some(generated_mino);
-													}
-													center_mino(falling_mino, &well);
-												}
-											}
-										}
-									}
-								}
+								PlayerType::Network(player) => {}
 							}
 						}
 						
@@ -1220,7 +1314,10 @@ fn main() {
 			State::LobbyHost => {
 				if let NetworkState::Host {listener, streams} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
-						units.push(Unit::new(Mode::default_marathon(), PlayerType::Network(ClientPlayer{stream:LenReader::new(incoming.0)})));
+						let mut stream = LenIO::new(incoming.0);
+						stream.write(&serialize(&NetworkEvent::InitPlayers{count:units.len()}).unwrap()).unwrap();
+						streams.push(stream);
+						println!("{:?}", incoming.1);
 						println!("Connection established");
 					}
 				}else {
@@ -1229,7 +1326,7 @@ fn main() {
 			}
 			
 			State::LobbyClient => {
-				state = State::Play;
+				
 			}
 			
 			_ => ()
@@ -1306,7 +1403,14 @@ fn main() {
 			}
 			
 		}else if let State::LobbyClient {..} = state {
-			
+			for (i, Unit{player,..}) in (0..).zip(&units) {
+				let player_text = get_player_text(player);
+				let TextureQuery {width, height, ..} = player_text.query();
+				let _ = canvas.copy(
+					&player_text,
+					Rect::new(0, 0, width, height),
+					Rect::new(0, 30+i*(32+8), width, height));
+			}
 		}else{
 			
 			let mut layout = Layout {

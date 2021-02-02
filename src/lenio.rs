@@ -2,14 +2,14 @@
 use std::io::{Result,Read,Write,Error,ErrorKind};
 
 #[derive(Debug)]
-pub struct LenReader<T> {
+pub struct LenIO<T> {
 	inner: T,
 	buf: [u8; 256],
 	len: usize,
 	pos: usize,
 }
 
-impl<T: Read> LenReader<T> {
+impl<T: Read> LenIO<T> {
 	pub fn new(inner: T) -> Self {
 		Self {
 			inner,
@@ -44,18 +44,8 @@ impl<T: Read> LenReader<T> {
 	}
 }
 
-#[derive(Debug)]
-pub struct LenWriter<T> {
-	inner: T,
-}
-
-impl<T: Write> LenWriter<T> {
-	pub fn new(inner: T) -> Self {
-		Self {
-			inner,
-		}
-	}
-	pub fn write(&mut self, bytes: Vec<u8>) -> Result<()> {
+impl<T: Write> LenIO<T> {
+	pub fn write(&mut self, bytes: &Vec<u8>) -> Result<()> {
 		self.inner.write(&[bytes.len() as u8]).and_then(|_|{
 			self.inner.write(&bytes[..])
 		}).map(|_|{})
