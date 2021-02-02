@@ -298,7 +298,7 @@ struct Unit {
 	state: UnitState,
 	queue: VecDeque<Mino>,
 	rng: MinoRng,
-	player: PlayerType,
+	player: Player,
 	
 	falling_mino: Mino,
 	
@@ -310,7 +310,7 @@ struct Unit {
 }
 
 impl Unit {
-	fn new(mode: Mode, player: PlayerType) -> Self {
+	fn new(mode: Mode, player: Player) -> Self {
 		let mut rng = MinoRng::fair();
 		let well = Well::filled_with(None, 10, 20);
 	    Unit {
@@ -387,26 +387,29 @@ fn get_lines_before_next_level(level: u32) -> i32 {
 	10 * (level as i32)
 }
 
-struct Player {
-	move_direction: MoveDirection,
-	move_state: MoveState,
-	rot_direction: RotDirection,
-	fall_state: FallState,
-	
-	store: bool,
-	
-	fall_countdown: Duration,
-	move_repeat_countdown: Duration,
-	
-	fall_duration: Duration,
-	
-	joystick_id: Option<u32>,
-	config_id: usize,
+enum Player {
+	Local {
+		move_direction: MoveDirection,
+		move_state: MoveState,
+		rot_direction: RotDirection,
+		fall_state: FallState,
+		
+		store: bool,
+		
+		fall_countdown: Duration,
+		move_repeat_countdown: Duration,
+		
+		fall_duration: Duration,
+		
+		joystick_id: Option<u32>,
+		config_id: usize,
+	},
+	Network,
 }
 
 impl Player {
-	fn new(config_id: usize, joystick_id: Option<u32>) -> Self {
-	    Player {
+	fn local(config_id: usize, joystick_id: Option<u32>) -> Self {
+	    Player::Local {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
 			rot_direction: RotDirection::None,
@@ -423,15 +426,88 @@ impl Player {
 			config_id,
 	    }
 	}
-}
-
-struct ClientPlayer {
-	stream_id: usize,
-}
-
-enum PlayerType {
-	Local(Player),
-	Network(ClientPlayer),
+	fn network() -> Self {
+		Player::Network
+	}
+	fn update_local(&mut self, keybinds: &mut [config::Player;4], event: &Event) {
+		if let Player::Local{
+			move_direction,
+			move_state,
+			rot_direction,
+			fall_state,
+			store,
+			joystick_id,
+			config_id,
+			..
+		} = self {
+			let keybinds = &mut keybinds[*config_id];
+			
+			if is_key_down(event, keybinds.left) ||
+			is_key_down(event, keybinds.left_alt) ||
+			is_controlcode_down(event, &mut keybinds.controller_left, *joystick_id) {
+				*move_direction = MoveDirection::Left;
+				*move_state = MoveState::Instant;
+			}
+			
+			if is_key_down(event, keybinds.right) ||
+			is_key_down(event, keybinds.right_alt) ||
+			is_controlcode_down(event, &mut keybinds.controller_right, *joystick_id) {
+				*move_direction = MoveDirection::Right;
+				*move_state = MoveState::Instant;
+			}
+			
+			if is_key_up(event, keybinds.left) ||
+			is_key_up(event, keybinds.left_alt) ||
+			is_controlcode_up(event, &mut keybinds.controller_left, *joystick_id) {
+				if *move_direction == MoveDirection::Left {
+					*move_direction = MoveDirection::None;
+					*move_state = MoveState::Still;
+				}
+			}
+			
+			if is_key_up(event, keybinds.right) ||
+			is_key_up(event, keybinds.right_alt) ||
+			is_controlcode_up(event, &mut keybinds.controller_right, *joystick_id) {
+				if *move_direction == MoveDirection::Right {
+					*move_direction = MoveDirection::None;
+					*move_state = MoveState::Still;
+				}
+			}
+			
+			if is_key_down(event, keybinds.rot_left) ||
+			is_controlcode_down(event, &mut keybinds.controller_rot_left, *joystick_id) {
+				*rot_direction = RotDirection::Left
+			}
+			
+			if is_key_down(event, keybinds.rot_right) ||
+			is_key_down(event, keybinds.rot_right_alt) ||
+			is_controlcode_down(event, &mut keybinds.controller_rot_right, *joystick_id) {
+				*rot_direction = RotDirection::Right
+			}
+			
+			if is_key_down(event, keybinds.softdrop) ||
+			is_key_down(event, keybinds.softdrop_alt) ||
+			is_controlcode_down(event, &mut keybinds.controller_softdrop, *joystick_id) {
+				*fall_state = FallState::Softdrop;
+			}
+			
+			if is_key_up(event, keybinds.softdrop) ||
+			is_key_up(event, keybinds.softdrop_alt) ||
+			is_controlcode_up(event, &mut keybinds.controller_softdrop, *joystick_id) {
+				*fall_state = FallState::Fall
+			}
+			
+			if is_key_down(event, keybinds.harddrop) ||
+			is_controlcode_down(event, &mut keybinds.controller_harddrop, *joystick_id) {
+				*fall_state = FallState::Harddrop;
+			}
+			
+			if is_key_down(event, keybinds.store) ||
+			is_controlcode_down(event, &mut keybinds.controller_store, *joystick_id) {
+				*store = true;
+			}
+		}
+	}
 }
 
 fn is_key_down(event: &Event, key: Option<Keycode>) -> bool {
@@ -516,86 +592,6 @@ fn is_controlcode_up(
 			}
 		}else {false}
 	}else {false}
-}
-
-fn update_player(
-	player: &mut Player,
-	keybinds: &mut config::Player,
-	event: &Event) {
-	let Player{
-		move_direction,
-		move_state,
-		rot_direction,
-		fall_state,
-		store,
-		joystick_id,
-		..
-	} = player;
-	
-	if is_key_down(event, keybinds.left) ||
-	is_key_down(event, keybinds.left_alt) ||
-	is_controlcode_down(event, &mut keybinds.controller_left, *joystick_id) {
-		*move_direction = MoveDirection::Left;
-		*move_state = MoveState::Instant;
-	}
-	
-	if is_key_down(event, keybinds.right) ||
-	is_key_down(event, keybinds.right_alt) ||
-	is_controlcode_down(event, &mut keybinds.controller_right, *joystick_id) {
-		*move_direction = MoveDirection::Right;
-		*move_state = MoveState::Instant;
-	}
-	
-	if is_key_up(event, keybinds.left) ||
-	is_key_up(event, keybinds.left_alt) ||
-	is_controlcode_up(event, &mut keybinds.controller_left, *joystick_id) {
-		if *move_direction == MoveDirection::Left {
-			*move_direction = MoveDirection::None;
-			*move_state = MoveState::Still;
-		}
-	}
-	
-	if is_key_up(event, keybinds.right) ||
-	is_key_up(event, keybinds.right_alt) ||
-	is_controlcode_up(event, &mut keybinds.controller_right, *joystick_id) {
-		if *move_direction == MoveDirection::Right {
-			*move_direction = MoveDirection::None;
-			*move_state = MoveState::Still;
-		}
-	}
-	
-	if is_key_down(event, keybinds.rot_left) ||
-	is_controlcode_down(event, &mut keybinds.controller_rot_left, *joystick_id) {
-		*rot_direction = RotDirection::Left
-	}
-	
-	if is_key_down(event, keybinds.rot_right) ||
-	is_key_down(event, keybinds.rot_right_alt) ||
-	is_controlcode_down(event, &mut keybinds.controller_rot_right, *joystick_id) {
-		*rot_direction = RotDirection::Right
-	}
-	
-	if is_key_down(event, keybinds.softdrop) ||
-	is_key_down(event, keybinds.softdrop_alt) ||
-	is_controlcode_down(event, &mut keybinds.controller_softdrop, *joystick_id) {
-		*fall_state = FallState::Softdrop;
-	}
-	
-	if is_key_up(event, keybinds.softdrop) ||
-	is_key_up(event, keybinds.softdrop_alt) ||
-	is_controlcode_up(event, &mut keybinds.controller_softdrop, *joystick_id) {
-		*fall_state = FallState::Fall
-	}
-	
-	if is_key_down(event, keybinds.harddrop) ||
-	is_controlcode_down(event, &mut keybinds.controller_harddrop, *joystick_id) {
-		*fall_state = FallState::Harddrop;
-	}
-	
-	if is_key_down(event, keybinds.store) ||
-	is_controlcode_down(event, &mut keybinds.controller_store, *joystick_id) {
-		*store = true;
-	}
 }
 
 #[derive(Default)]
@@ -750,10 +746,10 @@ fn main() {
 	let network_player_text = TextBuilder::new("Network player".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
 	
-	let get_player_text = |player: &PlayerType| -> &sdl2::render::Texture{
+	let get_player_text = |player: &Player| -> &sdl2::render::Texture{
 		match player {
-			PlayerType::Local(..) => &local_player_text,
-			PlayerType::Network(..) => &network_player_text,
+			Player::Local{..} => &local_player_text,
+			Player::Network => &network_player_text,
 		}
 	};
 	
@@ -827,7 +823,7 @@ fn main() {
 	let move_prepeat_duration = Duration::from_secs_f64(0.15);
 	let move_repeat_duration = Duration::from_secs_f64(0.05);
 	
-	let mut players = Vec::<PlayerType>::new();
+	let mut players = Vec::<Player>::new();
 	
 	let mut units: Vec<Unit> = Vec::new();
 	
@@ -863,9 +859,7 @@ fn main() {
 				State::Play | State::Pause => {
 					if let State::Play = state {
 						for Unit{player,..} in units.iter_mut() {
-							if let PlayerType::Local(player) = player {
-								update_player(player, &mut config.players[player.config_id], &event);
-							}
+							player.update_local(&mut config.players, &event)
 						}
 					}
 					match event{
@@ -933,7 +927,7 @@ fn main() {
 						network_state = match selected_network_state {
 							0 => {
 								state = State::Play;
-								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None)));
 								NetworkState::Offline
 							}
 							1 => {
@@ -957,7 +951,7 @@ fn main() {
 								let mut stream = LenIO::new(stream);
 								
 								state = State::LobbyClient;
-								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None)));
 								stream.write(&serialize(&NetworkEvent::AddPlayer).unwrap()).unwrap();
 								
 								NetworkState::Client {
@@ -974,7 +968,7 @@ fn main() {
 						state = State::Play;
 					}
 					if is_key_down(&event, Some(Keycode::Q)) {
-						units.push(Unit::new(Mode::default_marathon(), PlayerType::Local(Player::new(configs.next().unwrap(),None))));
+						units.push(Unit::new(Mode::default_marathon(), Player::local(configs.next().unwrap(),None)));
 						if let NetworkState::Host{streams,..} = &mut network_state {
 							let event = serialize(&NetworkEvent::AddPlayer).unwrap();
 							for stream in streams {
@@ -1043,7 +1037,7 @@ fn main() {
 									}
 								}
 							}
-							NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),PlayerType::Network(ClientPlayer{stream_id:0})))}
+							NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),Player::network()))}
 							NetworkEvent::StartGame => {} //only host gets to start game
 							NetworkEvent::InitPlayers {..} => {} //host already has players initted
 						}
@@ -1098,12 +1092,12 @@ fn main() {
 								}
 							}
 						}
-						NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),PlayerType::Network(ClientPlayer{stream_id:0})))}
+						NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),Player::network()))}
 						NetworkEvent::StartGame => {state = State::Play}
 						NetworkEvent::InitPlayers {count} => {
 							let mut inited_units = Vec::new();
 							for _ in 0..count {
-								inited_units.push(Unit::new(Mode::default_marathon(), PlayerType::Network(ClientPlayer{stream_id:0})));
+								inited_units.push(Unit::new(Mode::default_marathon(), Player::network()));
 							}
 							inited_units.append(&mut units);
 							units = inited_units;
@@ -1123,13 +1117,14 @@ fn main() {
 						UnitState::Play => {
 							
 							match player {
-								PlayerType::Local(player) => {
+								Player::Local{store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
+									fall_duration,fall_state,..} => {
 							
-									if player.store && *can_store_mino {
+									if *store && *can_store_mino {
 										
 										*can_store_mino = false;
-										player.store = false;
-										player.fall_countdown = Duration::from_secs(0);
+										*store = false;
+										*fall_countdown = Duration::from_secs(0);
 										reset_mino(falling_mino);
 										if let Some(stored_mino) = stored_mino {
 											swap(stored_mino, falling_mino);
@@ -1150,37 +1145,37 @@ fn main() {
 									
 									let mut mino_translated = false;
 									
-									mino_translated |= match player.rot_direction {
+									mino_translated |= match rot_direction {
 										RotDirection::Left => try_rotl_mino(falling_mino, &well),
 										RotDirection::Right => try_rotr_mino(falling_mino, &well),
 										RotDirection::None => false,
 									};
-									player.rot_direction = RotDirection::None;
+									*rot_direction = RotDirection::None;
 									
-									if MoveState::Instant == player.move_state {
-										mino_translated |= match player.move_direction{
+									if MoveState::Instant == *move_state {
+										mino_translated |= match move_direction{
 											MoveDirection::Left => try_left_mino(falling_mino, &well),
 											MoveDirection::Right => try_right_mino(falling_mino, &well),
 											_ => false, // oh no
 										};
-										player.move_repeat_countdown = Duration::from_secs(0);
-										player.move_state = MoveState::Prepeat;
+										*move_repeat_countdown = Duration::from_secs(0);
+										*move_state = MoveState::Prepeat;
 									}
-									if MoveState::Prepeat == player.move_state {
-										if player.move_repeat_countdown >= move_prepeat_duration {
-											player.move_repeat_countdown -= move_prepeat_duration;
-											mino_translated |= match player.move_direction{
+									if MoveState::Prepeat == *move_state {
+										if *move_repeat_countdown >= move_prepeat_duration {
+											*move_repeat_countdown -= move_prepeat_duration;
+											mino_translated |= match move_direction{
 												MoveDirection::Left => try_left_mino(falling_mino, &well),
 												MoveDirection::Right => try_right_mino(falling_mino, &well),
 												_ => false, // oh no
 											};
-											player.move_state = MoveState::Repeat;
+											*move_state = MoveState::Repeat;
 										}
 									}
-									if MoveState::Repeat == player.move_state {
-										while player.move_repeat_countdown >= move_repeat_duration {
-											player.move_repeat_countdown -= move_repeat_duration;
-											mino_translated |= match player.move_direction{
+									if MoveState::Repeat == *move_state {
+										while *move_repeat_countdown >= move_repeat_duration {
+											*move_repeat_countdown -= move_repeat_duration;
+											mino_translated |= match move_direction{
 												MoveDirection::Left => try_left_mino(falling_mino, &well),
 												MoveDirection::Right => try_right_mino(falling_mino, &well),
 												_ => false, // oh no
@@ -1190,9 +1185,9 @@ fn main() {
 								
 									let (add_mino, mino_translated_while_falling) = mino_falling_system(
 										falling_mino, &well,
-										&mut player.fall_countdown,
-										player.fall_duration, softdrop_duration,
-										&mut player.fall_state);
+										fall_countdown,
+										*fall_duration, softdrop_duration,
+										fall_state);
 									
 									mino_translated |= mino_translated_while_falling;
 									
@@ -1217,7 +1212,7 @@ fn main() {
 										}else{
 											*can_store_mino = true;
 											add_mino_to_well(&falling_mino, well);
-											player.fall_countdown = Duration::from_secs(0);
+											*fall_countdown = Duration::from_secs(0);
 											
 											let mut clearable_lines = 0;
 											mark_clearable_lines(&well, animate_line, &mut clearable_lines);
@@ -1241,7 +1236,7 @@ fn main() {
 													if level_changed {
 														*level_text =
 															create_level_text(*level, &font, &texture_creator);
-														player.fall_duration = get_fall_duration(*level);
+														*fall_duration = get_fall_duration(*level);
 													}
 												}
 											}
@@ -1258,12 +1253,12 @@ fn main() {
 										}
 									}
 									
-									player.fall_countdown += dpf;
-									if MoveState::Still != player.move_state {
-										player.move_repeat_countdown += dpf;
+									*fall_countdown += dpf;
+									if MoveState::Still != *move_state {
+										*move_repeat_countdown += dpf;
 									}
 								}
-								PlayerType::Network(player) => {}
+								Player::Network => {}
 							}
 						}
 						
