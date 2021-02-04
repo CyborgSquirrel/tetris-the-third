@@ -9,7 +9,7 @@ pub struct LenIO<T> {
 	pos: usize,
 }
 
-impl<T: Read> LenIO<T> {
+impl<T> LenIO<T> {
 	pub fn new(inner: T) -> Self {
 		Self {
 			inner,
@@ -18,6 +18,9 @@ impl<T: Read> LenIO<T> {
 			pos: 0,
 		}
 	}
+}
+
+impl<T: Read> LenIO<T> {
 	pub fn read(&mut self) -> Result<&[u8]> {
 		if self.len == 0 {
 			let result = self.inner.read(&mut self.buf[0..1]);
