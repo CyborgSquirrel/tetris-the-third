@@ -277,8 +277,7 @@ enum State {
 	Pause,
 	Over,
 	Start,
-	LobbyHost,
-	LobbyClient,
+	Lobby,
 }
 
 enum UnitState {
@@ -646,15 +645,14 @@ enum NetworkEvent {
 		unit_id: usize,
 		event: UnitEvent,
 	},
-	InitPlayers {
-		count: usize,
-	},
 	InitBegin,
 	InitPlayer {
 		name: String,
 	},
 	InitEnd,
-	AddPlayer,
+	AddPlayer {
+		name: String,
+	},
 	StartGame,
 }
 
@@ -761,6 +759,11 @@ impl NetworkState {
 	}
 }
 
+#[derive(Debug, Default)]
+struct NetworkInit {
+	player_names: Vec<String>,
+}
+
 fn main() {
 	let stdin = stdin();
 	
@@ -826,9 +829,9 @@ fn main() {
 		.with_wrap(window_rect.width() as u32)
 		.build(&font, &texture_creator);
 	
-	let local_player_text = TextBuilder::new("Local player".to_string(), Color::WHITE)
+	let local_player_text = TextBuilder::new(" (Local)".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
-	let network_player_text = TextBuilder::new("Network player".to_string(), Color::WHITE)
+	let network_player_text = TextBuilder::new(" (Network)".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
 	
 	let get_player_text = |player: &Player| -> &sdl2::render::Texture{
@@ -900,6 +903,9 @@ fn main() {
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
 	let mut player_names = Vec::<String>::new();
+	let mut player_names_text = Vec::<sdl2::render::Texture>::new();
+	
+	let mut network_init: Option<NetworkInit> = None;
 	
 	let mut stopwatch = Duration::from_secs(0);
 	'running: loop {
@@ -1007,7 +1013,7 @@ fn main() {
 								listener.set_nonblocking(true)
 									.expect("Couldn't set listener to be non-blocking");
 								
-								state = State::LobbyHost;
+								state = State::Lobby;
 								
 								NetworkState::Host {
 									listener,
@@ -1033,7 +1039,6 @@ fn main() {
 								println!("Player name:");
 								stdin.read_line(&mut name).unwrap();
 								name = name.trim_end().into();
-								player_names.push(name);
 								
 								let stream = TcpStream::connect(addr)
 									.expect("Couldn't connect stream");
@@ -1041,9 +1046,13 @@ fn main() {
 									.expect("Couldn't set stream to be non-blocking");
 								let mut stream = LenIO::new(stream);
 								
-								state = State::LobbyClient;
+								state = State::Lobby;
 								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None)));
-								stream.write(&serialize(&NetworkEvent::AddPlayer).unwrap()).unwrap();
+								stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
+								player_names_text.push(
+									TextBuilder::new(name.clone(), Color::WHITE)
+									.build(&font, &texture_creator));
+								player_names.push(name);
 								
 								NetworkState::Client {
 									stream,
@@ -1053,24 +1062,29 @@ fn main() {
 						}
 					}
 				}
-				State::LobbyHost => {
-					if is_key_down(&event, Some(Keycode::Return)) {
-						network_state.broadcast_event(&NetworkEvent::StartGame);
-						state = State::Play;
-					}
-					if is_key_down(&event, Some(Keycode::Q)) {
-						let mut name = String::new();
-						println!("Player name:");
-						stdin.read_line(&mut name).unwrap();
-						name = name.trim_end().into();
-						player_names.push(name);
-						
-						units.push(Unit::new(Mode::default_marathon(), Player::local(configs.next().unwrap(),None)));
-						if let NetworkState::Host{streams,..} = &mut network_state {
-							let event = serialize(&NetworkEvent::AddPlayer).unwrap();
-							for stream in streams {
-								stream.write(&event).unwrap();
+				State::Lobby => {
+					if let NetworkState::Host {..} = network_state {
+						if is_key_down(&event, Some(Keycode::Return)) {
+							network_state.broadcast_event(&NetworkEvent::StartGame);
+							state = State::Play;
+						}
+						if is_key_down(&event, Some(Keycode::Q)) {
+							let mut name = String::new();
+							println!("Player name:");
+							stdin.read_line(&mut name).unwrap();
+							name = name.trim_end().into();
+							player_names_text.push(
+								TextBuilder::new(name.clone(), Color::WHITE)
+								.build(&font, &texture_creator));
+							
+							units.push(Unit::new(Mode::default_marathon(), Player::local(configs.next().unwrap(),None)));
+							if let NetworkState::Host{streams,..} = &mut network_state {
+								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
+								for stream in streams {
+									stream.write(&event).unwrap();
+								}
 							}
+							player_names.push(name);
 						}
 					}
 				}
@@ -1090,9 +1104,14 @@ fn main() {
 						}
 						match event {
 							NetworkEvent::UnitEvent {unit_id, event} => {apply_unit_event(&mut units[unit_id], event)}
-							NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),Player::network()))}
+							NetworkEvent::AddPlayer {name} => {
+								player_names_text.push(
+									TextBuilder::new(name.clone(), Color::WHITE)
+									.build(&font, &texture_creator));
+								player_names.push(name);
+								units.push(Unit::new(Mode::default_marathon(),Player::network()))
+							}
 							NetworkEvent::StartGame => {} //only host gets to start game
-							NetworkEvent::InitPlayers {..} => {} //host already has players initted
 							NetworkEvent::InitBegin | NetworkEvent::InitEnd | NetworkEvent::InitPlayer {..}
 							=> {} //host already has players initted
 						}
@@ -1103,24 +1122,28 @@ fn main() {
 				while let Ok(Ok(event)) = stream.read().map(deserialize::<NetworkEvent>) {
 					match event {
 						NetworkEvent::UnitEvent {unit_id, event} => {apply_unit_event(&mut units[unit_id], event)}
-						NetworkEvent::AddPlayer => {units.push(Unit::new(Mode::default_marathon(),Player::network()))}
-						NetworkEvent::StartGame => {state = State::Play}
-						NetworkEvent::InitPlayers {count} => {
-							let mut inited_units = Vec::new();
-							for _ in 0..count {
-								inited_units.push(Unit::new(Mode::default_marathon(), Player::network()));
+						NetworkEvent::AddPlayer {name} => {
+								player_names_text.push(
+									TextBuilder::new(name.clone(), Color::WHITE)
+									.build(&font, &texture_creator));
+								player_names.push(name);
+								units.push(Unit::new(Mode::default_marathon(),Player::network()))
 							}
-							inited_units.append(&mut units);
-							units = inited_units;
-						}
+						NetworkEvent::StartGame => {state = State::Play}
 						NetworkEvent::InitBegin => {
-							
+							network_init = Some(NetworkInit::default());
 						}
 						NetworkEvent::InitPlayer {name} => {
-							
+							if let Some(ref mut network_init) = network_init {
+								network_init.player_names.push(name);
+							}else { panic!(); }
 						}
 						NetworkEvent::InitEnd => {
-							
+							if let Some(mut network_init) = network_init {
+								network_init.player_names.append(&mut player_names);
+								player_names = network_init.player_names;
+							}else { panic!(); }
+							network_init = None;
 						}
 					}
 				}
@@ -1326,22 +1349,22 @@ fn main() {
 				stopwatch += dpf;
 			}
 			
-			State::LobbyHost => {
+			State::Lobby => {
 				if let NetworkState::Host {listener, streams} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
 						let mut stream = LenIO::new(incoming.0);
-						stream.write(&serialize(&NetworkEvent::InitPlayers{count:units.len()}).unwrap()).unwrap();
+						
+						stream.write(&serialize(&NetworkEvent::InitBegin).unwrap()).unwrap();
+						for name in &mut player_names {
+							stream.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone()}).unwrap()).unwrap();
+						}
+						stream.write(&serialize(&NetworkEvent::InitEnd).unwrap()).unwrap();
+						
 						streams.push(stream);
 						println!("{:?}", incoming.1);
 						println!("Connection established");
 					}
-				}else {
-					panic!();
 				}
-			}
-			
-			State::LobbyClient => {
-				
 			}
 			
 			_ => ()
@@ -1400,32 +1423,36 @@ fn main() {
 				Rect::new(0, 0, width, height),
 				Rect::new(layout.centered_x(width), layout.y, width, height));
 			
-		}else if let State::LobbyHost {..} = state {
+		}else if let State::Lobby {..} = state {
 			
-			let TextureQuery {width, height, ..} = host_start_text.query();
-			let _ = canvas.copy(
-				&host_start_text,
-				Rect::new(0, 0, width, height),
-				Rect::new(0, 0, width, height));
+			if let NetworkState::Host {..} = network_state {
+				let TextureQuery {width, height, ..} = host_start_text.query();
+				let _ = canvas.copy(
+					&host_start_text,
+					Rect::new(0, 0, width, height),
+					Rect::new(0, 0, width, height));
+			}
 			
-			for (i, Unit{player,..}) in (0..).zip(&units) {
+			for (i, Unit{player,..}, name_text) in izip!(0..,&units,&player_names_text) {
 				let player_text = get_player_text(player);
+				
+				let mut x = 0;
+				
+				let TextureQuery {width, height, ..} = name_text.query();
+				let _ = canvas.copy(
+					&name_text,
+					Rect::new(0, 0, width, height),
+					Rect::new(x, 30+i*(32+8), width, height));
+				
+				x += width as i32;
+				
 				let TextureQuery {width, height, ..} = player_text.query();
 				let _ = canvas.copy(
 					&player_text,
 					Rect::new(0, 0, width, height),
-					Rect::new(0, 30+i*(32+8), width, height));
+					Rect::new(x, 30+i*(32+8), width, height));
 			}
 			
-		}else if let State::LobbyClient {..} = state {
-			for (i, Unit{player,..}) in (0..).zip(&units) {
-				let player_text = get_player_text(player);
-				let TextureQuery {width, height, ..} = player_text.query();
-				let _ = canvas.copy(
-					&player_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(0, 30+i*(32+8), width, height));
-			}
 		}else{
 			
 			let mut layout = Layout {
