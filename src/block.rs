@@ -25,7 +25,7 @@ impl Data {
 }
 
 use crate::Mino;
-use crate::Well;
+use crate::game::Well;
 use sdl2::rect::Rect;
 use sdl2::render::{Texture, WindowCanvas};
 
