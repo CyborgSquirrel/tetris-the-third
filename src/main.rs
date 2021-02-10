@@ -67,6 +67,77 @@ enum Mode {
 	Sprint{lines_cleared_target: u32},
 }
 
+struct UnitBase {
+	well: game::Well,
+	animate_line: Vec<bool>,
+	state: UnitState,
+	
+	lines_cleared: u32,
+	mode: Mode,
+	
+	falling_mino: Option<Mino>,
+	can_store_mino: bool,
+	stored_mino: Option<Mino>,
+}
+
+enum Unity {
+	Local {
+		base: UnitBase,
+		queue: VecDeque<Mino>,
+		rng: game::MinoRng,
+		player: player::Player,
+	},
+	Network {
+		base: UnitBase,
+		rng_queue: VecDeque<Mino>,
+	}
+}
+
+impl Unity {
+	fn local(mode: Mode, player: player::Player) -> Unity {
+		let mut rng = game::MinoRng::fair(1);
+		let well = game::Well::filled_with(None, 10, 20);
+		Unity::Local {
+			base: UnitBase {
+				animate_line: vec![false; 20],
+				state: UnitState::Play,
+				lines_cleared: 0,
+				mode,
+				can_store_mino: true,
+				stored_mino: None,
+				falling_mino: Some(rng.generate_centered(&well)),
+				well,
+			},
+			
+			player,
+			queue: {
+				let mut queue = VecDeque::with_capacity(5);
+				for _ in 0..5 {
+					queue.push_back(rng.generate());
+				}
+				queue
+			},
+			rng,
+		}
+	}
+	fn network(mode: Mode) -> Unity {
+		let well = game::Well::filled_with(None, 10, 20);
+		Unity::Network {
+			base: UnitBase {
+				animate_line: vec![false; 20],
+				state: UnitState::Play,
+				lines_cleared: 0,
+				mode,
+				can_store_mino: true,
+				stored_mino: None,
+				falling_mino: None,
+				well,
+			},
+			rng_queue: VecDeque::new(),
+		}
+	}
+}
+
 struct Unit {
 	well: game::Well,
 	animate_line: Vec<bool>,
@@ -88,26 +159,30 @@ impl Unit {
 	fn new(mode: Mode, player: player::Player, seed: u64) -> Self {
 		let mut rng = game::MinoRng::fair(seed);
 		let well = game::Well::filled_with(None, 10, 20);
-	    Unit {
-	    	animate_line: vec![false; 20],
-	    	state: UnitState::Play,
-	    	player,
-	    	queue: {
-	    		let mut queue = VecDeque::with_capacity(5);
-	    		for _ in 0..5 {
-	    			queue.push_back(rng.generate());
-	    		}
-	    		queue
-	    	},
-	    	falling_mino: None,
-	    	// fall_duration: get_fall_duration(1),
-	    	can_store_mino: true,
-	    	stored_mino: None,
-	    	well,
-	    	rng,
-	    	lines_cleared: 0,
-	    	mode,
-	    }
+		Unit {
+			animate_line: vec![false; 20],
+			state: UnitState::Play,
+			
+			falling_mino: match player {
+				player::Player::Local {..} => Some(rng.generate_centered(&well)),
+				player::Player::Network => None,
+			},
+			player,
+			queue: {
+				let mut queue = VecDeque::with_capacity(5);
+				for _ in 0..5 {
+					queue.push_back(rng.generate());
+				}
+				queue
+			},
+			// fall_duration: get_fall_duration(1),
+			can_store_mino: true,
+			stored_mino: None,
+			well,
+			rng,
+			lines_cleared: 0,
+			mode,
+		}
 	}
 }
 
@@ -563,7 +638,10 @@ fn main() {
 						network_state = match selected_network_state {
 							0 => {
 								state = State::Play;
-								units.push(Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None), seeder.next_u64()));
+								let mut unit = Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None), seeder.next_u64());
+								unit.falling_mino = Some(unit.rng.generate_centered(&unit.well));
+								units.push(unit);
+								
 								NetworkState::Offline
 							}
 							1 => {

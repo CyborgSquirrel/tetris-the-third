@@ -1,6 +1,6 @@
 use crate::block;
 use crate::Mino;
-use std::{mem::swap, time::Duration};
+use std::{collections::VecDeque, mem::swap, time::Duration};
 use crate::player;
 use crate::vec2i;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
@@ -17,7 +17,7 @@ impl MinoRng {
 	pub fn generate(&mut self) -> Mino {
 		const MINO_CTORS: [fn() -> Mino; 7] =
 			[Mino::l,Mino::j,Mino::o,Mino::z,Mino::s,Mino::t,Mino::i];
-		match self {
+		let mino = match self {
 			MinoRng::_Hard {ref mut rng} => {
 				MINO_CTORS[rng.gen_range(0..7)]()
 			}
@@ -33,7 +33,8 @@ impl MinoRng {
 				}
 				stack.pop().unwrap()
 			}
-		}
+		};
+		mino
 	}
 	pub fn generate_centered(&mut self, well: &Well) -> Mino {
 		let mut mino = self.generate();
@@ -41,9 +42,11 @@ impl MinoRng {
 		mino
 	}
 	pub fn fair(seed: u64) -> MinoRng {
-		MinoRng::Fair {rng: SmallRng::seed_from_u64(seed), stack: Vec::with_capacity(7)}
+		MinoRng::Fair {rng: SmallRng::from_entropy(), stack: Vec::with_capacity(7)}
 	}
 }
+
+
 
 pub fn check_block_in_bounds(block: &vec2i, dim: &vec2i) -> bool {
 	block.x >= 0 && block.x < dim.x && block.y < dim.y
