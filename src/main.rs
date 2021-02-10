@@ -75,7 +75,7 @@ struct Unit {
 	rng: game::MinoRng,
 	player: player::Player,
 	
-	falling_mino: Mino,
+	falling_mino: Option<Mino>,
 	
 	lines_cleared: u32,
 	mode: Mode,
@@ -99,7 +99,7 @@ impl Unit {
 	    		}
 	    		queue
 	    	},
-	    	falling_mino: rng.generate_centered(&well),
+	    	falling_mino: None,
 	    	// fall_duration: get_fall_duration(1),
 	    	can_store_mino: true,
 	    	stored_mino: None,
@@ -245,46 +245,42 @@ fn apply_unit_event(unit: &mut Unit, event: UnitEvent) {
 	let Unit{falling_mino,well,can_store_mino,rng,lines_cleared,animate_line,stored_mino,..} = unit;
 	match event {
 		UnitEvent::TranslateMino {origin, blocks} => {
-			falling_mino.origin = origin;
-			falling_mino.blocks = blocks;
+			if let Some(falling_mino) = falling_mino {
+				falling_mino.origin = origin;
+				falling_mino.blocks = blocks;
+			} else {panic!()}
 		}
 		UnitEvent::AddMinoToWell => {
-			let (_can_add, clearable_lines) = game::mino_adding_system(
-				falling_mino, well,
-				None,
-				animate_line,
-				can_store_mino,
-				&mut ||{
-					rng.generate()
-			});
-			*lines_cleared += clearable_lines;
+			if let Some(falling_mino) = falling_mino {
+				let (_can_add, clearable_lines) = game::mino_adding_system(
+					falling_mino, well,
+					None,
+					animate_line,
+					can_store_mino,
+					&mut ||rng.generate()
+					);
+				*lines_cleared += clearable_lines;
+			} else {panic!()}
 		}
 		UnitEvent::GenerateMino {mino} => {
-			*falling_mino = mino;
-			game::center_mino(falling_mino, &well);
+			if let Some(falling_mino) = falling_mino {
+				*falling_mino = mino;
+				game::center_mino(falling_mino, &well);
+			}
 		}
 		UnitEvent::StoreMino {generated_mino} => {
-			game::mino_storage_system(
-				falling_mino,
-				stored_mino,
-				well,
-				None,
-				&mut true,
-				can_store_mino,
-				||generated_mino.unwrap(),
-				None,
-				0);
-			// if *can_store_mino {
-			// 	*can_store_mino = false;
-			// 	reset_mino(falling_mino);
-			// 	if let Some(stored_mino) = stored_mino {
-			// 		swap(stored_mino, falling_mino);
-			// 	}else if let Some(mut generated_mino) = generated_mino{
-			// 		swap(&mut generated_mino, falling_mino);
-			// 		*stored_mino = Some(generated_mino);
-			// 	}
-			// 	center_mino(falling_mino, &well);
-			// }
+			if let Some(falling_mino) = falling_mino {
+				game::mino_storage_system(
+					falling_mino,
+					stored_mino,
+					well,
+					None,
+					&mut true,
+					can_store_mino,
+					||generated_mino.unwrap(),
+					None,
+					0);
+			}
 		}
 	}
 }
@@ -754,87 +750,90 @@ fn main() {
 							match player {
 								player::Player::Local{store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
 									fall_duration,fall_state,..} => {
-							
-									game::mino_storage_system(
-										falling_mino,
-										stored_mino,
-										well,
-										Some(fall_countdown),
-										store,
-										can_store_mino,
-										||{
-											let mino = queue.pop_front().unwrap();
-											queue.push_back(rng.generate());
-											mino
-										},
-										Some(&mut network_state),
-										unit_id,
-									);
 									
-									let mut mino_translated = false;
-									
-									mino_translated |= 
-										game::mino_rotation_system(
+									if let Some(falling_mino) = falling_mino {
+					
+										game::mino_storage_system(
 											falling_mino,
-											&well,
-											rot_direction);
-									
-									mino_translated |=
-										game::mino_movement_system(
-											falling_mino,
-											&well,
-											move_state, move_direction,
-											move_repeat_countdown,
-											move_prepeat_duration, move_repeat_duration,
-											dpf);
-								
-									let (add_mino, mino_translated_while_falling) =
-										game::mino_falling_system(
-											falling_mino, &well,
-											fall_countdown,
-											*fall_duration, softdrop_duration,
-											fall_state);
-									
-									mino_translated |= mino_translated_while_falling;
-									
-									if mino_translated {
-										network_state.broadcast_event(
-											&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
-												origin: falling_mino.origin,
-												blocks: falling_mino.blocks,
-											}}
-										);
-									}
-									
-									if add_mino {
-										let (can_add, clearable_lines) = game::mino_adding_system(
-											falling_mino, well,
+											stored_mino,
+											well,
 											Some(fall_countdown),
-											animate_line,
+											store,
 											can_store_mino,
-											&mut ||{
+											||{
 												let mino = queue.pop_front().unwrap();
-												network_state.broadcast_event(
-													&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::GenerateMino{
-														mino: mino.clone(),
-													}}
-												);
 												queue.push_back(rng.generate());
 												mino
-											});
+											},
+											Some(&mut network_state),
+											unit_id,
+										);
 										
-										if !can_add {
-											*state = UnitState::Over;
-										}else {
-											*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
-											
-											*lines_cleared += clearable_lines;
-											*lines_cleared_text =
-												create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
-										}
-									}
+										let mut mino_translated = false;
+										
+										mino_translated |= 
+											game::mino_rotation_system(
+												falling_mino,
+												&well,
+												rot_direction);
+										
+										mino_translated |=
+											game::mino_movement_system(
+												falling_mino,
+												&well,
+												move_state, move_direction,
+												move_repeat_countdown,
+												move_prepeat_duration, move_repeat_duration,
+												dpf);
 									
-									*fall_countdown += dpf;
+										let (add_mino, mino_translated_while_falling) =
+											game::mino_falling_system(
+												falling_mino, &well,
+												fall_countdown,
+												*fall_duration, softdrop_duration,
+												fall_state);
+										
+										mino_translated |= mino_translated_while_falling;
+										
+										if mino_translated {
+											network_state.broadcast_event(
+												&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
+													origin: falling_mino.origin,
+													blocks: falling_mino.blocks,
+												}}
+											);
+										}
+										
+										if add_mino {
+											let (can_add, clearable_lines) = game::mino_adding_system(
+												falling_mino, well,
+												Some(fall_countdown),
+												animate_line,
+												can_store_mino,
+												&mut ||{
+													let mino = queue.pop_front().unwrap();
+													network_state.broadcast_event(
+														&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::GenerateMino{
+															mino: mino.clone(),
+														}}
+													);
+													queue.push_back(rng.generate());
+													mino
+												});
+											
+											if !can_add {
+												*state = UnitState::Over;
+											}else {
+												*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+												
+												*lines_cleared += clearable_lines;
+												*lines_cleared_text =
+													create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+											}
+										}
+										
+										*fall_countdown += dpf;
+									}
 								}
 								player::Player::Network => {}
 							}
@@ -1023,9 +1022,11 @@ fn main() {
 				layout.row_margin(15);
 				
 				block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
-				let shadow_mino = game::create_shadow_mino(falling_mino, &well);
-				block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
-				block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
+				if let Some(falling_mino) = falling_mino {
+					let shadow_mino = game::create_shadow_mino(falling_mino, &well);
+					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
+					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
+				}
 				
 				layout.col(10*30);
 				layout.col_margin(15);
