@@ -1,6 +1,6 @@
 use crate::block;
 use crate::Mino;
-use std::{collections::VecDeque, mem::swap, time::Duration};
+use std::{mem::swap, time::Duration};
 use crate::player;
 use crate::vec2i;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
@@ -41,7 +41,7 @@ impl MinoRng {
 		center_mino(&mut mino, well);
 		mino
 	}
-	pub fn fair(seed: u64) -> MinoRng {
+	pub fn fair() -> MinoRng {
 		MinoRng::Fair {rng: SmallRng::from_entropy(), stack: Vec::with_capacity(7)}
 	}
 }

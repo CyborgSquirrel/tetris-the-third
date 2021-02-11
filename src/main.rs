@@ -67,7 +67,7 @@ enum Mode {
 	Sprint{lines_cleared_target: u32},
 }
 
-struct UnitBase {
+struct Unit {
 	well: game::Well,
 	animate_line: Vec<bool>,
 	state: UnitState,
@@ -78,37 +78,53 @@ struct UnitBase {
 	falling_mino: Option<Mino>,
 	can_store_mino: bool,
 	stored_mino: Option<Mino>,
+	
+	kind: UnitKind
 }
 
-enum Unity {
+enum UnitKind {
 	Local {
-		base: UnitBase,
 		queue: VecDeque<Mino>,
 		rng: game::MinoRng,
 		player: player::Player,
 	},
 	Network {
-		base: UnitBase,
 		rng_queue: VecDeque<Mino>,
 	}
 }
 
-impl Unity {
-	fn local(mode: Mode, player: player::Player) -> Unity {
-		let mut rng = game::MinoRng::fair(1);
+impl UnitKind {
+	fn next_mino(&mut self, network_state: Option<&mut NetworkState>, unit_id: usize) -> Mino {
+		match self {
+			UnitKind::Local {queue, rng, ..} => {
+				let mino = queue.pop_front().unwrap();
+				queue.push_back(rng.generate());
+				let network_state = network_state.unwrap();
+				network_state.broadcast_event(
+					&NetworkEvent::UnitEvent {
+						unit_id,
+						event: UnitEvent::GenerateMino {mino: mino.clone()}
+					}
+				);
+				mino
+			}
+			UnitKind::Network {rng_queue} => {
+				rng_queue.pop_front().unwrap()
+			}
+		}
+	}
+	fn next_mino_centered(&mut self, network_state: Option<&mut NetworkState>, unit_id: usize, well: &game::Well) -> Mino {
+		let mut mino = self.next_mino(network_state, unit_id);
+		game::center_mino(&mut mino, well);
+		mino
+	}
+}
+
+impl Unit {
+	fn local(mode: Mode, player: player::Player) -> Unit {
+		let mut rng = game::MinoRng::fair();
 		let well = game::Well::filled_with(None, 10, 20);
-		Unity::Local {
-			base: UnitBase {
-				animate_line: vec![false; 20],
-				state: UnitState::Play,
-				lines_cleared: 0,
-				mode,
-				can_store_mino: true,
-				stored_mino: None,
-				falling_mino: Some(rng.generate_centered(&well)),
-				well,
-			},
-			
+		let mut kind = UnitKind::Local {
 			player,
 			queue: {
 				let mut queue = VecDeque::with_capacity(5);
@@ -118,70 +134,33 @@ impl Unity {
 				queue
 			},
 			rng,
+		};
+		Unit {
+			animate_line: vec![false; 20],
+			state: UnitState::Play,
+			lines_cleared: 0,
+			mode,
+			can_store_mino: true,
+			stored_mino: None,
+			falling_mino: None,
+			well,
+			kind,
 		}
 	}
-	fn network(mode: Mode) -> Unity {
-		let well = game::Well::filled_with(None, 10, 20);
-		Unity::Network {
-			base: UnitBase {
-				animate_line: vec![false; 20],
-				state: UnitState::Play,
-				lines_cleared: 0,
-				mode,
-				can_store_mino: true,
-				stored_mino: None,
-				falling_mino: None,
-				well,
-			},
-			rng_queue: VecDeque::new(),
-		}
-	}
-}
-
-struct Unit {
-	well: game::Well,
-	animate_line: Vec<bool>,
-	state: UnitState,
-	queue: VecDeque<Mino>,
-	rng: game::MinoRng,
-	player: player::Player,
-	
-	falling_mino: Option<Mino>,
-	
-	lines_cleared: u32,
-	mode: Mode,
-	
-	can_store_mino: bool,
-	stored_mino: Option<Mino>,
-}
-
-impl Unit {
-	fn new(mode: Mode, player: player::Player, seed: u64) -> Self {
-		let mut rng = game::MinoRng::fair(seed);
+	fn network(mode: Mode) -> Unit {
 		let well = game::Well::filled_with(None, 10, 20);
 		Unit {
 			animate_line: vec![false; 20],
 			state: UnitState::Play,
-			
-			falling_mino: match player {
-				player::Player::Local {..} => Some(rng.generate_centered(&well)),
-				player::Player::Network => None,
-			},
-			player,
-			queue: {
-				let mut queue = VecDeque::with_capacity(5);
-				for _ in 0..5 {
-					queue.push_back(rng.generate());
-				}
-				queue
-			},
-			// fall_duration: get_fall_duration(1),
-			can_store_mino: true,
-			stored_mino: None,
-			well,
-			rng,
 			lines_cleared: 0,
 			mode,
+			can_store_mino: true,
+			stored_mino: None,
+			falling_mino: None,
+			well,
+			kind: UnitKind::Network {
+				rng_queue: VecDeque::new(),
+			}
 		}
 	}
 }
@@ -189,7 +168,7 @@ impl Unit {
 impl Mode {
 	fn default_marathon() -> Mode {
 		Mode::Marathon{
-			level_target: 11, level: 1,
+			level_target: 10, level: 1,
 			lines_before_next_level: get_lines_before_next_level(1),
 		}
 	}
@@ -314,47 +293,49 @@ enum UnitEvent {
 	StoreMino {
 		generated_mino: Option<Mino>,
 	},
+	Init,
 }
 
-fn apply_unit_event(unit: &mut Unit, event: UnitEvent) {
-	let Unit{falling_mino,well,can_store_mino,rng,lines_cleared,animate_line,stored_mino,..} = unit;
-	match event {
-		UnitEvent::TranslateMino {origin, blocks} => {
-			if let Some(falling_mino) = falling_mino {
-				falling_mino.origin = origin;
-				falling_mino.blocks = blocks;
-			} else {panic!()}
-		}
-		UnitEvent::AddMinoToWell => {
-			if let Some(falling_mino) = falling_mino {
-				let (_can_add, clearable_lines) = game::mino_adding_system(
-					falling_mino, well,
-					None,
-					animate_line,
-					can_store_mino,
-					&mut ||rng.generate()
-					);
-				*lines_cleared += clearable_lines;
-			} else {panic!()}
-		}
-		UnitEvent::GenerateMino {mino} => {
-			if let Some(falling_mino) = falling_mino {
-				*falling_mino = mino;
-				game::center_mino(falling_mino, &well);
+fn apply_unit_event(base: &mut Unit, event: UnitEvent) {
+	if let Unit{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,kind:UnitKind::Network{rng_queue},..} = base {
+		match event {
+			UnitEvent::TranslateMino {origin, blocks} => {
+				if let Some(falling_mino) = falling_mino {
+					falling_mino.origin = origin;
+					falling_mino.blocks = blocks;
+				} else {panic!()}
 			}
-		}
-		UnitEvent::StoreMino {generated_mino} => {
-			if let Some(falling_mino) = falling_mino {
-				game::mino_storage_system(
-					falling_mino,
-					stored_mino,
-					well,
-					None,
-					&mut true,
-					can_store_mino,
-					||generated_mino.unwrap(),
-					None,
-					0);
+			UnitEvent::AddMinoToWell => {
+				if let Some(falling_mino) = falling_mino {
+					let (_can_add, clearable_lines) = game::mino_adding_system(
+						falling_mino, well,
+						None,
+						animate_line,
+						can_store_mino,
+						&mut ||rng_queue.pop_back().unwrap()
+						);
+					*lines_cleared += clearable_lines;
+				} else {panic!()}
+			}
+			UnitEvent::GenerateMino {mino} => {
+				rng_queue.push_back(mino);
+			}
+			UnitEvent::Init => {
+				*falling_mino = Some(rng_queue.pop_back().unwrap());
+			}
+			UnitEvent::StoreMino {generated_mino} => {
+				if let Some(falling_mino) = falling_mino {
+					game::mino_storage_system(
+						falling_mino,
+						stored_mino,
+						well,
+						None,
+						&mut true,
+						can_store_mino,
+						||generated_mino.unwrap(),
+						None,
+						0);
+				}
 			}
 		}
 	}
@@ -378,6 +359,8 @@ pub enum NetworkState {
 	Host {
 		listener: TcpListener,
 		streams: Vec<LenIO<TcpStream>>,
+		readers: Vec<LenIO<TcpStream>>,
+		writers: Vec<LenIO<TcpStream>>,
 	},
 	Client {
 		stream: LenIO<TcpStream>,
@@ -478,10 +461,10 @@ fn main() {
 	let network_player_text = TextBuilder::new(" (Network)".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
 	
-	let get_player_text = |player: &player::Player| -> &sdl2::render::Texture{
-		match player {
-			player::Player::Local{..} => &local_player_text,
-			player::Player::Network => &network_player_text,
+	let get_player_text = |unit: &Unit| -> &sdl2::render::Texture{
+		match unit.kind {
+			UnitKind::Local {..} => &local_player_text,
+			UnitKind::Network {..} => &network_player_text,
 		}
 	};
 	
@@ -525,8 +508,6 @@ fn main() {
 	let move_prepeat_duration = Duration::from_secs_f64(0.15);
 	let move_repeat_duration = Duration::from_secs_f64(0.05);
 	
-	// let mut players = Vec::<Player>::new();
-	
 	let mut units: Vec<Unit> = Vec::new();
 	
 	let block_canvas = block::Canvas::new(&texture);
@@ -569,8 +550,10 @@ fn main() {
 			match state {
 				State::Play | State::Pause => {
 					if let State::Play = state {
-						for Unit{player,..} in units.iter_mut() {
-							player.update_local(&mut config.players, &event)
+						for unit in units.iter_mut() {
+							if let UnitKind::Local {player,..} = &mut unit.kind {
+								player.update_local(&mut config.players, &event)
+							}
 						}
 					}
 					match event{
@@ -638,8 +621,12 @@ fn main() {
 						network_state = match selected_network_state {
 							0 => {
 								state = State::Play;
-								let mut unit = Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None), seeder.next_u64());
-								unit.falling_mino = Some(unit.rng.generate_centered(&unit.well));
+								let mut unit = Unit::local(
+									game_mode_ctors[chosen_game_mode](),
+									Player::local(configs.next().unwrap(),None));
+								unit.falling_mino.replace(
+									unit.kind.next_mino_centered(
+										Some(&mut network_state), 0, &unit.well));
 								units.push(unit);
 								
 								NetworkState::Offline
@@ -669,6 +656,8 @@ fn main() {
 								NetworkState::Host {
 									listener,
 									streams: Vec::new(),
+									readers: Vec::new(),
+									writers: Vec::new(),
 								}
 							}
 							2 => {
@@ -701,7 +690,8 @@ fn main() {
 								player_seeds.push(seed);
 								
 								state = State::Lobby;
-								// units.push(Unit::new(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None),seed));
+								units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::local(configs.next().unwrap(),None)));
+								
 								stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone(),seed}).unwrap()).unwrap();
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
@@ -733,7 +723,7 @@ fn main() {
 							
 							let seed = seeder.next_u64();
 							
-							// units.push(Unit::new(Mode::default_marathon(), Player::local(configs.next().unwrap(),None),seed));
+							units.push(Unit::local(Mode::default_marathon(), Player::local(configs.next().unwrap(),None)));
 							if let NetworkState::Host{streams,..} = &mut network_state {
 								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone(),seed}).unwrap();
 								for stream in streams {
@@ -760,18 +750,24 @@ fn main() {
 							streams[j].write(&serialize(&event).unwrap()).unwrap();
 						}
 						match event {
-							NetworkEvent::UnitEvent {unit_id, event} => {apply_unit_event(&mut units[unit_id], event)}
+							NetworkEvent::UnitEvent {unit_id, event} => {
+								apply_unit_event(&mut units[unit_id], event);
+							}
 							NetworkEvent::AddPlayer {name, seed} => {
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
 								player_names.push(name);
 								player_seeds.push(seed);
-								// units.push(Unit::new(Mode::default_marathon(),Player::network(),seed))
+								units.push(Unit::network(Mode::default_marathon()))
 							}
 							NetworkEvent::StartGame => {
-								for seed in &player_seeds {
-									
+								for unit in &mut units {
+									if let UnitKind::Local {..} = unit.kind {
+										// unit.falling_mino.replace(
+										// 	unit.kind.next_mino_centered(
+										// 		Some(&mut network_state), 0, &unit.well));
+									}
 								}
 							} //only host gets to start game
 							NetworkEvent::InitBegin | NetworkEvent::InitEnd | NetworkEvent::InitPlayer {..}
@@ -783,7 +779,9 @@ fn main() {
 			NetworkState::Client {ref mut stream} => {
 				while let Ok(Ok(event)) = stream.read().map(deserialize::<NetworkEvent>) {
 					match event {
-						NetworkEvent::UnitEvent {unit_id, event} => {apply_unit_event(&mut units[unit_id], event)}
+						NetworkEvent::UnitEvent {unit_id, event} => {
+							apply_unit_event(&mut units[unit_id], event);
+						}
 						NetworkEvent::AddPlayer {name, seed} => {
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
@@ -819,139 +817,139 @@ fn main() {
 		// @update
 		match state {
 			State::Play => {
-				for (unit_id,Unit{well,state,queue,rng,animate_line,player,lines_cleared,mode,
-					stored_mino, can_store_mino, falling_mino},lines_cleared_text,level_text) in
-					izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
-					match state {
-						UnitState::Play => {
-							
-							match player {
-								player::Player::Local{store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
-									fall_duration,fall_state,..} => {
-									
-									if let Some(falling_mino) = falling_mino {
-					
-										game::mino_storage_system(
-											falling_mino,
-											stored_mino,
-											well,
-											Some(fall_countdown),
-											store,
-											can_store_mino,
-											||{
-												let mino = queue.pop_front().unwrap();
-												queue.push_back(rng.generate());
-												mino
-											},
-											Some(&mut network_state),
-											unit_id,
-										);
+				for (unit_id,unit,lines_cleared_text,level_text)
+				in izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
+					if let Unit {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode, kind: UnitKind::Local {queue,rng,player}} = unit {
+						match state {
+							UnitState::Play => {
+								match player {
+									player::Player::Local{store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
+										fall_duration,fall_state,..} => {
 										
-										let mut mino_translated = false;
-										
-										mino_translated |= 
-											game::mino_rotation_system(
+										if let Some(falling_mino) = falling_mino {
+						
+											game::mino_storage_system(
 												falling_mino,
-												&well,
-												rot_direction);
-										
-										mino_translated |=
-											game::mino_movement_system(
-												falling_mino,
-												&well,
-												move_state, move_direction,
-												move_repeat_countdown,
-												move_prepeat_duration, move_repeat_duration,
-												dpf);
-									
-										let (add_mino, mino_translated_while_falling) =
-											game::mino_falling_system(
-												falling_mino, &well,
-												fall_countdown,
-												*fall_duration, softdrop_duration,
-												fall_state);
-										
-										mino_translated |= mino_translated_while_falling;
-										
-										if mino_translated {
-											network_state.broadcast_event(
-												&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
-													origin: falling_mino.origin,
-													blocks: falling_mino.blocks,
-												}}
-											);
-										}
-										
-										if add_mino {
-											let (can_add, clearable_lines) = game::mino_adding_system(
-												falling_mino, well,
+												stored_mino,
+												well,
 												Some(fall_countdown),
-												animate_line,
+												store,
 												can_store_mino,
-												&mut ||{
+												||{
 													let mino = queue.pop_front().unwrap();
-													network_state.broadcast_event(
-														&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::GenerateMino{
-															mino: mino.clone(),
-														}}
-													);
 													queue.push_back(rng.generate());
 													mino
-												});
+												},
+												Some(&mut network_state),
+												unit_id,
+											);
 											
-											if !can_add {
-												*state = UnitState::Over;
-											}else {
-												*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+											let mut mino_translated = false;
+											
+											mino_translated |= 
+												game::mino_rotation_system(
+													falling_mino,
+													&well,
+													rot_direction);
+											
+											mino_translated |=
+												game::mino_movement_system(
+													falling_mino,
+													&well,
+													move_state, move_direction,
+													move_repeat_countdown,
+													move_prepeat_duration, move_repeat_duration,
+													dpf);
+										
+											let (add_mino, mino_translated_while_falling) =
+												game::mino_falling_system(
+													falling_mino, &well,
+													fall_countdown,
+													*fall_duration, softdrop_duration,
+													fall_state);
+											
+											mino_translated |= mino_translated_while_falling;
+											
+											if mino_translated {
+												network_state.broadcast_event(
+													&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
+														origin: falling_mino.origin,
+														blocks: falling_mino.blocks,
+													}}
+												);
+											}
+											
+											if add_mino {
+												let (can_add, clearable_lines) = game::mino_adding_system(
+													falling_mino, well,
+													Some(fall_countdown),
+													animate_line,
+													can_store_mino,
+													&mut ||{
+														let mino = queue.pop_front().unwrap();
+														network_state.broadcast_event(
+															&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::GenerateMino{
+																mino: mino.clone(),
+															}}
+														);
+														queue.push_back(rng.generate());
+														mino
+													});
 												
-												*lines_cleared += clearable_lines;
-												*lines_cleared_text =
-													create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+												if !can_add {
+													*state = UnitState::Over;
+												}else {
+													*state = UnitState::LineClear{countdown: Duration::from_secs(0)};
+													
+													*lines_cleared += clearable_lines;
+													*lines_cleared_text =
+														create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
+												}
+											}
+											
+											*fall_countdown += dpf;
+										}
+									}
+									player::Player::Network => {}
+								}
+							}
+							
+							UnitState::LineClear{countdown} => {
+								*countdown += dpf;
+								if *countdown >= line_clear_duration {
+									*state = UnitState::Play;
+									game::line_clearing_system(well, animate_line);
+									
+									match mode {
+										Mode::Marathon{level,level_target,..} => {
+											if *level >= *level_target {
+												let _won_text =
+													TextBuilder::new(
+														format!("You won! Press r to restart.").to_string(),
+														Color::WHITE)
+													.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+													.build(&font, &texture_creator);
+												*state = UnitState::Win;
 											}
 										}
-										
-										*fall_countdown += dpf;
-									}
-								}
-								player::Player::Network => {}
-							}
-						}
-						
-						UnitState::LineClear{countdown} => {
-							*countdown += dpf;
-							if *countdown >= line_clear_duration {
-								*state = UnitState::Play;
-								game::line_clearing_system(well, animate_line);
-								
-								match mode {
-									Mode::Marathon{level,level_target,..} => {
-										if *level >= *level_target {
-											let _won_text =
-												TextBuilder::new(
-													format!("You won! Press r to restart.").to_string(),
-													Color::WHITE)
-												.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
-												.build(&font, &texture_creator);
-											*state = UnitState::Win;
-										}
-									}
-									Mode::Sprint{lines_cleared_target} => {
-										if *lines_cleared >= *lines_cleared_target {
-											let _won_text =
-												TextBuilder::new(
-													format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
-													Color::WHITE)
-												.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
-												.build(&font, &texture_creator);
-											*state = UnitState::Win;
+										Mode::Sprint{lines_cleared_target} => {
+											if *lines_cleared >= *lines_cleared_target {
+												let _won_text =
+													TextBuilder::new(
+														format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
+														Color::WHITE)
+													.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+													.build(&font, &texture_creator);
+												*state = UnitState::Win;
+											}
 										}
 									}
 								}
 							}
+							
+							UnitState::Over => (),
+							UnitState::Win => ()
 						}
-						
-						UnitState::Over => (),
-						UnitState::Win => ()
 					}
 				}
 				
@@ -959,17 +957,23 @@ fn main() {
 			}
 			
 			State::Lobby => {
-				if let NetworkState::Host {listener, streams} = &mut network_state {
+				if let NetworkState::Host {listener, streams, readers, writers} = &mut network_state {
 					while let Ok(incoming) = listener.accept() {
-						let mut stream = LenIO::new(incoming.0);
+						let reader = incoming.0;
+						let writer = reader.try_clone().unwrap();
 						
-						stream.write(&serialize(&NetworkEvent::InitBegin).unwrap()).unwrap();
+						let reader = LenIO::new(reader);
+						let mut writer = LenIO::new(writer);
+						// let mut stream = LenIO::new(incoming.0);
+						
+						writer.write(&serialize(&NetworkEvent::InitBegin).unwrap()).unwrap();
 						for (name, seed) in izip!(&player_names, &player_seeds) {
-							stream.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone(),seed:*seed}).unwrap()).unwrap();
+							writer.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone(),seed:*seed}).unwrap()).unwrap();
 						}
-						stream.write(&serialize(&NetworkEvent::InitEnd).unwrap()).unwrap();
+						writer.write(&serialize(&NetworkEvent::InitEnd).unwrap()).unwrap();
 						
-						streams.push(stream);
+						readers.push(reader);
+						writers.push(writer);
 						println!("{:?}", incoming.1);
 						println!("Connection established");
 					}
@@ -1042,8 +1046,8 @@ fn main() {
 					Rect::new(0, 0, width, height));
 			}
 			
-			for (i, Unit{player,..}, name_text) in izip!(0..,&units,&player_names_text) {
-				let player_text = get_player_text(player);
+			for (i, unit, name_text) in izip!(0..,&units,&player_names_text) {
+				let player_text = get_player_text(unit);
 				
 				let mut x = 0;
 				
@@ -1069,8 +1073,10 @@ fn main() {
 				width:window_rect.width() as i32,expected_width:(4*30+15+10*30+15+4*30+15) * units.len() as i32 - 15
 			};
 			
-			for ((Unit{well,queue,animate_line,stored_mino,state,falling_mino,..},lines_cleared_text),level_text)
-			in units.iter().zip(lines_cleared_text.iter()).zip(level_text.iter_mut()) {
+			for (unit, lines_cleared_text, level_text)
+			in izip!(&mut units, &lines_cleared_text, &level_text) {
+				let Unit {stored_mino, falling_mino, well, animate_line, ..} = unit;
+				
 				layout.row_margin(15);
 				
 				if let Some(ref stored_mino) = stored_mino {
@@ -1110,18 +1116,20 @@ fn main() {
 				layout.col_margin(15);
 				
 				layout.row_margin(15);
-				for mino in queue.iter() {
-					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), mino);
-					layout.row(3*30);
-					layout.row_margin(15);
-				}
-				
-				layout.col(4*30);
-				layout.col_margin(15);
-				
-				if let UnitState::Win = state {
+				if let UnitKind::Local {queue,..} = &unit.kind {
+					for mino in queue.iter() {
+						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), mino);
+						layout.row(3*30);
+						layout.row_margin(15);
+					}
 					
+					layout.col(4*30);
+					layout.col_margin(15);
 				}
+				
+				// if let UnitState::Win = state {
+					
+				// }
 			}
 			
 			match state {
