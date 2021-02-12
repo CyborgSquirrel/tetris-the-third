@@ -314,9 +314,8 @@ pub fn mino_storage_system<F>(
 	store: &mut bool,
 	can_store_mino: &mut bool,
 	next_mino: F,
-	network_state: Option<&mut crate::NetworkState>,
-	unit_id: usize,
-)
+	_unit_id: usize,
+) -> bool
 where F: FnOnce() -> Mino
 {
 	if *store && *can_store_mino {
@@ -327,23 +326,14 @@ where F: FnOnce() -> Mino
 		reset_mino(falling_mino);
 		if let Some(stored_mino) = stored_mino {
 			swap(stored_mino, falling_mino);
-			if let Some(network_state) = network_state {
-				network_state.broadcast_event(
-					&crate::NetworkEvent::UnitEvent{unit_id,event:crate::UnitEvent::StoreMino{generated_mino:None}}
-				);
-			}
 		}else{
 			let mut next_mino = next_mino();
 			swap(&mut next_mino, falling_mino);
 			*stored_mino = Some(next_mino);
-			if let Some(network_state) = network_state {
-				network_state.broadcast_event(
-					&crate::NetworkEvent::UnitEvent{unit_id,event:crate::UnitEvent::StoreMino{generated_mino:Some(falling_mino.clone())}}
-				);
-			}
 		}
 		center_mino(falling_mino, &well);
-	}
+		true
+	}else {false}
 }
 
 pub fn line_clearing_system(
