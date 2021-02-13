@@ -1,3 +1,7 @@
+width = 800
+height = 800
+borderless = false
+
 [[players]]
 [players.controls.keyboard]
 left = "a"

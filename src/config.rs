@@ -1,4 +1,4 @@
-use toml::Value;
+use toml::{Value};
 use sdl2::keyboard::Keycode;
 use sdl2::controller::Button;
 use sdl2::controller::Axis;
@@ -124,6 +124,9 @@ impl Player {
 }
 
 pub struct Config {
+	pub width: Option<u32>,
+	pub height: Option<u32>,
+	pub borderless: bool,
 	pub players: [Player;4],
 }
 
@@ -137,9 +140,9 @@ impl Config {
 		Config::from_string(contents)
 	}
 	fn from_string(string: String) -> Config {
-		let value = string.parse::<Value>().unwrap();
+		let toml = string.parse::<Value>().unwrap();
 		
-		let players = &value["players"].as_array().unwrap();
+		let players = &toml["players"].as_array().unwrap();
 		let player_from_toml = |index|players.get(index).map(|v|Player::from_toml(v)).unwrap_or_default();
 		
 		let players = [
@@ -149,7 +152,15 @@ impl Config {
 			player_from_toml(3),
 		];
 		
+		let width = toml.get("width").and_then(Value::as_integer).map(|a|a as u32);
+		let height = toml.get("height").and_then(Value::as_integer).map(|a|a as u32);
+		
+		let borderless = toml.get("borderless").and_then(Value::as_bool).unwrap_or(false);
+		
 		Config {
+			width,
+			height,
+			borderless,
 			players,
 		}
 	}

@@ -414,14 +414,23 @@ fn main() {
 	let mut config = Config::from_file();
 	let mut configs = (0..4usize).cycle();
 	
-	let window_rect = video_subsystem.display_bounds(0).unwrap();
+	let window_rect = if let (Some(width), Some(height)) = (config.width, config.height) {
+		Rect::new(0, 0, width, height)
+	}else {
+		video_subsystem.display_bounds(0).unwrap()
+	};
 	
-	let window = video_subsystem.window(
+	println!("{:?}", window_rect);
+	
+	let mut window = video_subsystem.window(
 			"Tetris part 3",
 			window_rect.width(),
-			window_rect.height())
-		.position_centered()
-		.borderless()
+			window_rect.height());
+	window.position_centered();
+	if config.borderless {
+		window.borderless();
+	}
+	let window = window
 		.build()
 		.expect("Failed to create window");
 	
