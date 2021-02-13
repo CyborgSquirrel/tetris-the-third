@@ -246,7 +246,7 @@ pub fn mino_movement_system(
 		mino_mutated |= match move_direction{
 			MoveDirection::Left => try_left_mino(falling_mino, &well),
 			MoveDirection::Right => try_right_mino(falling_mino, &well),
-			_ => false, // oh no
+			_ => panic!(),
 		};
 		*move_repeat_countdown = Duration::from_secs(0);
 		*move_state = MoveState::Prepeat;
@@ -257,7 +257,7 @@ pub fn mino_movement_system(
 			mino_mutated |= match move_direction{
 				MoveDirection::Left => try_left_mino(falling_mino, &well),
 				MoveDirection::Right => try_right_mino(falling_mino, &well),
-				_ => false, // oh no
+				_ => panic!(),
 			};
 			*move_state = MoveState::Repeat;
 		}
@@ -268,7 +268,7 @@ pub fn mino_movement_system(
 			mino_mutated |= match move_direction{
 				MoveDirection::Left => try_left_mino(falling_mino, &well),
 				MoveDirection::Right => try_right_mino(falling_mino, &well),
-				_ => false, // oh no
+				_ => panic!(),
 			};
 		}
 	}
@@ -321,8 +321,9 @@ where F: FnOnce() -> Mino
 	if *store && *can_store_mino {
 		*can_store_mino = false;
 		*store = false;
-		fall_countdown
-			.map(|_|Duration::from_secs(0));
+		if let Some(fall_countdown) = fall_countdown {
+			*fall_countdown = Duration::from_secs(0);
+		}
 		reset_mino(falling_mino);
 		if let Some(stored_mino) = stored_mino {
 			swap(stored_mino, falling_mino);
