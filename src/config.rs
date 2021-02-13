@@ -1,4 +1,4 @@
-use toml::{Value};
+use toml::Value;
 use sdl2::keyboard::Keycode;
 use sdl2::controller::Button;
 use sdl2::controller::Axis;
