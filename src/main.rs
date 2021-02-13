@@ -48,8 +48,7 @@ use player::Player;
 // #[derive(PartialEq, Eq, Clone)]
 enum State {
 	Play,
-	Pause,
-	Over,
+	// Over,
 	Start,
 	Lobby,
 }
@@ -318,7 +317,9 @@ fn apply_unit_event(base: &mut Unit, event: UnitEvent) {
 				rng_queue.push_back(mino);
 			}
 			UnitEvent::Init => {
-				*falling_mino = Some(rng_queue.pop_back().unwrap());
+				let mut mino = rng_queue.pop_back().unwrap();
+				game::center_mino(&mut mino, well);
+				*falling_mino = Some(mino);
 			}
 			UnitEvent::StoreMino => {
 				if let Some(falling_mino) = falling_mino {
@@ -508,7 +509,6 @@ fn main() {
 	let block_canvas = block::Canvas::new(&texture);
 	
 	let mut state = State::Start;
-	let mut prev_state: Option<State> = None;
 	
 	let start_text = TextBuilder::new(
 			"Welcome to tetris! Please choose a game mode, and press enter.".to_string(), 
@@ -536,6 +536,9 @@ fn main() {
 	let mut network_players = 0u32;
 	
 	let mut start_game = false;
+	
+	let mut paused = false;
+	
 	'running: loop {
 		let start = Instant::now();
 		
@@ -547,12 +550,10 @@ fn main() {
 			};
 			
 			match state {
-				State::Play | State::Pause => {
-					if let State::Play = state {
-						for unit in units.iter_mut() {
-							if let UnitKind::Local {player,..} = &mut unit.kind {
-								player.update(&mut config.players, &event)
-							}
+				State::Play => {
+					for unit in units.iter_mut() {
+						if let UnitKind::Local {player,..} = &mut unit.kind {
+							player.update(&mut config.players, &event)
 						}
 					}
 					match event{
@@ -588,11 +589,7 @@ fn main() {
 						// Deliberately not adding custom pause keybind
 						Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
 						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..}
-							=> match state {
-								State::Pause => {state = prev_state.unwrap_or(State::Play); prev_state = None;},
-								State::Over => (),
-								other => {state = State::Pause;prev_state = Some(other);},
-							}
+							=> {paused = !paused;}
 						
 						_ => ()
 					};
@@ -734,7 +731,6 @@ fn main() {
 						}
 					}
 				}
-				_ => {}
 			}
 		}
 		
@@ -807,7 +803,6 @@ fn main() {
 								
 								network_init.player_names.append(&mut player_names);
 								player_names = network_init.player_names;
-								println!("{:?}", player_names);
 								network_init.player_seeds.append(&mut player_seeds);
 								player_seeds = network_init.player_seeds;
 								network_init.units.append(&mut units);
@@ -845,7 +840,7 @@ fn main() {
 				in izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
 					let Unit {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode, kind} = unit;
 					match state {
-						UnitState::Play => {
+						UnitState::Play if (!paused || network_players > 0) => {
 							if let UnitKind::Local {player,rng} = kind {
 								let player::Player {store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
 								fall_duration,fall_state,..} = player;
@@ -990,9 +985,9 @@ fn main() {
 							}
 						}
 						
-						UnitState::Over => (),
-						UnitState::Win => ()
-						
+						UnitState::Over => {}
+						UnitState::Win => {}
+						_ => {}
 					}
 				}
 				
@@ -1170,39 +1165,50 @@ fn main() {
 				// }
 			}
 			
-			match state {
-				State::Pause => {
-					canvas.set_draw_color(Color::RGBA(0,0,0,160));
-					let _ = canvas.fill_rect(None);
-					
-					let TextureQuery {width, height, ..} = paused_text.query();
-					let _ = canvas.copy(
-						&paused_text,
-						Rect::new(0, 0, width, height),
-						Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
-				}
-				State::Over => {
-					canvas.set_draw_color(Color::RGBA(0,0,0,160));
-					let _ = canvas.fill_rect(None);
-					
-					let TextureQuery {width, height, ..} = game_over_text.query();
-					let _ = canvas.copy(
-						&game_over_text,
-						Rect::new(0, 0, width, height),
-						Rect::new(0, 0, width, height));
-				}
-				// State::Won{ref won_text} => {
-				// 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
-				// 	let _ = canvas.fill_rect(None);
-					
-				// 	let TextureQuery {width, height, ..} = won_text.query();
-				// 	let _ = canvas.copy(
-				// 		&won_text,
-				// 		Rect::new(0, 0, width, height),
-				// 		Rect::new(0, 0, width, height));
-				// }
-				_ => ()
+			if paused {
+				canvas.set_draw_color(Color::RGBA(0,0,0,160));
+				let _ = canvas.fill_rect(None);
+				
+				let TextureQuery {width, height, ..} = paused_text.query();
+				let _ = canvas.copy(
+					&paused_text,
+					Rect::new(0, 0, width, height),
+					Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
 			}
+			
+			// match state {
+			// 	State::Pause => {
+			// 		canvas.set_draw_color(Color::RGBA(0,0,0,160));
+			// 		let _ = canvas.fill_rect(None);
+					
+			// 		let TextureQuery {width, height, ..} = paused_text.query();
+			// 		let _ = canvas.copy(
+			// 			&paused_text,
+			// 			Rect::new(0, 0, width, height),
+			// 			Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+			// 	}
+			// 	State::Over => {
+			// 		canvas.set_draw_color(Color::RGBA(0,0,0,160));
+			// 		let _ = canvas.fill_rect(None);
+					
+			// 		let TextureQuery {width, height, ..} = game_over_text.query();
+			// 		let _ = canvas.copy(
+			// 			&game_over_text,
+			// 			Rect::new(0, 0, width, height),
+			// 			Rect::new(0, 0, width, height));
+			// 	}
+			// 	// State::Won{ref won_text} => {
+			// 	// 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
+			// 	// 	let _ = canvas.fill_rect(None);
+					
+			// 	// 	let TextureQuery {width, height, ..} = won_text.query();
+			// 	// 	let _ = canvas.copy(
+			// 	// 		&won_text,
+			// 	// 		Rect::new(0, 0, width, height),
+			// 	// 		Rect::new(0, 0, width, height));
+			// 	// }
+			// 	_ => ()
+			// }
 			
 		}
 		
