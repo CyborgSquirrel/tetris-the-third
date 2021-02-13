@@ -53,6 +53,7 @@ enum State {
 	Lobby,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 enum UnitState {
 	Play,
 	LineClear{countdown: Duration},
@@ -60,13 +61,14 @@ enum UnitState {
 	Win,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum Mode {
 	Marathon{level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint{lines_cleared_target: u32},
 }
 
-struct Unit {
+#[derive(Debug, Serialize, Deserialize)]
+struct UnitBase {
 	well: game::Well,
 	animate_line: Vec<bool>,
 	state: UnitState,
@@ -77,8 +79,11 @@ struct Unit {
 	falling_mino: Option<Mino>,
 	can_store_mino: bool,
 	stored_mino: Option<Mino>,
-	
-	kind: UnitKind
+}
+
+struct Unit {
+	base: UnitBase,
+	kind: UnitKind,
 }
 
 struct LocalMinoRng {
@@ -116,11 +121,10 @@ enum UnitKind {
 	}
 }
 
-impl Unit {
-	fn local(mode: Mode, player: player::Player) -> Unit {
+impl UnitKind {
+	fn local(player: player::Player) -> UnitKind {
 		let mut rng = game::MinoRng::fair();
-		let well = game::Well::filled_with(None, 10, 20);
-		let kind = UnitKind::Local {
+		UnitKind::Local {
 			player,
 			rng: LocalMinoRng {
 				queue: {
@@ -132,30 +136,41 @@ impl Unit {
 				},
 				rng
 			}
-		};
+		}
+	}
+}
+
+impl Unit {
+	fn local(mode: Mode, player: player::Player) -> Unit {
+		let well = game::Well::filled_with(None, 10, 20);
+		let kind = UnitKind::local(player);
 		Unit {
-			animate_line: vec![false; 20],
-			state: UnitState::Play,
-			lines_cleared: 0,
-			mode,
-			can_store_mino: true,
-			stored_mino: None,
-			falling_mino: None,
-			well,
+			base: UnitBase {
+				animate_line: vec![false; 20],
+				state: UnitState::Play,
+				lines_cleared: 0,
+				mode,
+				can_store_mino: true,
+				stored_mino: None,
+				falling_mino: None,
+				well,
+			},
 			kind,
 		}
 	}
 	fn network(mode: Mode) -> Unit {
 		let well = game::Well::filled_with(None, 10, 20);
 		Unit {
-			animate_line: vec![false; 20],
-			state: UnitState::Play,
-			lines_cleared: 0,
-			mode,
-			can_store_mino: true,
-			stored_mino: None,
-			falling_mino: None,
-			well,
+			base: UnitBase {
+				animate_line: vec![false; 20],
+				state: UnitState::Play,
+				lines_cleared: 0,
+				mode,
+				can_store_mino: true,
+				stored_mino: None,
+				falling_mino: None,
+				well,
+			},
 			kind: UnitKind::Network {
 				rng_queue: VecDeque::new(),
 			}
@@ -293,7 +308,7 @@ enum UnitEvent {
 }
 
 fn apply_unit_event(base: &mut Unit, event: UnitEvent) {
-	if let Unit{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,kind:UnitKind::Network{rng_queue},state,..} = base {
+	if let Unit{base: UnitBase{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,state,..},kind:UnitKind::Network{rng_queue},..} = base {
 		match event {
 			UnitEvent::TranslateMino {origin, blocks} => {
 				if let Some(falling_mino) = falling_mino {
@@ -349,6 +364,11 @@ impl StartLayout {
 		self.y += y;
 	}
 }
+
+fn draw_menu_select(canvas: &mut sdl2::render::WindowCanvas, rect: sdl2::rect::Rect) {
+	canvas.set_draw_color(Color::RGBA(255, 255, 0, 127));
+	let _ = canvas.draw_rect(rect);
+}
 	
 #[derive(Debug)]
 pub enum NetworkState {
@@ -387,6 +407,14 @@ struct NetworkInit {
 	units: Vec<Unit>,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+enum StartSelection {
+	Continue,
+	NewGame,
+	GameMode,
+	NetworkMode,
+}
+
 fn main() {
 	let stdin = stdin();
 	
@@ -420,8 +448,6 @@ fn main() {
 		video_subsystem.display_bounds(0).unwrap()
 	};
 	
-	println!("{:?}", window_rect);
-	
 	let mut window = video_subsystem.window(
 			"Tetris part 3",
 			window_rect.width(),
@@ -450,10 +476,12 @@ fn main() {
 	
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
-	let paused_text = TextBuilder::new("Paused".to_string(), Color::WHITE)
+	let mut paused = false;
+	let paused_text = TextBuilder::new("Paused press q to save".to_string(), Color::WHITE)
+		.with_wrap(120)
 		.build(&font, &texture_creator);
 	
-	let game_over_text = TextBuilder::new("Game over press r to restart".to_string(), Color::WHITE)
+	let _game_over_text = TextBuilder::new("Game over press r to restart".to_string(), Color::WHITE)
 		.with_wrap(10*30)
 		.build(&font, &texture_creator);
 	
@@ -489,6 +517,13 @@ fn main() {
 	let offline_text = TextBuilder::new("Offline".to_string(), Color::WHITE).build(&font, &texture_creator);
 	let host_text = TextBuilder::new("Host".to_string(),Color::WHITE).build(&font, &texture_creator);
 	let client_text = TextBuilder::new("Client".to_string(),Color::WHITE).build(&font, &texture_creator);
+	let get_network_text = |selected_network_state: i32|
+		match selected_network_state {
+			0 => &offline_text,
+			1 => &host_text,
+			2 => &client_text,
+			_ => panic!(),
+		};
 	
 	let mut lines_cleared_text = [
 		create_lines_cleared_text(0, &font, &texture_creator),
@@ -546,7 +581,31 @@ fn main() {
 	
 	let mut start_game = false;
 	
-	let mut paused = false;
+	let can_continue_text = TextBuilder::new("Continue".into(), Color::WHITE).build(&font, &texture_creator);
+	let cant_continue_text = TextBuilder::new("Continue".into(), Color::GRAY).build(&font, &texture_creator);
+	let mut saved_unit: Option<UnitBase> = {
+		use std::fs::File;
+		use std::io::prelude::*;
+		let file = File::open("save");
+		file.ok().and_then(|mut file|{
+			let mut buf = Vec::<u8>::new();
+			file.read_to_end(&mut buf).ok().and_then(|_|{
+				deserialize(&buf).ok()
+			})
+		})
+	};
+	
+	let get_continue_text = |can_continue|{
+		if can_continue {&can_continue_text}
+		else {&cant_continue_text}
+	};
+	
+	let new_game_text = TextBuilder::new("New Game".into(), Color::WHITE).build(&font, &texture_creator);
+	
+	let just_saved_text = TextBuilder::new("Saved!".into(), Color::WHITE).build(&font, &texture_creator);
+	let mut just_saved = false;
+	
+	let mut start_selection = StartSelection::Continue;
 	
 	'running: loop {
 		let start = Instant::now();
@@ -598,7 +657,16 @@ fn main() {
 						// Deliberately not adding custom pause keybind
 						Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
 						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..}
-							=> {paused = !paused;}
+							=> {paused = !paused;just_saved = false;}
+						
+						Event::KeyDown{keycode:Some(Keycode::Q), repeat:false, ..}
+						if paused => {
+							use std::fs::File;
+							use std::io::prelude::*;
+							let mut file = File::create("save").unwrap();
+							file.write_all(&serialize(&units[0].base).unwrap()).unwrap();
+							just_saved = true;
+						}
 						
 						_ => ()
 					};
@@ -606,34 +674,72 @@ fn main() {
 				State::Start => {
 					let keybinds = &mut config.players[0];
 					
-					if is_key_down(&event, keybinds.left) ||
-					is_key_down(&event, keybinds.left_alt) ||
-					is_controlcode_down(&event, &mut keybinds.controller_left, None) {
-						chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
+					use StartSelection::*;
+					if is_key_down(&event, Some(Keycode::S)) {
+						start_selection = match start_selection {
+							Continue => NewGame,
+							NewGame => GameMode,
+							GameMode => NetworkMode,
+							NetworkMode => Continue,
+						}
+					}
+					if is_key_down(&event, Some(Keycode::W)) {
+						start_selection = match start_selection {
+							Continue => NetworkMode,
+							NewGame => Continue,
+							GameMode => NewGame,
+							NetworkMode => GameMode,
+						}
 					}
 					
-					if is_key_down(&event, keybinds.right) ||
-					is_key_down(&event, keybinds.right_alt) ||
-					is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-						chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
-					}
-					
-					if is_key_down(&event, Some(Keycode::Q)) {
-						selected_network_state = network_states.next().unwrap();
+					match start_selection {
+						Continue => {},
+						NewGame => {},
+						GameMode => {
+							if is_key_down(&event, keybinds.left) ||
+							is_key_down(&event, keybinds.left_alt) ||
+							is_controlcode_down(&event, &mut keybinds.controller_left, None) {
+								chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
+							}
+							
+							if is_key_down(&event, keybinds.right) ||
+							is_key_down(&event, keybinds.right_alt) ||
+							is_controlcode_down(&event, &mut keybinds.controller_right, None) {
+								chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
+							}
+						},
+						NetworkMode => {
+							if is_key_down(&event, keybinds.right) ||
+							is_key_down(&event, keybinds.right_alt) ||
+							is_controlcode_down(&event, &mut keybinds.controller_right, None) {
+								selected_network_state = network_states.next().unwrap();
+							}
+						},
 					}
 					
 					if is_key_down(&event, Some(Keycode::Return)) {
 						network_state = match selected_network_state {
 							0 => {
 								state = State::Play;
-								let mut unit = Unit::local(
-									game_mode_ctors[chosen_game_mode](),
-									Player::new(configs.next().unwrap(),None));
-								if let UnitKind::Local {rng,..} = &mut unit.kind {
-									unit.falling_mino.replace(
-										rng.next_mino_centered(
-											&mut network_state, 0, &unit.well));
-								}
+								let player = Player::new(configs.next().unwrap(),None);
+								let unit = if start_selection == Continue && saved_unit.is_some() {
+									let unit = Unit {base: saved_unit.take().unwrap(), kind: UnitKind::local(player)};
+									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
+									if let Unit{base:UnitBase{mode:Mode::Marathon{level,..},..},..} = unit {
+										level_text[0] = create_level_text(level, &font, &texture_creator);
+									}
+									unit
+								}else if start_selection == NewGame {
+									let mut unit = Unit::local(
+										game_mode_ctors[chosen_game_mode](),
+										player);
+									if let UnitKind::Local {rng,..} = &mut unit.kind {
+										unit.base.falling_mino.replace(
+											rng.next_mino_centered(
+												&mut network_state, 0, &unit.base.well));
+									}
+									unit
+								}else {panic!()};
 								units.push(unit);
 								
 								NetworkState::Offline
@@ -829,9 +935,9 @@ fn main() {
 			state = State::Play;
 			for (unit_id, unit) in izip!(0.., &mut units) {
 				if let UnitKind::Local {rng,..} = &mut unit.kind {
-					unit.falling_mino.replace(
+					unit.base.falling_mino.replace(
 						rng.next_mino_centered(
-							&mut network_state, unit_id, &unit.well));
+							&mut network_state, unit_id, &unit.base.well));
 					network_state.broadcast_event(
 						&NetworkEvent::UnitEvent {
 							unit_id,
@@ -847,7 +953,7 @@ fn main() {
 			State::Play => {
 				for (unit_id,unit,lines_cleared_text,level_text)
 				in izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
-					let Unit {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode, kind} = unit;
+					let Unit {base: UnitBase {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode}, kind} = unit;
 					match state {
 						UnitState::Play if (!paused || network_players > 0) => {
 							if let UnitKind::Local {player,rng} = kind {
@@ -1055,28 +1161,59 @@ fn main() {
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
-			let game_mode_text =
-				&game_mode_text[chosen_game_mode];
-			let TextureQuery {width, height, ..} = game_mode_text.query();
+			let continue_text = get_continue_text(saved_unit.is_some());
+			
+			let TextureQuery {width, height, ..} = continue_text.query();
+			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 			let _ = canvas.copy(
-				&game_mode_text,
+				&continue_text,
 				Rect::new(0, 0, width, height),
-				Rect::new(layout.centered_x(width), layout.y, width, height));
+				rect);
+			if start_selection == StartSelection::Continue {
+				draw_menu_select(&mut canvas, rect);
+			}
 			
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
-			let network_text = match selected_network_state {
-				0 => &offline_text,
-				1 => &host_text,
-				2 => &client_text,
-				_ => panic!(),
-			};
+			let TextureQuery {width, height, ..} = new_game_text.query();
+			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+			let _ = canvas.copy(
+				&new_game_text,
+				Rect::new(0, 0, width, height),
+				rect);
+			if start_selection == StartSelection::NewGame {
+				draw_menu_select(&mut canvas, rect);
+			}
+			
+			layout.row(height as i32);
+			layout.row_margin(15);
+			
+			let game_mode_text =
+				&game_mode_text[chosen_game_mode];
+			let TextureQuery {width, height, ..} = game_mode_text.query();
+			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+			let _ = canvas.copy(
+				&game_mode_text,
+				Rect::new(0, 0, width, height),
+				rect);
+			if start_selection == StartSelection::GameMode {
+				draw_menu_select(&mut canvas, rect);
+			}
+			
+			layout.row(height as i32);
+			layout.row_margin(15);
+			
+			let network_text = get_network_text(selected_network_state);
 			let TextureQuery {width, height, ..} = network_text.query();
+			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 			let _ = canvas.copy(
 				&network_text,
 				Rect::new(0, 0, width, height),
-				Rect::new(layout.centered_x(width), layout.y, width, height));
+				rect);
+			if start_selection == StartSelection::NetworkMode {
+				draw_menu_select(&mut canvas, rect);
+			}
 			
 		}else if let State::Lobby {..} = state {
 			
@@ -1117,7 +1254,7 @@ fn main() {
 			
 			for (unit, lines_cleared_text, level_text)
 			in izip!(&mut units, &lines_cleared_text, &level_text) {
-				let Unit {stored_mino, falling_mino, well, animate_line, ..} = unit;
+				let Unit {base: UnitBase {stored_mino, falling_mino, well, animate_line, ..}, ..} = unit;
 				
 				layout.row_margin(15);
 				
@@ -1183,41 +1320,15 @@ fn main() {
 					&paused_text,
 					Rect::new(0, 0, width, height),
 					Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+				
+				if just_saved {
+					let TextureQuery {width, height, ..} = just_saved_text.query();
+					let _ = canvas.copy(
+						&just_saved_text,
+						Rect::new(0, 0, width, height),
+						Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32 + 100, width, height));
+				}
 			}
-			
-			// match state {
-			// 	State::Pause => {
-			// 		canvas.set_draw_color(Color::RGBA(0,0,0,160));
-			// 		let _ = canvas.fill_rect(None);
-					
-			// 		let TextureQuery {width, height, ..} = paused_text.query();
-			// 		let _ = canvas.copy(
-			// 			&paused_text,
-			// 			Rect::new(0, 0, width, height),
-			// 			Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
-			// 	}
-			// 	State::Over => {
-			// 		canvas.set_draw_color(Color::RGBA(0,0,0,160));
-			// 		let _ = canvas.fill_rect(None);
-					
-			// 		let TextureQuery {width, height, ..} = game_over_text.query();
-			// 		let _ = canvas.copy(
-			// 			&game_over_text,
-			// 			Rect::new(0, 0, width, height),
-			// 			Rect::new(0, 0, width, height));
-			// 	}
-			// 	// State::Won{ref won_text} => {
-			// 	// 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
-			// 	// 	let _ = canvas.fill_rect(None);
-					
-			// 	// 	let TextureQuery {width, height, ..} = won_text.query();
-			// 	// 	let _ = canvas.copy(
-			// 	// 		&won_text,
-			// 	// 		Rect::new(0, 0, width, height),
-			// 	// 		Rect::new(0, 0, width, height));
-			// 	// }
-			// 	_ => ()
-			// }
 			
 		}
 		

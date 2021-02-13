@@ -46,8 +46,6 @@ impl MinoRng {
 	}
 }
 
-
-
 pub fn check_block_in_bounds(block: &vec2i, dim: &vec2i) -> bool {
 	block.x >= 0 && block.x < dim.x && block.y < dim.y
 }
@@ -66,30 +64,24 @@ pub fn check_mino_well_collision(mino: &Mino, well: &Well) -> bool {
 	false
 }
 
-pub fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool where F: Fn(&mut Mino) {
+pub fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool
+where F: Fn(&mut Mino, &Well) {
 	let mut mutated_mino = mino.clone();
-	f(&mut mutated_mino);
+	f(&mut mutated_mino, well);
 	if !check_mino_well_collision(&mutated_mino, &well) {
 		*mino = mutated_mino;
 		return true;
 	}
 	false
 }
-
-pub fn try_rotl_mino(mino: &mut Mino, well: &Well) -> bool{
-	try_mutate_mino(mino, well, |mino|mino.rotl())
-}
-pub fn try_rotr_mino(mino: &mut Mino, well: &Well) -> bool{
-	try_mutate_mino(mino, well, |mino|mino.rotr())
-}
 pub fn try_left_mino(mino: &mut Mino, well: &Well) -> bool{
-	try_mutate_mino(mino, well, |mino|mino.left())
+	try_mutate_mino(mino, well, |mino,_|mino.left())
 }
 pub fn try_right_mino(mino: &mut Mino, well: &Well) -> bool{
-	try_mutate_mino(mino, well, |mino|mino.right())
+	try_mutate_mino(mino, well, |mino,_|mino.right())
 }
 pub fn try_down_mino(mino: &mut Mino, well: &Well) -> bool{
-	try_mutate_mino(mino, well, |mino|mino.down())
+	try_mutate_mino(mino, well, |mino,_|mino.down())
 }
 
 pub fn mino_falling_system(
@@ -213,6 +205,24 @@ pub fn get_mino_rect(mino: &Mino) -> (vec2i,vec2i) {
 	(lo,hi)
 }
 
+fn move_mino_into_horizontal_bounds(mino: &mut Mino, well: &Well) {
+	let (lo,hi) = get_mino_rect(mino);
+	mino.translate(vec2i!(-min(0,lo.x),0));
+	mino.translate(vec2i!(min(0,well.num_rows() as i32 - hi.x - 1),0));
+}
+pub fn try_rotl_mino(mino: &mut Mino, well: &Well) -> bool{
+	try_mutate_mino(mino, well,
+		|mino,well|{
+			mino.rotl();
+			move_mino_into_horizontal_bounds(mino, well);})
+}
+pub fn try_rotr_mino(mino: &mut Mino, well: &Well) -> bool{
+	try_mutate_mino(mino, well,
+		|mino,well|{
+			mino.rotr();
+			move_mino_into_horizontal_bounds(mino, well);})
+}
+
 pub fn mino_rotation_system(
 	falling_mino: &mut Mino,
 	well: &Well,
@@ -221,8 +231,8 @@ pub fn mino_rotation_system(
 {
 	use player::RotDirection;
 	let mino_mutated = match rot_direction {
-		RotDirection::Left => try_rotl_mino(falling_mino, &well),
-		RotDirection::Right => try_rotr_mino(falling_mino, &well),
+		RotDirection::Left => try_rotl_mino(falling_mino, well),
+		RotDirection::Right => try_rotr_mino(falling_mino, well),
 		_ => false,
 	};
 	*rot_direction = RotDirection::None;
