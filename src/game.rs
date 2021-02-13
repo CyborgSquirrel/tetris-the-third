@@ -174,13 +174,13 @@ pub fn add_mino_to_well(mino: &Mino, well: &mut Well) {
 	}
 }
 
-pub fn get_mino_extents(mino: &Mino) -> vec2i {
+pub fn get_mino_size(mino: &Mino) -> vec2i {
 	let (lo,hi) = get_mino_rect(mino);
 	hi-lo+vec2i!(1,1)
 }
 
 pub fn center_mino(mino: &mut Mino, well: &Well) {
-	let ext = get_mino_extents(mino);
+	let ext = get_mino_size(mino);
 	mino.translate(vec2i::RIGHT * (well.num_rows() as i32-ext.x)/2);
 }
 

@@ -545,9 +545,6 @@ fn main() {
 	
 	let softdrop_duration = Duration::from_secs_f64(0.05);
 	
-	let move_prepeat_duration = Duration::from_secs_f64(0.15);
-	let move_repeat_duration = Duration::from_secs_f64(0.05);
-	
 	let mut units: Vec<Unit> = Vec::new();
 	
 	let block_canvas = block::Canvas::new(&texture);
@@ -986,6 +983,8 @@ fn main() {
 									
 									let mut mino_translated = false;
 									
+									let config::Player {move_prepeat_duration,move_repeat_duration,..} = &config.players[player.config_id];
+									
 									mino_translated |= 
 										game::mino_rotation_system(
 											falling_mino,
@@ -998,7 +997,7 @@ fn main() {
 											&well,
 											move_state, move_direction,
 											move_repeat_countdown,
-											move_prepeat_duration, move_repeat_duration,
+											*move_prepeat_duration, *move_repeat_duration,
 											dpf);
 								
 									let (add_mino, mino_translated_while_falling) =

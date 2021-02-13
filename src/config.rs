@@ -4,6 +4,7 @@ use sdl2::controller::Button;
 use sdl2::controller::Axis;
 use std::fs::File;
 use std::io::prelude::*;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Controlcode {
@@ -50,6 +51,9 @@ pub struct Player {
 	pub controller_harddrop: Option<Controlcode>,
 	
 	pub controller_store: Option<Controlcode>,
+	
+	pub move_prepeat_duration: Duration,
+	pub move_repeat_duration: Duration,
 }
 
 impl Player {
@@ -57,6 +61,16 @@ impl Player {
 		fn get_as_str<'a>(toml: &'a Value, key: &str) -> Option<&'a str>{
 			toml.get(key).and_then(toml::Value::as_str)
 		}
+		
+		let move_prepeat_duration = toml.get("move_prepeat_duration")
+			.and_then(Value::as_float)
+			.map(Duration::from_secs_f64)
+			.unwrap_or(Duration::from_secs_f64(0.15));
+
+		let move_repeat_duration = toml.get("move_repeat_duration")
+			.and_then(Value::as_float)
+			.map(Duration::from_secs_f64)
+			.unwrap_or(Duration::from_secs_f64(0.05));
 		
 		let controls = &toml["controls"];
 		
@@ -119,6 +133,9 @@ impl Player {
 			controller_harddrop,
 			
 			controller_store,
+			
+			move_prepeat_duration,
+			move_repeat_duration,
 		}
 	}
 }

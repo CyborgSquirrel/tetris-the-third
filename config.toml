@@ -3,6 +3,9 @@ height = 800
 borderless = false
 
 [[players]]
+move_prepeat_duration = 0.15
+move_repeat_duration = 0.05
+
 [players.controls.keyboard]
 left = "a"
 right = "d"
