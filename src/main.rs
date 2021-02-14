@@ -191,7 +191,7 @@ fn create_lines_cleared_text<'a>(
 	lines_cleared: u32,
 	font: &sdl2::ttf::Font,
 	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
-	-> sdl2::render::Texture<'a> {
+-> sdl2::render::Texture<'a> {
 	TextBuilder::new(format!("Lines: {}", lines_cleared), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -201,17 +201,29 @@ fn create_level_text<'a>(
 	level: u32,
 	font: &sdl2::ttf::Font,
 	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
-	-> sdl2::render::Texture<'a> {
+-> sdl2::render::Texture<'a> {
 	TextBuilder::new(format!("Level: {}", level), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
+}
+
+fn on_level_changed<'a>(
+	level: u32,
+	font: &sdl2::ttf::Font,
+	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+	level_text: &mut sdl2::render::Texture<'a>,
+	fall_duration: Option<&mut Duration>) {
+	*level_text = create_level_text(level, font, texture_creator);
+	if let Some(fall_duration) = fall_duration {
+		*fall_duration = get_fall_duration(level);
+	}
 }
 
 fn create_score_text<'a>(
 	score: u32,
 	font: &sdl2::ttf::Font,
 	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
-	-> sdl2::render::Texture<'a> {
+-> sdl2::render::Texture<'a> {
 	TextBuilder::new(format!("Score: {}", score), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -1032,9 +1044,10 @@ fn main() {
 														level_changed = true;
 													}
 													if level_changed {
-														*level_text =
-															create_level_text(*level, &font, &texture_creator);
-														*fall_duration = get_fall_duration(*level);
+														on_level_changed(
+															*level,
+															&font, &texture_creator, level_text,
+															Some(fall_duration));
 													}
 												}
 											}
