@@ -12,7 +12,6 @@ use sdl2::rect::Rect;
 use std::collections::VecDeque;
 
 use itertools::izip;
-use rand::RngCore;
 
 #[macro_use]
 pub mod vec2;
@@ -40,10 +39,8 @@ use bincode::{serialize,deserialize};
 use std::io::stdin;
 
 use mino::Mino;
-use rand::{SeedableRng,rngs::SmallRng};
 
 use player::Player;
-
 
 // #[derive(PartialEq, Eq, Clone)]
 enum State {
@@ -282,13 +279,11 @@ enum NetworkEvent {
 	InitBegin,
 	InitPlayer {
 		name: String,
-		seed: u64,
 	},
 	InitEnd,
 	
 	AddPlayer {
 		name: String,
-		seed: u64,
 	},
 	StartGame,
 }
@@ -403,7 +398,6 @@ impl NetworkState {
 #[derive(Default)]
 struct NetworkInit {
 	player_names: Vec<String>,
-	player_seeds: Vec<u64>,
 	units: Vec<Unit>,
 }
 
@@ -563,12 +557,8 @@ fn main() {
 	
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
-	let mut seeder = SmallRng::from_entropy();
-	
 	let mut player_names = Vec::<String>::new();
 	let mut player_names_text = Vec::<sdl2::render::Texture>::new();
-	
-	let mut player_seeds = Vec::<u64>::new();
 	
 	let mut network_init: Option<NetworkInit> = None;
 	
@@ -794,13 +784,10 @@ fn main() {
 									.expect("Couldn't set stream to be non-blocking");
 								let mut stream = LenIO::new(stream);
 								
-								let seed = seeder.next_u64();
-								player_seeds.push(seed);
-								
 								state = State::Lobby;
 								units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
 								
-								stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone(),seed}).unwrap()).unwrap();
+								stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
@@ -829,17 +816,14 @@ fn main() {
 								TextBuilder::new(name.clone(), Color::WHITE)
 								.build(&font, &texture_creator));
 							
-							let seed = seeder.next_u64();
-							
 							units.push(Unit::local(Mode::default_marathon(), Player::new(configs.next().unwrap(),None)));
 							if let NetworkState::Host{streams,..} = &mut network_state {
-								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone(),seed}).unwrap();
+								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
 								for stream in streams {
 									stream.write(&event).unwrap();
 								}
 							}
 							player_names.push(name);
-							player_seeds.push(seed);
 						}
 					}
 				}
@@ -860,12 +844,11 @@ fn main() {
 							NetworkEvent::UnitEvent {unit_id, event} => {
 								apply_unit_event(&mut units[unit_id], event);
 							}
-							NetworkEvent::AddPlayer {name, seed} => {
+							NetworkEvent::AddPlayer {name} => {
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
 								player_names.push(name);
-								player_seeds.push(seed);
 								units.push(Unit::network(Mode::default_marathon()))
 							}
 							NetworkEvent::StartGame => {} //only host gets to start game
@@ -881,24 +864,22 @@ fn main() {
 						NetworkEvent::UnitEvent {unit_id, event} => {
 							apply_unit_event(&mut units[unit_id], event);
 						}
-						NetworkEvent::AddPlayer {name, seed} => {
+						NetworkEvent::AddPlayer {name} => {
 								network_players += 1;
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
 								player_names.push(name);
-								player_seeds.push(seed);
 								units.push(Unit::network(Mode::default_marathon()));
 							}
 						NetworkEvent::StartGame => {start_game = true}
 						NetworkEvent::InitBegin => {
 							network_init = Some(NetworkInit::default());
 						}
-						NetworkEvent::InitPlayer {name, seed} => {
+						NetworkEvent::InitPlayer {name} => {
 							if let Some(ref mut network_init) = network_init {
 								network_players += 1;
 								network_init.player_names.push(name);
-								network_init.player_seeds.push(seed);
 								network_init.units.push(Unit::network(Mode::default_marathon()));
 							}else { panic!(); }
 						}
@@ -915,8 +896,6 @@ fn main() {
 								
 								network_init.player_names.append(&mut player_names);
 								player_names = network_init.player_names;
-								network_init.player_seeds.append(&mut player_seeds);
-								player_seeds = network_init.player_seeds;
 								network_init.units.append(&mut units);
 								units = network_init.units;
 							}else { panic!(); }
@@ -1055,6 +1034,7 @@ fn main() {
 													if level_changed {
 														*level_text =
 															create_level_text(*level, &font, &texture_creator);
+														*fall_duration = get_fall_duration(*level);
 													}
 												}
 											}
@@ -1115,8 +1095,8 @@ fn main() {
 						let mut stream = LenIO::new(incoming.0);
 						
 						stream.write(&serialize(&NetworkEvent::InitBegin).unwrap()).unwrap();
-						for (name, seed) in izip!(&player_names, &player_seeds) {
-							stream.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone(),seed:*seed}).unwrap()).unwrap();
+						for name in &player_names {
+							stream.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone()}).unwrap()).unwrap();
 						}
 						stream.write(&serialize(&NetworkEvent::InitEnd).unwrap()).unwrap();
 						
