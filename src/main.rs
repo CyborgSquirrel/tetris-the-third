@@ -262,11 +262,21 @@ struct NetworkInit {
 enum StartSelection {
 	Continue,
 	NewGame,
-	GameMode,
+	GameMode,	
 	NetworkMode,
 }
 
 fn main() {
+	// use generational_arena::Arena;
+	// let mut a1 = Arena::<i32>::new();
+	// let mut a2 = Arena::<i32>::new();
+	
+	// let juan = a1.insert(1);
+	// println!("{:?}", a1[juan]);
+	
+	// a2[juan] = 1;
+	// println!("{:?}", a2[juan]);
+	
 	let stdin = stdin();
 	
 	let sdl_context = sdl2::init()

@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 use serde::{Serialize,Deserialize};
-// use bincode::{serialize,deserialize};
 use crate::game;
 use crate::player;
 use crate::mino::Mino;
@@ -20,6 +19,7 @@ pub enum State {
 pub struct Unit {
 	pub base: Base,
 	pub kind: Kind,
+	// pub lines_cleared_text: sdl2::render::Texture<'a>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -137,7 +137,7 @@ pub enum Mode {
 impl Mode {
 	pub fn default_marathon() -> Mode {
 		Mode::Marathon{
-			level_target: 10, level: 1,
+			level_target: 20, level: 1,
 			lines_before_next_level: get_lines_before_next_level(1),
 		}
 	}
