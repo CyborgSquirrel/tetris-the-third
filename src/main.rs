@@ -45,7 +45,6 @@ use player::Player;
 // #[derive(PartialEq, Eq, Clone)]
 enum State {
 	Play,
-	// Over,
 	Start,
 	Lobby,
 }
@@ -266,17 +265,12 @@ enum StartSelection {
 	NetworkMode,
 }
 
+fn darken(canvas: &mut sdl2::render::WindowCanvas) {
+	canvas.set_draw_color(Color::RGBA(0,0,0,160));
+	let _ = canvas.fill_rect(None);
+}
+
 fn main() {
-	// use generational_arena::Arena;
-	// let mut a1 = Arena::<i32>::new();
-	// let mut a2 = Arena::<i32>::new();
-	
-	// let juan = a1.insert(1);
-	// println!("{:?}", a1[juan]);
-	
-	// a2[juan] = 1;
-	// println!("{:?}", a2[juan]);
-	
 	let stdin = stdin();
 	
 	let sdl_context = sdl2::init()
@@ -342,7 +336,10 @@ fn main() {
 		.with_wrap(120)
 		.build(&font, &texture_creator);
 	
-	let _game_over_text = TextBuilder::new("Game over press r to restart".to_string(), Color::WHITE)
+	let game_over_text = TextBuilder::new("Game over".to_string(), Color::WHITE)
+		.with_wrap(10*30)
+		.build(&font, &texture_creator);
+	let game_won_text = TextBuilder::new("You won".to_string(), Color::WHITE)
 		.with_wrap(10*30)
 		.build(&font, &texture_creator);
 	
@@ -399,10 +396,6 @@ fn main() {
 		create_level_text(1, &font, &texture_creator),
 		create_level_text(1, &font, &texture_creator),
 	];
-	
-	let mut _score = 0;
-	let mut _score_text =
-		create_score_text(_score, &font, &texture_creator);
 	
 	let softdrop_duration = Duration::from_secs_f64(0.05);
 	
@@ -547,8 +540,109 @@ fn main() {
 					}
 					
 					match start_selection {
-						Continue => {},
-						NewGame => {},
+						Continue => {
+							if is_key_down(&event, Some(Keycode::Return)) {
+								if selected_network_state == 0 {
+									network_state = NetworkState::Offline;
+									state = State::Play;
+									let player = Player::new(configs.next().unwrap(),None);
+									let unit = Unit {base: saved_unit.take().unwrap(), kind: unit::Kind::local(player)};
+									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
+									if let Unit{base:unit::Base{mode:Mode::Marathon{level,..},..},..} = unit {
+										level_text[0] = create_level_text(level, &font, &texture_creator);
+									}
+									units.push(unit);
+								}
+							}
+						},
+						NewGame => {
+							if is_key_down(&event, Some(Keycode::Return)) {
+								network_state = match selected_network_state {
+									0 => {
+										state = State::Play;
+										let player = Player::new(configs.next().unwrap(),None);
+										let mut unit = Unit::local(
+											game_mode_ctors[chosen_game_mode](),
+											player);
+										if let unit::Kind::Local {rng,..} = &mut unit.kind {
+											unit.base.falling_mino.replace(
+												rng.next_mino_centered(
+													&mut network_state, 0, &unit.base.well));
+										}
+										units.push(unit);
+										
+										NetworkState::Offline
+									}
+									1 => {
+										println!("Write the ip pls:");
+										
+										let mut addr = String::new();
+										stdin.read_line(&mut addr).unwrap();
+										addr = addr.trim_end().into();
+										
+										let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
+										
+										let addr = addr.to_socket_addrs().ok()
+											.and_then(|mut v|v.next())
+											.unwrap_or(default_addr);
+										
+										println!("{:?}", addr);
+										
+										let listener = TcpListener::bind(addr)
+											.expect("Couldn't bind listener");
+										listener.set_nonblocking(true)
+											.expect("Couldn't set listener to be non-blocking");
+										
+										state = State::Lobby;
+										
+										NetworkState::Host {
+											listener,
+											streams: Vec::new(),
+										}
+									}
+									2 => {
+										println!("Write the ip pls:");
+										
+										let mut addr = String::new();
+										stdin.read_line(&mut addr).unwrap();
+										addr = addr.trim_end().into();
+										
+										let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
+										
+										let addr = addr.to_socket_addrs().ok()
+											.and_then(|mut v|v.next())
+											.unwrap_or(default_addr);
+										
+										println!("{:?}", addr);
+										
+										let mut name = String::new();
+										println!("Player name:");
+										stdin.read_line(&mut name).unwrap();
+										name = name.trim_end().into();
+										
+										let stream = TcpStream::connect(addr)
+											.expect("Couldn't connect stream");
+										stream.set_nonblocking(true)
+											.expect("Couldn't set stream to be non-blocking");
+										let mut stream = LenIO::new(stream);
+										
+										state = State::Lobby;
+										units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
+										
+										stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
+										player_names_text.push(
+											TextBuilder::new(name.clone(), Color::WHITE)
+											.build(&font, &texture_creator));
+										player_names.push(name);
+										
+										NetworkState::Client {
+											stream,
+										}
+									}
+									_ => panic!()
+								}
+							}
+						},
 						GameMode => {
 							if is_key_down(&event, keybinds.left) ||
 							is_key_down(&event, keybinds.left_alt) ||
@@ -571,102 +665,7 @@ fn main() {
 						},
 					}
 					
-					if is_key_down(&event, Some(Keycode::Return)) {
-						network_state = match selected_network_state {
-							0 => {
-								state = State::Play;
-								let player = Player::new(configs.next().unwrap(),None);
-								let unit = if start_selection == Continue && saved_unit.is_some() {
-									let unit = Unit {base: saved_unit.take().unwrap(), kind: unit::Kind::local(player)};
-									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
-									if let Unit{base:unit::Base{mode:Mode::Marathon{level,..},..},..} = unit {
-										level_text[0] = create_level_text(level, &font, &texture_creator);
-									}
-									unit
-								}else if start_selection == NewGame {
-									let mut unit = Unit::local(
-										game_mode_ctors[chosen_game_mode](),
-										player);
-									if let unit::Kind::Local {rng,..} = &mut unit.kind {
-										unit.base.falling_mino.replace(
-											rng.next_mino_centered(
-												&mut network_state, 0, &unit.base.well));
-									}
-									unit
-								}else {panic!()};
-								units.push(unit);
-								
-								NetworkState::Offline
-							}
-							1 => {
-								println!("Write the ip pls:");
-								
-								let mut addr = String::new();
-								stdin.read_line(&mut addr).unwrap();
-								addr = addr.trim_end().into();
-								
-								let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
-								
-								let addr = addr.to_socket_addrs().ok()
-									.and_then(|mut v|v.next())
-									.unwrap_or(default_addr);
-								
-								println!("{:?}", addr);
-								
-								let listener = TcpListener::bind(addr)
-									.expect("Couldn't bind listener");
-								listener.set_nonblocking(true)
-									.expect("Couldn't set listener to be non-blocking");
-								
-								state = State::Lobby;
-								
-								NetworkState::Host {
-									listener,
-									streams: Vec::new(),
-								}
-							}
-							2 => {
-								println!("Write the ip pls:");
-								
-								let mut addr = String::new();
-								stdin.read_line(&mut addr).unwrap();
-								addr = addr.trim_end().into();
-								
-								let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
-								
-								let addr = addr.to_socket_addrs().ok()
-									.and_then(|mut v|v.next())
-									.unwrap_or(default_addr);
-								
-								println!("{:?}", addr);
-								
-								let mut name = String::new();
-								println!("Player name:");
-								stdin.read_line(&mut name).unwrap();
-								name = name.trim_end().into();
-								
-								let stream = TcpStream::connect(addr)
-									.expect("Couldn't connect stream");
-								stream.set_nonblocking(true)
-									.expect("Couldn't set stream to be non-blocking");
-								let mut stream = LenIO::new(stream);
-								
-								state = State::Lobby;
-								units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
-								
-								stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
-								player_names_text.push(
-									TextBuilder::new(name.clone(), Color::WHITE)
-									.build(&font, &texture_creator));
-								player_names.push(name);
-								
-								NetworkState::Client {
-									stream,
-								}
-							}
-							_ => {panic!()}
-						}
-					}
+					
 				}
 				State::Lobby => {
 					if let NetworkState::Host {..} = network_state {
@@ -1008,7 +1007,7 @@ fn main() {
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
-			let continue_text = get_continue_text(saved_unit.is_some());
+			let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == 0);
 			
 			let TextureQuery {width, height, ..} = continue_text.query();
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
@@ -1101,7 +1100,7 @@ fn main() {
 			
 			for (unit, lines_cleared_text, level_text)
 			in izip!(&mut units, &lines_cleared_text, &level_text) {
-				let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, ..}, ..} = unit;
+				let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, ..}, ..} = unit;
 				
 				layout.row_margin(15);
 				
@@ -1153,14 +1152,31 @@ fn main() {
 					layout.col_margin(15);
 				}
 				
-				// if let unit::State::Win = state {
-					
-				// }
+				match state {
+					unit::State::Win => {
+						darken(&mut canvas);
+				
+						let TextureQuery {width, height, ..} = game_won_text.query();
+						let _ = canvas.copy(
+							&game_won_text,
+							Rect::new(0, 0, width, height),
+							Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+					}
+					unit::State::Over => {
+						darken(&mut canvas);
+				
+						let TextureQuery {width, height, ..} = game_over_text.query();
+						let _ = canvas.copy(
+							&game_over_text,
+							Rect::new(0, 0, width, height),
+							Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+					}
+					_ => {}
+				}
 			}
 			
 			if paused {
-				canvas.set_draw_color(Color::RGBA(0,0,0,160));
-				let _ = canvas.fill_rect(None);
+				darken(&mut canvas);
 				
 				let TextureQuery {width, height, ..} = paused_text.query();
 				let _ = canvas.copy(
