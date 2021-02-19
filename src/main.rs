@@ -1105,7 +1105,7 @@ fn main() {
 				layout.row_margin(15);
 				
 				if let Some(ref stored_mino) = stored_mino {
-					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), stored_mino);
+					block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), stored_mino, vec2i!(4,3));
 				}
 				layout.row(3*30);
 				layout.row_margin(15);
@@ -1143,7 +1143,7 @@ fn main() {
 				layout.row_margin(15);
 				if let unit::Kind::Local {rng: unit::LocalMinoRng {queue,..},..} = &unit.kind {
 					for mino in queue.iter() {
-						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), mino);
+						block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), mino, vec2i!(4,3));
 						layout.row(3*30);
 						layout.row_margin(15);
 					}

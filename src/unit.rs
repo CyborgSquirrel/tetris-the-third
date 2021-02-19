@@ -137,7 +137,7 @@ pub enum Mode {
 impl Mode {
 	pub fn default_marathon() -> Mode {
 		Mode::Marathon{
-			level_target: 20, level: 1,
+			level_target: 50, level: 1,
 			lines_before_next_level: get_lines_before_next_level(1),
 		}
 	}

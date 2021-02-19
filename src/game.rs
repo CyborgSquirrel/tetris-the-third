@@ -174,13 +174,8 @@ pub fn add_mino_to_well(mino: &Mino, well: &mut Well) {
 	}
 }
 
-pub fn get_mino_size(mino: &Mino) -> vec2i {
-	let (lo,hi) = get_mino_rect(mino);
-	hi-lo+vec2i!(1,1)
-}
-
 pub fn center_mino(mino: &mut Mino, well: &Well) {
-	let ext = get_mino_size(mino);
+	let ext = mino.get_size();
 	mino.translate(vec2i::RIGHT * (well.num_rows() as i32-ext.x)/2);
 }
 
@@ -188,25 +183,12 @@ pub fn reset_mino(mino: &mut Mino) {
 	for _ in 0..mino.rotation.rem_euclid(4) {
 		mino.rotl();
 	}
-	let (lo,_) = get_mino_rect(mino);
+	let (lo,_) = mino.get_rect();
 	mino.translate(-lo);
 }
 
-pub fn get_mino_rect(mino: &Mino) -> (vec2i,vec2i) {
-	let mut iter = mino.blocks.iter();
-	let mut hi = iter.next().unwrap().clone();
-	let mut lo = hi;
-	for v in iter {
-		hi.x = max(hi.x, v.x);
-		hi.y = max(hi.y, v.y);
-		lo.x = min(lo.x, v.x);
-		lo.y = min(lo.y, v.y);
-	}
-	(lo,hi)
-}
-
 fn move_mino_into_horizontal_bounds(mino: &mut Mino, well: &Well) {
-	let (lo,hi) = get_mino_rect(mino);
+	let (lo,hi) = mino.get_rect();
 	mino.translate(vec2i!(-min(0,lo.x),0));
 	mino.translate(vec2i!(min(0,well.num_rows() as i32 - hi.x - 1),0));
 }

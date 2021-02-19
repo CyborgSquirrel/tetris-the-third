@@ -1,4 +1,4 @@
-use crate::vec2i;
+use crate::{vec2i,vec2f};
 use serde::{Serialize,Deserialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -71,6 +71,14 @@ impl<'a> Canvas<'a> {
 		);
 	}
 	pub fn draw_mino(&self, canvas: &mut WindowCanvas, origin: vec2i, mino: &Mino) {
+		for (block, data) in mino.blocks.iter().zip(mino.blocks_data.iter()) {
+			self.draw_block(canvas, origin, block, data);
+		}
+	}
+	// over here, the size is in blocks (so not pixels)
+	pub fn draw_mino_centered(&self, canvas: &mut WindowCanvas, mut origin: vec2i, mino: &Mino, size: vec2i) {
+		let margin = (vec2f::from(size) - vec2f::from(mino.get_size())) / 2f64;
+		origin += vec2i::from(margin * self.block_size_draw.into());
 		for (block, data) in mino.blocks.iter().zip(mino.blocks_data.iter()) {
 			self.draw_block(canvas, origin, block, data);
 		}

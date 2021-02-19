@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use std::cmp::{max, min};
+
 use crate::vec2::{vec2f,vec2i};
 use crate::block::Data;
 use serde::{Serialize,Deserialize};
@@ -60,6 +62,23 @@ impl Mino {
 	}
 	pub fn down(&mut self) {
 		self.translate(vec2i!(0,1));
+	}
+
+	pub fn get_rect(&self) -> (vec2i,vec2i) {
+		let mut iter = self.blocks.iter();
+		let mut hi = iter.next().unwrap().clone();
+		let mut lo = hi;
+		for v in iter {
+			hi.x = max(hi.x, v.x);
+			hi.y = max(hi.y, v.y);
+			lo.x = min(lo.x, v.x);
+			lo.y = min(lo.y, v.y);
+		}
+		(lo,hi)
+	}
+	pub fn get_size(&self) -> vec2i {
+		let (lo,hi) = self.get_rect();
+		hi-lo+vec2i!(1,1)
 	}
 	
 	pub fn make_shadow(&mut self) {
