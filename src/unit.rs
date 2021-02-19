@@ -132,17 +132,26 @@ impl LocalMinoRng {
 pub enum Mode {
 	Marathon{level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint{lines_cleared_target: u32},
+	Versus{lines_received: u32, target_unit_id: usize},
 }
 
 impl Mode {
 	pub fn default_marathon() -> Mode {
-		Mode::Marathon{
+		Mode::Marathon {
 			level_target: 50, level: 1,
 			lines_before_next_level: get_lines_before_next_level(1),
 		}
 	}
 	pub fn default_sprint() -> Mode {
-		Mode::Sprint{lines_cleared_target: 40}
+		Mode::Sprint {
+			lines_cleared_target: 40
+		}
+	}
+	pub fn default_versus() -> Mode {
+		Mode::Versus {
+			lines_received: 0,
+			target_unit_id: 0,
+		}
 	}
 }
 

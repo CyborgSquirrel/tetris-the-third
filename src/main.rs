@@ -81,16 +81,6 @@ fn on_level_changed<'a>(
 	}
 }
 
-fn create_score_text<'a>(
-	score: u32,
-	font: &sdl2::ttf::Font,
-	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
--> sdl2::render::Texture<'a> {
-	TextBuilder::new(format!("Score: {}", score), Color::WHITE)
-		.with_wrap(120)
-		.build(font, texture_creator)
-}
-
 fn get_fall_duration(level: u32) -> Duration {
 	let base: Duration = Duration::from_secs_f64(0.5);
 	base.div_f64(1f64 + (level as f64 / 10f64))
@@ -471,6 +461,10 @@ fn main() {
 							player.update(&mut config.players, &event)
 						}
 					}
+					// if is_key_down(&event, Some(Keycode::L)) {
+					// 	let unit::Unit{base:unit::Base{well,..},..} = &mut units[0];
+					// 	game::try_add_bottom_gap_lines(well, 2, 3);
+					// }
 					match event{
 						// Not adding restart keybind for now
 						// Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..}
@@ -545,6 +539,7 @@ fn main() {
 								if selected_network_state == 0 {
 									network_state = NetworkState::Offline;
 									state = State::Play;
+									
 									let player = Player::new(configs.next().unwrap(),None);
 									let unit = Unit {base: saved_unit.take().unwrap(), kind: unit::Kind::local(player)};
 									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
@@ -560,9 +555,23 @@ fn main() {
 								network_state = match selected_network_state {
 									0 => {
 										state = State::Play;
+										
+										// THIS BIT IS TEMPORARY, FOR TESTING
+										// TODO
 										let player = Player::new(configs.next().unwrap(),None);
 										let mut unit = Unit::local(
-											game_mode_ctors[chosen_game_mode](),
+											unit::Mode::default_versus(),
+											player);
+										if let unit::Kind::Local {rng,..} = &mut unit.kind {
+											unit.base.falling_mino.replace(
+												rng.next_mino_centered(
+													&mut network_state, 0, &unit.base.well));
+										}
+										units.push(unit);
+										
+										let player = Player::new(configs.next().unwrap(),None);
+										let mut unit = Unit::local(
+											unit::Mode::default_versus(),
 											player);
 										if let unit::Kind::Local {rng,..} = &mut unit.kind {
 											unit.base.falling_mino.replace(
@@ -793,9 +802,12 @@ fn main() {
 		// @update
 		match state {
 			State::Play => {
-				for (unit_id,unit,lines_cleared_text,level_text)
-				in izip!(0usize..,units.iter_mut(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
-					let Unit {base: unit::Base {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode}, kind} = unit;
+				let foreach_unit = || {
+					
+				};
+				for (unit_id,lines_cleared_text,level_text)
+				in izip!(0usize..,lines_cleared_text.iter_mut(),level_text.iter_mut()) {
+					let Unit {base: unit::Base {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode}, kind} = &mut units[unit_id];
 					match state {
 						unit::State::Play if (!paused || network_players > 0) => {
 							if let unit::Kind::Local {player,rng} = kind {
@@ -854,6 +866,8 @@ fn main() {
 									
 									mino_translated |= mino_translated_while_falling;
 									
+									*fall_countdown += dpf;
+									
 									if mino_translated {
 										network_state.broadcast_event(
 											&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
@@ -889,26 +903,30 @@ fn main() {
 												*lines_cleared_text =
 													create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
 												
-												if let Mode::Marathon {level,lines_before_next_level,..} = mode {
-													*lines_before_next_level -= clearable_lines as i32;
-													let mut level_changed = false;
-													while *lines_before_next_level <= 0 {
-														*level += 1;
-														*lines_before_next_level += unit::get_lines_before_next_level(*level);
-														level_changed = true;
+												match mode {
+													Mode::Versus {target_unit_id,..} => {
+														
 													}
-													if level_changed {
-														on_level_changed(
-															*level,
-															&font, &texture_creator, level_text,
-															Some(fall_duration));
+													Mode::Marathon {level,lines_before_next_level,..} => {
+														*lines_before_next_level -= clearable_lines as i32;
+														let mut level_changed = false;
+														while *lines_before_next_level <= 0 {
+															*level += 1;
+															*lines_before_next_level += unit::get_lines_before_next_level(*level);
+															level_changed = true;
+														}
+														if level_changed {
+															on_level_changed(
+																*level,
+																&font, &texture_creator, level_text,
+																Some(fall_duration));
+														}
 													}
+													_ => {}
 												}
 											}
 										}
 									}
-									
-									*fall_countdown += dpf;
 								}
 							}
 						}
@@ -919,30 +937,30 @@ fn main() {
 								*state = unit::State::Play;
 								game::line_clearing_system(well, animate_line);
 								
-								match mode {
-									Mode::Marathon{level,level_target,..} => {
-										if *level >= *level_target {
-											let _won_text =
-												TextBuilder::new(
-													format!("You won! Press r to restart.").to_string(),
-													Color::WHITE)
-												.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
-												.build(&font, &texture_creator);
-											*state = unit::State::Win;
-										}
-									}
-									Mode::Sprint{lines_cleared_target} => {
-										if *lines_cleared >= *lines_cleared_target {
-											let _won_text =
-												TextBuilder::new(
-													format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
-													Color::WHITE)
-												.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
-												.build(&font, &texture_creator);
-											*state = unit::State::Win;
-										}
-									}
-								}
+								// match mode {
+								// 	Mode::Marathon{level,level_target,..} => {
+								// 		if *level >= *level_target {
+								// 			let _won_text =
+								// 				TextBuilder::new(
+								// 					format!("You won! Press r to restart.").to_string(),
+								// 					Color::WHITE)
+								// 				.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+								// 				.build(&font, &texture_creator);
+								// 			*state = unit::State::Win;
+								// 		}
+								// 	}
+								// 	Mode::Sprint{lines_cleared_target} => {
+								// 		if *lines_cleared >= *lines_cleared_target {
+								// 			let _won_text =
+								// 				TextBuilder::new(
+								// 					format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
+								// 					Color::WHITE)
+								// 				.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+								// 				.build(&font, &texture_creator);
+								// 			*state = unit::State::Win;
+								// 		}
+								// 	}
+								// }
 							}
 						}
 						

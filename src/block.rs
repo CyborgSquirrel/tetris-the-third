@@ -8,6 +8,7 @@ pub struct Data {
 impl Data {
 	pub const BACKGROUND: Data = Data{texture_pos:vec2i{x:0,y:0}};
 	pub const SHADOW: Data = Data{texture_pos:vec2i{x:1,y:0}};
+	pub const GRAY: Data = Data{texture_pos:vec2i{x:3,y:0}};
 	
 	pub const CYAN: Data = Data{texture_pos:vec2i{x:2,y:0}};
 	pub const ORANGE: Data = Data{texture_pos:vec2i{x:0,y:1}};

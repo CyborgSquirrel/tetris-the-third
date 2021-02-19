@@ -4,7 +4,7 @@ use std::{mem::swap, time::Duration};
 use crate::player;
 use crate::vec2i;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
-use std::cmp::{max,min};
+use std::cmp::min;
 
 pub type Well = array2d::Array2D<Option<block::Data>>;
 
@@ -154,6 +154,24 @@ pub fn try_clear_lines(well: &mut Well) {
 		}
 		if count == well.column_len() {
 			dy += 1;
+		}
+	}
+}
+
+pub fn try_add_bottom_line_with_gap(
+	well: &mut Well,
+	lines: usize,
+	gap: usize,
+) {
+	for y in 0..well.row_len() {
+		for x in 0..well.column_len() {
+			if well[(x,y)].is_some() {
+				if y >= lines {
+					well[(x,y-lines)] = well[(x,y)];
+				}
+			}
+			well[(x,y)] = if y >= well.row_len()-lines && x != gap
+			{Some(block::Data::GRAY)} else {None}
 		}
 	}
 }

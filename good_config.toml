@@ -31,16 +31,18 @@ harddrop = "a"
 store = "righttrigger"
 
 [[players]]
-[players.controls.keyboard]
-left = "left"
-right = "right"
+# [players.controls.keyboard]
+# left = "left"
+# left_alt = ""
+# right = "right"
+# right_alt = ""
 
-rot_right_alt = "up"
+# rot_right_alt = "up"
 
-softdrop_alt = "down"
-harddrop = "right shift"
+# softdrop_alt = "down"
+# harddrop = "right shift"
 
-store = "return"
+# store = "return"
 
 [players.controls.controller]
 left = "dpleft"
