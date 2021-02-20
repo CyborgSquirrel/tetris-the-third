@@ -3,6 +3,7 @@ use crate::Mino;
 use std::{mem::swap, time::Duration};
 use crate::player;
 use crate::vec2i;
+use itertools::izip;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
 use std::cmp::min;
 
@@ -128,19 +129,6 @@ pub fn create_shadow_mino(mino: &Mino, well: &Well) -> Mino {
 	shadow_mino
 }
 
-pub fn mark_clearable_lines(well: &Well, clearable: &mut Vec<bool>, clearable_count: &mut u32) {
-	for (row,clearable) in (well.columns_iter()).zip(clearable.iter_mut()) {
-		let mut count = 0;
-		for block in row {
-			count += block.is_some() as u32;
-		}
-		if count as usize == well.column_len() {
-			*clearable_count += 1;
-			*clearable = true;
-		}
-	}
-}
-
 pub fn try_clear_lines(well: &mut Well) {
 	let mut dy: usize = 0;
 	for y in (0..well.row_len()).rev() {
@@ -163,6 +151,7 @@ pub fn try_add_bottom_line_with_gap(
 	lines: usize,
 	gap: usize,
 ) {
+	if lines == 0 {return}
 	for y in 0..well.row_len() {
 		for x in 0..well.column_len() {
 			if well[(x,y)].is_some() {
@@ -295,11 +284,12 @@ pub fn mino_adding_system<F>(
 	animate_line: &mut Vec<bool>,
 	can_store_mino: &mut bool,
 	mut next_mino: F,
-) -> (bool, u32)
+) -> (bool, u32, u32)
 where F: FnMut() -> Mino
 {
 	let can_add = mino_fits_in_well(falling_mino, &well);
 	let mut clearable_lines = 0;
+	let mut sendable_lines = 0;
 	if can_add {
 		*can_store_mino = true;
 		add_mino_to_well(falling_mino, well);
@@ -308,12 +298,24 @@ where F: FnMut() -> Mino
 			*fall_countdown = Duration::from_secs(0);
 		}
 		
-		mark_clearable_lines(well, animate_line, &mut clearable_lines);
+		for (row,clearable) in izip!(well.columns_iter(),animate_line.iter_mut()) {
+			let mut count = 0;
+			let mut sendable = true;
+			for block in row {
+				count += block.is_some() as u32;
+				sendable &= block.map_or(true, |block|block!=block::Data::GRAY);
+			}
+			if count as usize == well.column_len() {
+				clearable_lines += 1;
+				sendable_lines += sendable as u32;
+				*clearable = true;
+			}
+		}
 		
 		*falling_mino = next_mino();
 		center_mino(falling_mino, &well);
 	}
-	(can_add, clearable_lines)
+	(can_add, clearable_lines, sendable_lines)
 }
 
 pub fn mino_storage_system<F>(

@@ -132,7 +132,7 @@ impl LocalMinoRng {
 pub enum Mode {
 	Marathon{level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint{lines_cleared_target: u32},
-	Versus{lines_received: u32, target_unit_id: usize},
+	Versus{lines_received: VecDeque<u32>, target_unit_id: usize},
 }
 
 impl Mode {
@@ -149,7 +149,7 @@ impl Mode {
 	}
 	pub fn default_versus() -> Mode {
 		Mode::Versus {
-			lines_received: 0,
+			lines_received: VecDeque::new(),
 			target_unit_id: 0,
 		}
 	}

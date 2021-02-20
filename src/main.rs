@@ -1,13 +1,15 @@
 // #![windows_subsystem = "windows"]
 
-use sdl2::render::TextureQuery;
-use sdl2::event::Event;
+use sdl2::render::{BlendMode, TextureQuery};
+use sdl2::render::WindowCanvas;
+use sdl2::{event::Event, render::{Texture,TextureCreator}};
 use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
-use std::time::{Duration,Instant};
+use std::{net::SocketAddr, time::{Duration,Instant}};
 use std::thread::sleep;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use rand::{RngCore, SeedableRng, rngs::SmallRng};
 
 use itertools::izip;
 
@@ -52,8 +54,8 @@ enum State {
 fn create_lines_cleared_text<'a>(
 	lines_cleared: u32,
 	font: &sdl2::ttf::Font,
-	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
--> sdl2::render::Texture<'a> {
+	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>)
+-> Texture<'a> {
 	TextBuilder::new(format!("Lines: {}", lines_cleared), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -62,8 +64,8 @@ fn create_lines_cleared_text<'a>(
 fn create_level_text<'a>(
 	level: u32,
 	font: &sdl2::ttf::Font,
-	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>)
--> sdl2::render::Texture<'a> {
+	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>)
+-> Texture<'a> {
 	TextBuilder::new(format!("Level: {}", level), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -72,8 +74,8 @@ fn create_level_text<'a>(
 fn on_level_changed<'a>(
 	level: u32,
 	font: &sdl2::ttf::Font,
-	texture_creator: &'a sdl2::render::TextureCreator<sdl2::video::WindowContext>,
-	level_text: &mut sdl2::render::Texture<'a>,
+	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>,
+	level_text: &mut Texture<'a>,
 	fall_duration: Option<&mut Duration>) {
 	*level_text = create_level_text(level, font, texture_creator);
 	if let Some(fall_duration) = fall_duration {
@@ -160,7 +162,7 @@ fn apply_unit_event(base: &mut Unit, event: UnitEvent) {
 			UnitEvent::AddMinoToWell => {
 				if let Some(falling_mino) = falling_mino {
 					*state = unit::State::LineClear {countdown:Duration::from_secs(0)};
-					let (_can_add, clearable_lines) = game::mino_adding_system(
+					let (_can_add, clearable_lines, _sendable_lines) = game::mino_adding_system(
 						falling_mino, well,
 						None,
 						animate_line,
@@ -206,7 +208,7 @@ impl StartLayout {
 	}
 }
 
-fn draw_menu_select(canvas: &mut sdl2::render::WindowCanvas, rect: sdl2::rect::Rect) {
+fn draw_menu_select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect) {
 	canvas.set_draw_color(Color::RGBA(255, 255, 0, 127));
 	let _ = canvas.draw_rect(rect);
 }
@@ -255,9 +257,35 @@ enum StartSelection {
 	NetworkMode,
 }
 
-fn darken(canvas: &mut sdl2::render::WindowCanvas) {
+fn darken(canvas: &mut WindowCanvas) {
 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
 	let _ = canvas.fill_rect(None);
+}
+
+fn ask_for_ip(stdin: &std::io::Stdin) -> SocketAddr {
+	println!("Write the ip pls:");
+	
+	let mut addr = String::new();
+	stdin.read_line(&mut addr).unwrap();
+	addr = addr.trim_end().into();
+	
+	let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
+	
+	let addr = addr.to_socket_addrs().ok()
+		.and_then(|mut v|v.next())
+		.unwrap_or(default_addr);
+	
+	println!("{:?}", addr);
+	
+	addr
+}
+
+fn ask_for_name(stdin: &std::io::Stdin) -> String {
+	let mut name = String::new();
+	println!("Player name:");
+	stdin.read_line(&mut name).unwrap();
+	name = name.trim_end().into();
+	name
 }
 
 fn main() {
@@ -307,7 +335,7 @@ fn main() {
 	
 	let mut canvas = window.into_canvas().build()
 		.expect("Failed to create canvas");
-	canvas.set_blend_mode(sdl2::render::BlendMode::Blend);
+	canvas.set_blend_mode(BlendMode::Blend);
 	
 	let mut event_pump = sdl_context.event_pump()
 		.expect("Failed to create event pump");
@@ -342,7 +370,7 @@ fn main() {
 	let network_player_text = TextBuilder::new(" (Network)".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
 	
-	let get_player_text = |unit: &Unit| -> &sdl2::render::Texture{
+	let get_player_text = |unit: &Unit| -> &Texture{
 		match unit.kind {
 			unit::Kind::Local {..} => &local_player_text,
 			unit::Kind::Network {..} => &network_player_text,
@@ -408,7 +436,7 @@ fn main() {
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
 	let mut player_names = Vec::<String>::new();
-	let mut player_names_text = Vec::<sdl2::render::Texture>::new();
+	let mut player_names_text = Vec::<Texture>::new();
 	
 	let mut network_init: Option<NetworkInit> = None;
 	
@@ -437,12 +465,21 @@ fn main() {
 		else {&cant_continue_text}
 	};
 	
+	let mut quick_game = true;
 	let new_game_text = TextBuilder::new("New Game".into(), Color::WHITE).build(&font, &texture_creator);
+	let quick_game_text = TextBuilder::new("Quick Game".into(), Color::WHITE).build(&font, &texture_creator);
+	
+	let get_game_text = |quick_game|{
+		if quick_game {&quick_game_text}
+		else {&new_game_text}
+	};
 	
 	let just_saved_text = TextBuilder::new("Saved!".into(), Color::WHITE).build(&font, &texture_creator);
 	let mut just_saved = false;
 	
 	let mut start_selection = StartSelection::Continue;
+	
+	let mut other_rng = SmallRng::from_entropy();
 	
 	'running: loop {
 		let start = Instant::now();
@@ -552,104 +589,69 @@ fn main() {
 						},
 						NewGame => {
 							if is_key_down(&event, Some(Keycode::Return)) {
-								network_state = match selected_network_state {
-									0 => {
-										state = State::Play;
-										
-										// THIS BIT IS TEMPORARY, FOR TESTING
-										// TODO
-										let player = Player::new(configs.next().unwrap(),None);
-										let mut unit = Unit::local(
-											unit::Mode::default_versus(),
-											player);
-										if let unit::Kind::Local {rng,..} = &mut unit.kind {
-											unit.base.falling_mino.replace(
-												rng.next_mino_centered(
-													&mut network_state, 0, &unit.base.well));
-										}
-										units.push(unit);
-										
-										let player = Player::new(configs.next().unwrap(),None);
-										let mut unit = Unit::local(
-											unit::Mode::default_versus(),
-											player);
-										if let unit::Kind::Local {rng,..} = &mut unit.kind {
-											unit.base.falling_mino.replace(
-												rng.next_mino_centered(
-													&mut network_state, 0, &unit.base.well));
-										}
-										units.push(unit);
-										
-										NetworkState::Offline
+								if quick_game {
+									state = State::Play;
+									
+									let player = Player::new(configs.next().unwrap(),None);
+									let mut unit = Unit::local(Mode::default_marathon(), player);
+									if let unit::Kind::Local {rng,..} = &mut unit.kind {
+										unit.base.falling_mino.replace(
+											rng.next_mino_centered(
+												&mut network_state, 0, &unit.base.well));
 									}
-									1 => {
-										println!("Write the ip pls:");
-										
-										let mut addr = String::new();
-										stdin.read_line(&mut addr).unwrap();
-										addr = addr.trim_end().into();
-										
-										let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
-										
-										let addr = addr.to_socket_addrs().ok()
-											.and_then(|mut v|v.next())
-											.unwrap_or(default_addr);
-										
-										println!("{:?}", addr);
-										
-										let listener = TcpListener::bind(addr)
-											.expect("Couldn't bind listener");
-										listener.set_nonblocking(true)
-											.expect("Couldn't set listener to be non-blocking");
-										
-										state = State::Lobby;
-										
-										NetworkState::Host {
-											listener,
-											streams: Vec::new(),
+									units.push(unit);
+								}else {
+									network_state = match selected_network_state {
+										0 => {
+											state = State::Lobby;
+											
+											NetworkState::Offline
 										}
-									}
-									2 => {
-										println!("Write the ip pls:");
-										
-										let mut addr = String::new();
-										stdin.read_line(&mut addr).unwrap();
-										addr = addr.trim_end().into();
-										
-										let default_addr = "127.0.0.1:4141".to_socket_addrs().unwrap().next().unwrap();
-										
-										let addr = addr.to_socket_addrs().ok()
-											.and_then(|mut v|v.next())
-											.unwrap_or(default_addr);
-										
-										println!("{:?}", addr);
-										
-										let mut name = String::new();
-										println!("Player name:");
-										stdin.read_line(&mut name).unwrap();
-										name = name.trim_end().into();
-										
-										let stream = TcpStream::connect(addr)
-											.expect("Couldn't connect stream");
-										stream.set_nonblocking(true)
-											.expect("Couldn't set stream to be non-blocking");
-										let mut stream = LenIO::new(stream);
-										
-										state = State::Lobby;
-										units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
-										
-										stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
-										player_names_text.push(
-											TextBuilder::new(name.clone(), Color::WHITE)
-											.build(&font, &texture_creator));
-										player_names.push(name);
-										
-										NetworkState::Client {
-											stream,
+										1 => {
+											let addr = ask_for_ip(&stdin);
+											
+											let listener = TcpListener::bind(addr)
+												.expect("Couldn't bind listener");
+											listener.set_nonblocking(true)
+												.expect("Couldn't set listener to be non-blocking");
+											
+											state = State::Lobby;
+											
+											NetworkState::Host {
+												listener,
+												streams: Vec::new(),
+											}
 										}
+										2 => {
+											let addr = ask_for_ip(&stdin);
+											let name = ask_for_name(&stdin);
+											
+											let stream = TcpStream::connect(addr)
+												.expect("Couldn't connect stream");
+											stream.set_nonblocking(true)
+												.expect("Couldn't set stream to be non-blocking");
+											let mut stream = LenIO::new(stream);
+											
+											state = State::Lobby;
+											units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
+											
+											stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
+											player_names_text.push(
+												TextBuilder::new(name.clone(), Color::WHITE)
+												.build(&font, &texture_creator));
+											player_names.push(name);
+											
+											NetworkState::Client {
+												stream,
+											}
+										}
+										_ => panic!()
 									}
-									_ => panic!()
 								}
+							}
+							if is_key_down(&event, Some(Keycode::A)) ||
+							is_key_down(&event, Some(Keycode::D)) {
+								quick_game = !quick_game;
 							}
 						},
 						GameMode => {
@@ -677,16 +679,13 @@ fn main() {
 					
 				}
 				State::Lobby => {
-					if let NetworkState::Host {..} = network_state {
+					if let NetworkState::Host {..} | NetworkState::Offline = network_state {
 						if is_key_down(&event, Some(Keycode::Return)) {
 							network_state.broadcast_event(&NetworkEvent::StartGame);
 							start_game = true;
 						}
 						if is_key_down(&event, Some(Keycode::Q)) {
-							let mut name = String::new();
-							println!("Player name:");
-							stdin.read_line(&mut name).unwrap();
-							name = name.trim_end().into();
+							let name = ask_for_name(&stdin);
 							player_names_text.push(
 								TextBuilder::new(name.clone(), Color::WHITE)
 								.build(&font, &texture_creator));
@@ -760,7 +759,7 @@ fn main() {
 						}
 						NetworkEvent::InitEnd => {
 							if let Some(mut network_init) = network_init {
-								let mut player_names_text_init = Vec::<sdl2::render::Texture>::new();
+								let mut player_names_text_init = Vec::<Texture>::new();
 								for name in &network_init.player_names {
 									player_names_text_init.push(
 										TextBuilder::new(name.clone(), Color::WHITE)
@@ -802,11 +801,8 @@ fn main() {
 		// @update
 		match state {
 			State::Play => {
-				let foreach_unit = || {
-					
-				};
 				for (unit_id,lines_cleared_text,level_text)
-				in izip!(0usize..,lines_cleared_text.iter_mut(),level_text.iter_mut()) {
+				in izip!(0usize..units.len(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
 					let Unit {base: unit::Base {well, state, stored_mino, can_store_mino, falling_mino, animate_line, lines_cleared, mode}, kind} = &mut units[unit_id];
 					match state {
 						unit::State::Play if (!paused || network_players > 0) => {
@@ -872,13 +868,16 @@ fn main() {
 										network_state.broadcast_event(
 											&NetworkEvent::UnitEvent{unit_id,event:UnitEvent::TranslateMino{
 												origin: falling_mino.origin,
-												blocks: falling_mino.blocks,
+												blocks: falling_mino.blocks.clone()
 											}}
 										);
 									}
 									
+									// let update_target = true;
+									// if update
+									
 									if add_mino {
-										let (can_add, clearable_lines) = game::mino_adding_system(
+										let (can_add, clearable_lines, sendable_lines) = game::mino_adding_system(
 											falling_mino, well,
 											Some(fall_countdown),
 											animate_line,
@@ -896,6 +895,13 @@ fn main() {
 										if !can_add {
 											*state = unit::State::Over;
 										}else {
+											if let Mode::Versus {lines_received,..} = mode {
+												while !lines_received.is_empty() {
+													game::try_add_bottom_line_with_gap(
+														well, lines_received.pop_front().unwrap() as usize,
+														other_rng.next_u32() as usize % well.num_rows());
+												}
+											}
 											if clearable_lines > 0 {
 												*state = unit::State::LineClear{countdown: Duration::from_secs(0)};
 												
@@ -903,26 +909,25 @@ fn main() {
 												*lines_cleared_text =
 													create_lines_cleared_text(*lines_cleared, &font, &texture_creator);
 												
-												match mode {
-													Mode::Versus {target_unit_id,..} => {
-														
+												if let Mode::Marathon {level,lines_before_next_level,..} = mode {
+													*lines_before_next_level -= clearable_lines as i32;
+													let mut level_changed = false;
+													while *lines_before_next_level <= 0 {
+														*level += 1;
+														*lines_before_next_level += unit::get_lines_before_next_level(*level);
+														level_changed = true;
 													}
-													Mode::Marathon {level,lines_before_next_level,..} => {
-														*lines_before_next_level -= clearable_lines as i32;
-														let mut level_changed = false;
-														while *lines_before_next_level <= 0 {
-															*level += 1;
-															*lines_before_next_level += unit::get_lines_before_next_level(*level);
-															level_changed = true;
-														}
-														if level_changed {
-															on_level_changed(
-																*level,
-																&font, &texture_creator, level_text,
-																Some(fall_duration));
-														}
+													if level_changed {
+														on_level_changed(
+															*level,
+															&font, &texture_creator, level_text,
+															Some(fall_duration));
 													}
-													_ => {}
+												}else if let Mode::Versus {target_unit_id: _,..} = mode {
+													let target_unit_id = (unit_id+1).rem_euclid(2);//*target_unit_id;
+													if let Unit{base:unit::Base{mode:Mode::Versus{lines_received,..},..},..} = &mut units[target_unit_id] {
+														lines_received.push_back(sendable_lines);
+													}
 												}
 											}
 										}
@@ -1040,48 +1045,51 @@ fn main() {
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
-			let TextureQuery {width, height, ..} = new_game_text.query();
+			let game_text = get_game_text(quick_game);
+			let TextureQuery {width, height, ..} = game_text.query();
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 			let _ = canvas.copy(
-				&new_game_text,
+				&game_text,
 				Rect::new(0, 0, width, height),
 				rect);
 			if start_selection == StartSelection::NewGame {
 				draw_menu_select(&mut canvas, rect);
 			}
 			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let game_mode_text =
-				&game_mode_text[chosen_game_mode];
-			let TextureQuery {width, height, ..} = game_mode_text.query();
-			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			let _ = canvas.copy(
-				&game_mode_text,
-				Rect::new(0, 0, width, height),
-				rect);
-			if start_selection == StartSelection::GameMode {
-				draw_menu_select(&mut canvas, rect);
-			}
-			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let network_text = get_network_text(selected_network_state);
-			let TextureQuery {width, height, ..} = network_text.query();
-			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			let _ = canvas.copy(
-				&network_text,
-				Rect::new(0, 0, width, height),
-				rect);
-			if start_selection == StartSelection::NetworkMode {
-				draw_menu_select(&mut canvas, rect);
+			if !quick_game {
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let game_mode_text =
+					&game_mode_text[chosen_game_mode];
+				let TextureQuery {width, height, ..} = game_mode_text.query();
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				let _ = canvas.copy(
+					&game_mode_text,
+					Rect::new(0, 0, width, height),
+					rect);
+				if start_selection == StartSelection::GameMode {
+					draw_menu_select(&mut canvas, rect);
+				}
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let network_text = get_network_text(selected_network_state);
+				let TextureQuery {width, height, ..} = network_text.query();
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				let _ = canvas.copy(
+					&network_text,
+					Rect::new(0, 0, width, height),
+					rect);
+				if start_selection == StartSelection::NetworkMode {
+					draw_menu_select(&mut canvas, rect);
+				}
 			}
 			
 		}else if let State::Lobby {..} = state {
 			
-			if let NetworkState::Host {..} = network_state {
+			if let NetworkState::Host {..} | NetworkState::Offline = network_state {
 				let TextureQuery {width, height, ..} = host_start_text.query();
 				let _ = canvas.copy(
 					&host_start_text,

@@ -21,7 +21,7 @@ pub type vec2f = vec2<f64>;
 );
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct vec2<T>{
 	pub x: T,
 	pub y: T,
