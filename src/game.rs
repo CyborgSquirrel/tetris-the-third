@@ -330,9 +330,8 @@ pub fn mino_storage_system<F>(
 ) -> bool
 where F: FnOnce() -> Mino
 {
-	if *store && *can_store_mino {
+	let r = if *store && *can_store_mino {
 		*can_store_mino = false;
-		*store = false;
 		if let Some(fall_countdown) = fall_countdown {
 			*fall_countdown = Duration::from_secs(0);
 		}
@@ -346,7 +345,9 @@ where F: FnOnce() -> Mino
 		}
 		center_mino(falling_mino, &well);
 		true
-	}else {false}
+	}else {false};
+	*store = false;
+	r
 }
 
 pub fn line_clearing_system(
