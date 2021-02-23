@@ -1,6 +1,7 @@
-width = 700
-height = 700
+width = 1200
+height = 800
 borderless = false
+block_size = 30
 
 [[players]]
 move_prepeat_duration = 0.15

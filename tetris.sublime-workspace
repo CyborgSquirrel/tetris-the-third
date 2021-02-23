@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"as_",
+				"as_integer(…)\t  pub fn as_integer(&self) -> Option<i64>"
+			],
+			[
 				"ask_",
 				"ask_for_name(…)\t  fn ask_for_name(stdin: &std::io::Stdin) -> String"
 			],
@@ -510,10 +514,6 @@
 			[
 				"T",
 				"TcpListener\t  Struct"
-			],
-			[
-				"Tcp",
-				"TcpListener"
 			]
 		]
 	},
@@ -532,16 +532,16 @@
 			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 36851,
+				"buffer_size": 37307,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"contents": "Microsoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>git add .                                                               \nwarning: LF will be replaced by CRLF in tetris.sublime-project.                             \nThe file will have its original line endings in your working directory.                     \nwarning: LF will be replaced by CRLF in tetris.sublime-workspace.                           \nThe file will have its original line endings in your working directory.                     \n                                                                                            \nD:\\Workspace\\tetris>git commit -m \"Checkpoint\"                                              \n[master 79306bc] Checkpoint                                                                 \n 7 files changed, 1010 insertions(+), 924 deletions(-)                                      \n                                                                                            \nD:\\Workspace\\tetris>git push origin master                                                  \nfatal: AggregateException encountered.                                                      \n   One or more errors occurred.                                                             \nCounting objects: 31, done.                                                                 \nDelta compression using up to 8 threads.                                                    \nCompressing objects: 100% (31/31), done.                                                    \nWriting objects: 100% (31/31), 10.71 KiB | 0 bytes/s, done.                                 \nTotal 31 (delta 24), reused 0 (delta 0)                                                     \nremote: Resolving deltas: 100% (24/24), completed with 11 local objects.                    \nTo https://github.com/CyborgSquirrel/tetris-the-third                                       \n   c3cc059..79306bc  master -> master                                                       \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>",
+			"contents": "Microsoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>git add .                                                               \nwarning: LF will be replaced by CRLF in tetris.sublime-project.                             \nThe file will have its original line endings in your working directory.                     \nwarning: LF will be replaced by CRLF in tetris.sublime-workspace.                           \nThe file will have its original line endings in your working directory.                     \n                                                                                            \nD:\\Workspace\\tetris>git commit -m \"Checkpoint\"                                              \n[master 79306bc] Checkpoint                                                                 \n 7 files changed, 1010 insertions(+), 924 deletions(-)                                      \n                                                                                            \nD:\\Workspace\\tetris>git push origin master                                                  \nfatal: AggregateException encountered.                                                      \n   One or more errors occurred.                                                             \nCounting objects: 31, done.                                                                 \nDelta compression using up to 8 threads.                                                    \nCompressing objects: 100% (31/31), done.                                                    \nWriting objects: 100% (31/31), 10.71 KiB | 0 bytes/s, done.                                 \nTotal 31 (delta 24), reused 0 (delta 0)                                                     \nremote: Resolving deltas: 100% (24/24), completed with 11 local objects.                    \nTo https://github.com/CyborgSquirrel/tetris-the-third                                       \n   c3cc059..79306bc  master -> master                                                       \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>",
 			"settings":
 			{
-				"buffer_size": 3989,
+				"buffer_size": 4289,
 				"line_ending": "Windows",
 				"name": "Command Prompt",
 				"scratch": true
@@ -560,7 +560,7 @@
 			"file": "src/block.rs",
 			"settings":
 			{
-				"buffer_size": 3383,
+				"buffer_size": 3401,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -605,7 +605,7 @@
 			"file": "src/config.rs",
 			"settings":
 			{
-				"buffer_size": 4641,
+				"buffer_size": 4770,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -614,7 +614,7 @@
 			"file": "config.toml",
 			"settings":
 			{
-				"buffer_size": 1151,
+				"buffer_size": 1167,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -1248,6 +1248,14 @@
 		"selected_items":
 		[
 			[
+				"sync",
+				"Sync Settings: Upload"
+			],
+			[
+				"terminal: ",
+				"Terminal: Open"
+			],
+			[
 				"upload",
 				"Sync Settings: Upload"
 			],
@@ -1740,10 +1748,6 @@
 				"Sync Settings: Download"
 			],
 			[
-				"sync",
-				"Sync Settings: Upload"
-			],
-			[
 				"package Control",
 				"Package Control: List Packages"
 			],
@@ -1754,10 +1758,6 @@
 			[
 				"filedi",
 				"FileDiffs: Menu"
-			],
-			[
-				"list",
-				"Package Control: List Packages"
 			]
 		],
 		"width": 436.0
@@ -1944,7 +1944,7 @@
 	],
 	"find":
 	{
-		"height": 41.0
+		"height": 40.0
 	},
 	"find_in_files":
 	{
@@ -1959,6 +1959,13 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"700",
+			".into()",
+			"config.block_size",
+			"config.block_size as i32",
+			" as i32",
+			"config.block_size",
+			"30",
 			"800",
 			"Player name:",
 			"network_state",
@@ -2079,14 +2086,7 @@
 			"PlayerType",
 			"offline",
 			"Offline",
-			"offline",
-			"Offline",
-			"PlayerType::Host",
-			"PlayerType",
-			"PlayerType::Client",
-			"Host",
-			"GameEvent",
-			"LobbyClient"
+			"offline"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2225,7 +2225,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 11,
+					"stack_index": 10,
 					"type": "text"
 				},
 				{
@@ -2234,7 +2234,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 36851,
+						"buffer_size": 37307,
 						"regions":
 						{
 							"bookmarks":
@@ -2250,16 +2250,16 @@
 						"selection":
 						[
 							[
-								22621,
-								22621
+								34644,
+								34644
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 0,
-								"count": 1553,
+								"changes": 784,
+								"count": 1574,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -2279,24 +2279,24 @@
 								{
 									"1":
 									[
-										22628,
-										22629
+										34735,
+										34736
 									]
 								},
 								"icon":
 								{
 									"1":
 									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
+										"Packages/BracketHighlighter/icons/round_bracket.png",
+										"region.yellowish"
 									]
 								},
 								"open":
 								{
 									"1":
 									[
-										21933,
-										21934
+										34625,
+										34626
 									]
 								},
 								"unmatched":
@@ -2310,6 +2310,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2320,46 +2330,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2372,17 +2372,11 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 14483.0,
+						"translation.y": 20301.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
 					"type": "text"
-				},
-				{
-					"file": "gfx/block.png",
-					"semi_transient": true,
-					"stack_index": 8,
-					"type": "image"
 				}
 			]
 		},
@@ -2395,19 +2389,27 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3989,
+						"buffer_size": 4289,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3989,
-								3989
+								4289,
+								4289
 							]
 						],
 						"settings":
 						{
+							"WordCount":
+							{
+								"changes": -1,
+								"modified": true,
+								"selection": true,
+								"status": -1,
+								"syntax": "plain text"
+							},
 							"__vi_external_disable": true,
 							"auto_complete": false,
 							"auto_complete_commit_on_tab": false,
@@ -2463,14 +2465,14 @@
 							"terminus_view.natural_keyboard": true,
 							"terminus_view.panel_name": null,
 							"terminus_view.tag": null,
-							"terminus_view.viewport_y": 798.0,
+							"terminus_view.viewport_y": 828.0,
 							"word_wrap": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 798.0,
+						"translation.y": 828.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 10,
+					"stack_index": 9,
 					"type": "text"
 				},
 				{
@@ -2546,6 +2548,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2556,46 +2568,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2607,10 +2609,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 5841.0,
+						"translation.y": 5534.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 8,
 					"type": "text"
 				},
 				{
@@ -2619,23 +2621,23 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3383,
+						"buffer_size": 3401,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								364,
-								364
+								1096,
+								1096
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 0,
-								"count": 215,
+								"changes": 32,
+								"count": 216,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -2655,8 +2657,8 @@
 								{
 									"1":
 									[
-										867,
-										868
+										3400,
+										3401
 									]
 								},
 								"icon":
@@ -2671,8 +2673,8 @@
 								{
 									"1":
 									[
-										179,
-										180
+										1095,
+										1096
 									]
 								},
 								"unmatched":
@@ -2686,6 +2688,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2696,46 +2708,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2747,7 +2749,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 325.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 7,
@@ -2826,6 +2828,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2836,46 +2848,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2966,6 +2968,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -2976,46 +2988,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -3027,7 +3029,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1509.0,
+						"translation.y": 1430.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 5,
@@ -3084,6 +3086,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -3094,46 +3106,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"spell_check": false,
 							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
@@ -3212,6 +3214,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -3222,46 +3234,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -3285,23 +3287,23 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4641,
+						"buffer_size": 4770,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1664,
-								1664
+								3688,
+								3688
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 0,
-								"count": 208,
+								"changes": 103,
+								"count": 216,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -3319,27 +3321,12 @@
 							{
 								"close":
 								{
-									"1":
-									[
-										1694,
-										1695
-									]
 								},
 								"icon":
 								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
-									]
 								},
 								"open":
 								{
-									"1":
-									[
-										1664,
-										1665
-									]
 								},
 								"unmatched":
 								{
@@ -3352,6 +3339,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -3362,46 +3359,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_diagnostic_phantom": false,
@@ -3415,7 +3402,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 969.0,
+						"translation.y": 2594.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
@@ -3427,27 +3414,23 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1151,
+						"buffer_size": 1167,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								11,
-								11
-							],
-							[
-								24,
-								24
+								59,
+								59
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 4,
-								"count": 89,
+								"changes": 38,
+								"count": 90,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -3476,6 +3459,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
@@ -3486,46 +3479,36 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
 								"bh_tag",
 								"bh_tag_center",
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"syntax": "Packages/TOML/TOML.sublime-syntax"
 						},
@@ -3541,7 +3524,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 31.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -3617,7 +3600,7 @@
 	"project": "tetris.sublime-project",
 	"replace":
 	{
-		"height": 58.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":

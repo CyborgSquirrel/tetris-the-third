@@ -144,6 +144,7 @@ pub struct Config {
 	pub width: Option<u32>,
 	pub height: Option<u32>,
 	pub borderless: bool,
+	pub block_size: u32,
 	pub players: [Player;4],
 }
 
@@ -173,11 +174,13 @@ impl Config {
 		let height = toml.get("height").and_then(Value::as_integer).map(|a|a as u32);
 		
 		let borderless = toml.get("borderless").and_then(Value::as_bool).unwrap_or(false);
+		let block_size = toml.get("block_size").and_then(Value::as_integer).unwrap_or(30) as u32;
 		
 		Config {
 			width,
 			height,
 			borderless,
+			block_size,
 			players,
 		}
 	}

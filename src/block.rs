@@ -37,11 +37,11 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
-	pub fn new(texture: &'a Texture<'a>) -> Canvas<'a> {
+	pub fn new(texture: &'a Texture<'a>, block_size_draw: u32) -> Canvas<'a> {
 		Self {
 			texture,
 			block_size_tex: 24,
-			block_size_draw: 30,
+			block_size_draw,
 		}
 	}
 	fn draw_block(&self, canvas: &mut WindowCanvas, origin: vec2i, block: &vec2i, data: &Data) {

@@ -355,10 +355,10 @@ fn main() {
 		.build(&font, &texture_creator);
 	
 	let game_over_text = TextBuilder::new("Game over".to_string(), Color::WHITE)
-		.with_wrap(10*30)
+		.with_wrap(10*config.block_size)
 		.build(&font, &texture_creator);
 	let game_won_text = TextBuilder::new("You won".to_string(), Color::WHITE)
-		.with_wrap(10*30)
+		.with_wrap(10*config.block_size)
 		.build(&font, &texture_creator);
 	
 	let host_start_text = TextBuilder::new("Press enter to start game".to_string(), Color::WHITE)
@@ -380,10 +380,16 @@ fn main() {
 	let fps: u32 = 60;
 	let dpf: Duration = Duration::from_secs(1) / fps;
 	
-	let mut chosen_game_mode: usize = 0;
+	let mut selected_game_mode: usize = 0;
 	let game_mode_text = [
 		TextBuilder::new("Marathon".to_string(),Color::WHITE).build(&font, &texture_creator),
 		TextBuilder::new("Sprint".to_string(), Color::WHITE).build(&font, &texture_creator),
+		TextBuilder::new("Versus".to_string(), Color::WHITE).build(&font, &texture_creator),
+	];
+	let game_mode_ctors = [
+		Mode::default_marathon,
+		Mode::default_sprint,
+		Mode::default_versus,
 	];
 	
 	let mut network_states = (0..3i32).cycle();
@@ -419,19 +425,15 @@ fn main() {
 	
 	let mut units: Vec<Unit> = Vec::new();
 	
-	let block_canvas = block::Canvas::new(&texture);
+	let block_canvas = block::Canvas::new(&texture, config.block_size);
 	
 	let mut state = State::Start;
 	
 	let start_text = TextBuilder::new(
 			"Welcome to tetris! Please choose a game mode, and press enter.".to_string(), 
 			Color::WHITE)
-		.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+		.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
 		.build(&font, &texture_creator);
-	let game_mode_ctors = [
-		Mode::default_marathon,
-		Mode::default_sprint,
-	];
 	
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
@@ -523,7 +525,7 @@ fn main() {
 							
 						// 	units.clear();
 						// 	for player in players.drain(..) {
-						// 		units.push(Unit::new(game_mode_ctors[chosen_game_mode](), player));
+						// 		units.push(Unit::new(game_mode_ctors[selected_game_mode](), player));
 						// 	}
 							
 						// 	state = State::Play;
@@ -633,7 +635,7 @@ fn main() {
 											let mut stream = LenIO::new(stream);
 											
 											state = State::Lobby;
-											units.push(Unit::local(game_mode_ctors[chosen_game_mode](), Player::new(configs.next().unwrap(),None)));
+											units.push(Unit::local(game_mode_ctors[selected_game_mode](), Player::new(configs.next().unwrap(),None)));
 											
 											stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
 											player_names_text.push(
@@ -658,13 +660,13 @@ fn main() {
 							if is_key_down(&event, keybinds.left) ||
 							is_key_down(&event, keybinds.left_alt) ||
 							is_controlcode_down(&event, &mut keybinds.controller_left, None) {
-								chosen_game_mode = (chosen_game_mode as i32 - 1).rem_euclid(2) as usize;
+								selected_game_mode = (selected_game_mode as i32 - 1).rem_euclid(3) as usize;
 							}
 							
 							if is_key_down(&event, keybinds.right) ||
 							is_key_down(&event, keybinds.right_alt) ||
 							is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-								chosen_game_mode = (chosen_game_mode + 1).rem_euclid(2);
+								selected_game_mode = (selected_game_mode + 1).rem_euclid(3);
 							}
 						},
 						NetworkMode => {
@@ -690,7 +692,7 @@ fn main() {
 								TextBuilder::new(name.clone(), Color::WHITE)
 								.build(&font, &texture_creator));
 							
-							units.push(Unit::local(Mode::default_marathon(), Player::new(configs.next().unwrap(),None)));
+							units.push(Unit::local(game_mode_ctors[selected_game_mode](), Player::new(configs.next().unwrap(),None)));
 							if let NetworkState::Host{streams,..} = &mut network_state {
 								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
 								for stream in streams {
@@ -783,11 +785,14 @@ fn main() {
 		if start_game {
 			start_game = false;
 			state = State::Play;
+			let units_len = units.len();
 			for (unit_id, unit) in izip!(0.., &mut units) {
-				if let unit::Kind::Local {rng,..} = &mut unit.kind {
-					unit.base.falling_mino.replace(
+				let Unit{kind, base: unit::Base{mode,falling_mino,well,..}} = unit;
+				
+				if let unit::Kind::Local{rng,..} = kind {
+					falling_mino.replace(
 						rng.next_mino_centered(
-							&mut network_state, unit_id, &unit.base.well));
+							&mut network_state, unit_id, &well));
 					network_state.broadcast_event(
 						&NetworkEvent::UnitEvent {
 							unit_id,
@@ -795,6 +800,11 @@ fn main() {
 						}
 					)
 				}
+				
+				if let Mode::Versus {target_unit_id,..} = mode {
+					*target_unit_id = (unit_id+1).rem_euclid(units_len);
+				}
+				
 			}
 		}
 		
@@ -923,8 +933,8 @@ fn main() {
 															&font, &texture_creator, level_text,
 															Some(fall_duration));
 													}
-												}else if let Mode::Versus {target_unit_id: _,..} = mode {
-													let target_unit_id = (unit_id+1).rem_euclid(2);//*target_unit_id;
+												}else if let Mode::Versus {target_unit_id,..} = mode {
+													let target_unit_id = *target_unit_id;
 													if let Unit{base:unit::Base{mode:Mode::Versus{lines_received,..},..},..} = &mut units[target_unit_id] {
 														lines_received.push_back(sendable_lines);
 													}
@@ -949,7 +959,7 @@ fn main() {
 								// 				TextBuilder::new(
 								// 					format!("You won! Press r to restart.").to_string(),
 								// 					Color::WHITE)
-								// 				.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+								// 				.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
 								// 				.build(&font, &texture_creator);
 								// 			*state = unit::State::Win;
 								// 		}
@@ -960,7 +970,7 @@ fn main() {
 								// 				TextBuilder::new(
 								// 					format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
 								// 					Color::WHITE)
-								// 				.with_wrap(15 + 4*30 + 15 + 10*30 + 15 + 4*30 + 15)
+								// 				.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
 								// 				.build(&font, &texture_creator);
 								// 			*state = unit::State::Win;
 								// 		}
@@ -1061,7 +1071,7 @@ fn main() {
 				layout.row_margin(15);
 				
 				let game_mode_text =
-					&game_mode_text[chosen_game_mode];
+					&game_mode_text[selected_game_mode];
 				let TextureQuery {width, height, ..} = game_mode_text.query();
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				let _ = canvas.copy(
@@ -1106,7 +1116,7 @@ fn main() {
 				let _ = canvas.copy(
 					&name_text,
 					Rect::new(0, 0, width, height),
-					Rect::new(x, 30+i*(32+8), width, height));
+					Rect::new(x, config.block_size as i32+i*(32+8), width, height));
 				
 				x += width as i32;
 				
@@ -1114,14 +1124,14 @@ fn main() {
 				let _ = canvas.copy(
 					&player_text,
 					Rect::new(0, 0, width, height),
-					Rect::new(x, 30+i*(32+8), width, height));
+					Rect::new(x, config.block_size as i32+i*(32+8), width, height));
 			}
 			
 		}else{
 			
 			let mut layout = Layout {
 				x:0,y:0,
-				width:window_rect.width() as i32,expected_width:(4*30+15+10*30+15+4*30+15) * units.len() as i32 - 15
+				width:window_rect.width() as i32,expected_width:(4*config.block_size as i32+15+10*config.block_size as i32+15+4*config.block_size as i32+15) * units.len() as i32 - 15
 			};
 			
 			for (unit, lines_cleared_text, level_text)
@@ -1133,8 +1143,8 @@ fn main() {
 				if let Some(ref stored_mino) = stored_mino {
 					block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), stored_mino, vec2i!(4,3));
 				}
-				layout.row(3*30);
-				layout.row_margin(15);
+				layout.row(3*config.block_size as i32);
+				layout.row_margin(config.block_size as i32 / 2);
 				
 				let TextureQuery {width, height, ..} = lines_cleared_text.query();
 				let _ = canvas.copy(
@@ -1151,7 +1161,7 @@ fn main() {
 					Rect::new(0, 0, width, height),
 					Rect::new(layout.x(), layout.y(), width, height));
 				
-				layout.col(4*30);
+				layout.col(4*config.block_size as i32);
 				layout.col_margin(15);
 				
 				layout.row_margin(15);
@@ -1163,18 +1173,18 @@ fn main() {
 					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
 				}
 				
-				layout.col(10*30);
+				layout.col(10*config.block_size as i32);
 				layout.col_margin(15);
 				
 				layout.row_margin(15);
 				if let unit::Kind::Local {rng: unit::LocalMinoRng {queue,..},..} = &unit.kind {
 					for mino in queue.iter() {
 						block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), mino, vec2i!(4,3));
-						layout.row(3*30);
-						layout.row_margin(15);
+						layout.row(3*config.block_size as i32);
+						layout.row_margin(config.block_size as i32 / 2);
 					}
 					
-					layout.col(4*30);
+					layout.col(4*config.block_size as i32);
 					layout.col_margin(15);
 				}
 				
