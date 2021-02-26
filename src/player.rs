@@ -1,15 +1,18 @@
 use crate::config;
 use std::time::Duration;
-use crate::get_fall_duration;
 use crate::util::*;
 use sdl2::event::Event;
+use crate::unit::get_level_fall_duration;
+use serde::{Serialize,Deserialize};
+
+#[derive(Serialize, Deserialize)]
 pub enum RotDirection {
 	None,
 	Left,
 	Right,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Serialize, Deserialize)]
 pub enum MoveState {
 	Still,
 	Instant,
@@ -17,19 +20,21 @@ pub enum MoveState {
 	Repeat,
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum MoveDirection {
 	None,
 	Left,
 	Right,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Serialize, Deserialize)]
 pub enum FallState {
 	Fall,
 	Softdrop,
 	Harddrop,
 }
+
+#[derive(Serialize, Deserialize)]
 pub struct Player {
 	pub move_direction: MoveDirection,
 	pub move_state: MoveState,
@@ -60,7 +65,7 @@ impl Player {
 			fall_countdown: Duration::from_secs(0),
 			move_repeat_countdown: Duration::from_secs(0),
 			
-			fall_duration: get_fall_duration(1),
+			fall_duration: get_level_fall_duration(1),
 			
 			joystick_id,
 			config_id,

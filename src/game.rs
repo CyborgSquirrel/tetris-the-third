@@ -6,12 +6,14 @@ use crate::vec2i;
 use itertools::izip;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
 use std::cmp::min;
+use serde::{Serialize,Deserialize};
 
 pub type Well = array2d::Array2D<Option<block::Data>>;
 
+#[derive(Serialize, Deserialize)]
 pub enum MinoRng {
-	_Hard {rng: SmallRng},
-	Fair {rng: SmallRng, stack: Vec<Mino>},
+	_Hard {#[serde(skip,default="SmallRng::from_entropy")] rng: SmallRng},
+	Fair {#[serde(skip,default="SmallRng::from_entropy")] rng: SmallRng, stack: Vec<Mino>},
 }
 
 impl MinoRng {

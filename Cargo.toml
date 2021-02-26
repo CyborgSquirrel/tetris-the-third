@@ -13,7 +13,7 @@ features = ["image","ttf"]
 
 [dependencies.rand]
 version = "0.8.1"
-features = ["small_rng"]
+features = ["small_rng","serde1"]
 
 [dependencies.serde]
 version = "1.0.123"

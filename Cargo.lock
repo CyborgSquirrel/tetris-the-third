@@ -124,6 +124,7 @@ dependencies = [
  "rand_chacha",
  "rand_core",
  "rand_hc",
+ "serde",
 ]
 
 [[package]]

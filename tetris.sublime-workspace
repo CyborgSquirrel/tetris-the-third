@@ -4,6 +4,50 @@
 		"selected_items":
 		[
 			[
+				"seri",
+				"fn serialize(..)\t  Method"
+			],
+			[
+				"O",
+				"Offline\t  ()"
+			],
+			[
+				"Netw",
+				"NetworkState\t  Enum"
+			],
+			[
+				"lines",
+				"lines_cleared_text\t  [Texture; _]"
+			],
+			[
+				"as",
+				"as_mut\t  -> Option<&mut T>"
+			],
+			[
+				"up",
+				"update_network_unit"
+			],
+			[
+				"create",
+				"create_lines_cleared_text(…)\t  -> Texture"
+			],
+			[
+				"Net",
+				"NetworkState\t  Enum"
+			],
+			[
+				"Network",
+				"NetworkUnit\t  Struct"
+			],
+			[
+				"Lcoa",
+				"LocalUnit\t  Struct"
+			],
+			[
+				"game_mode",
+				"chosen_game_mode\t  usize"
+			],
+			[
 				"as_",
 				"as_integer(…)\t  pub fn as_integer(&self) -> Option<i64>"
 			],
@@ -24,10 +68,6 @@
 				"quick_game_text\t  Texture"
 			],
 			[
-				"Net",
-				"NetworkState::Offline\t  ()"
-			],
-			[
 				"send",
 				"sendable\t  bool"
 			],
@@ -38,10 +78,6 @@
 			[
 				"pp",
 				"pop_front()\t  pub fn pop_front(&mut self) -> Option<T>"
-			],
-			[
-				"lines",
-				"lines_received\t  &mut VecDeque<u32>"
 			],
 			[
 				"rows",
@@ -110,10 +146,6 @@
 			[
 				"level",
 				"level_text\t  &mut Texture"
-			],
-			[
-				"create",
-				"create_level_text"
 			],
 			[
 				"fall_",
@@ -196,10 +228,6 @@
 				"unwrap_or(…)\t  pub fn unwrap_or(self, default: T) -> T"
 			],
 			[
-				"as",
-				"as_integer"
-			],
-			[
 				"po",
 				"position_centered()\t  pub fn position_centered(&mut self) -> &mut WindowBuilder"
 			],
@@ -222,10 +250,6 @@
 			[
 				"Unit",
 				"UnitEvent\t  Enum"
-			],
-			[
-				"Netw",
-				"NetworkEvent\t  Enum"
 			],
 			[
 				"Local",
@@ -490,30 +514,6 @@
 			[
 				"conne",
 				"connections"
-			],
-			[
-				"Rot",
-				"RotRight\t  ()"
-			],
-			[
-				"E",
-				"Offline\t  ()"
-			],
-			[
-				"pa",
-				"panic!(…)\t  #[macro_export]\nmacro_rules! panic"
-			],
-			[
-				"n",
-				"next()\t  fn next(&mut self) -> Option<Self::Item>"
-			],
-			[
-				"set",
-				"set_nonblocking(…)\t  pub fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()>"
-			],
-			[
-				"T",
-				"TcpListener\t  Struct"
 			]
 		]
 	},
@@ -523,7 +523,7 @@
 			"file": "Cargo.toml",
 			"settings":
 			{
-				"buffer_size": 592,
+				"buffer_size": 601,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -532,82 +532,19 @@
 			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 37307,
+				"buffer_size": 32567,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"contents": "Microsoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>git add .                                                               \nwarning: LF will be replaced by CRLF in tetris.sublime-project.                             \nThe file will have its original line endings in your working directory.                     \nwarning: LF will be replaced by CRLF in tetris.sublime-workspace.                           \nThe file will have its original line endings in your working directory.                     \n                                                                                            \nD:\\Workspace\\tetris>git commit -m \"Checkpoint\"                                              \n[master 79306bc] Checkpoint                                                                 \n 7 files changed, 1010 insertions(+), 924 deletions(-)                                      \n                                                                                            \nD:\\Workspace\\tetris>git push origin master                                                  \nfatal: AggregateException encountered.                                                      \n   One or more errors occurred.                                                             \nCounting objects: 31, done.                                                                 \nDelta compression using up to 8 threads.                                                    \nCompressing objects: 100% (31/31), done.                                                    \nWriting objects: 100% (31/31), 10.71 KiB | 0 bytes/s, done.                                 \nTotal 31 (delta 24), reused 0 (delta 0)                                                     \nremote: Resolving deltas: 100% (24/24), completed with 11 local objects.                    \nTo https://github.com/CyborgSquirrel/tetris-the-third                                       \n   c3cc059..79306bc  master -> master                                                       \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>",
+			"contents": "Microsoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                 \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>git add .                                                               \nwarning: LF will be replaced by CRLF in tetris.sublime-project.                             \nThe file will have its original line endings in your working directory.                     \nwarning: LF will be replaced by CRLF in tetris.sublime-workspace.                           \nThe file will have its original line endings in your working directory.                     \n                                                                                            \nD:\\Workspace\\tetris>git commit -m \"Checkpoint\"                                              \n[master 79306bc] Checkpoint                                                                 \n 7 files changed, 1010 insertions(+), 924 deletions(-)                                      \n                                                                                            \nD:\\Workspace\\tetris>git push origin master                                                  \nfatal: AggregateException encountered.                                                      \n   One or more errors occurred.                                                             \nCounting objects: 31, done.                                                                 \nDelta compression using up to 8 threads.                                                    \nCompressing objects: 100% (31/31), done.                                                    \nWriting objects: 100% (31/31), 10.71 KiB | 0 bytes/s, done.                                 \nTotal 31 (delta 24), reused 0 (delta 0)                                                     \nremote: Resolving deltas: 100% (24/24), completed with 11 local objects.                    \nTo https://github.com/CyborgSquirrel/tetris-the-third                                       \n   c3cc059..79306bc  master -> master                                                       \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                       \n(c) 2019 Microsoft Corporation. All rights reserved.                                              \n                                                                                                  \nD:\\Workspace\\tetris>                                                                              \nD:\\Workspace\\tetris>dir                                                                           \n Volume in drive D is Local Disk                                                                  \n Volume Serial Number is 6A8F-8751                                                                \n                                                                                                  \n Directory of D:\\Workspace\\tetris                                                                 \n                                                                                                  \n19/02/2021  08:54 PM    <DIR>          .                                                          \n19/02/2021  08:54 PM    <DIR>          ..                                                         \n30/01/2021  01:20 PM                17 .gitignore                                                 \n14/02/2021  11:22 AM             6,428 Cargo.lock                                                 \n14/02/2021  11:22 AM               621 Cargo.toml                                                 \n23/02/2021  09:36 PM             1,249 config.toml                                                \n21/02/2021  09:21 AM    <DIR>          gfx                                                        \n19/02/2021  08:54 PM             1,282 good_config.toml                                           \n30/01/2021  01:20 PM    <DIR>          lib                                                        \n23/02/2021  09:36 PM             1,135 save                                                       \n                                                                                                  \n                                                                                                  \n        23/02/2021  09:36 PM             1,249 config.toml                                        \n21/02/2021  09:21 AM    <DIR>          gfx                                                        \n19/02/2021  08:54 PM             1,282 good_config.toml                                           \n30/01/2021  01:20 PM    <DIR>          lib                                                        \n23/02/2021  09:36 PM             1,135 save                                                       \n                                                                      rc                          \n13/02/2021  05:13 PM    <DIR>          target                                                     \n20/02/2021  07:45 AM               119 tetris.sublime-project                                     \n23/02/2021  11:12 AM            78,095 tetris.sublime-workspace                                   \n13/02/2021  08:27 AM    <DIR>          thoughts                                                   \n               8 File(s)         88,946 bytes                                                     \n               7 Dir(s)  142,826,139,648 bytes free                                               \n                                                                                                  \nD:\\Workspace\\tetris>target/debug                                                                  \n'target' is not recognized as an internal or external command,                                    \noperable program or batch file.                                                                   \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nscrip                                                                                             \nPlayer name:                                                                                      \nsala                                                                                              \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nsala                                                                                              \nPlayer name:                                                                                      \nscri                                                                                              \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nsasala                                                                                            \nPlayer name:                                                                                      \nscri                                                                                              \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nsa                                                                                                \nPlayer name:                                                                                      \ns                                                                                                 \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \n                                                                                                  \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                       \n(c) 2019 Microsoft Corporation. All rights reserved.                                              \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nsa                                                                                                \nPlayer name:                                                                                      \nla                                                                                                \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nqaa                                                                                               \nPlayer name:                                                                                      \ndsa                                                                                               \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nasdas                                                                                             \nPlayer name:                                                                                      \ndasda                                                                                             \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n                                                                                                  \nD:\\Workspace\\tetris>target\\debug\\tetris.exe                                                       \nPlayer name:                                                                                      \nasda                                                                                              \nPlayer name:                                                                                      \nqasda                                                                                             \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n1                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n1                                                                                                 \n1                                                                                                 \n0                                                                                                 \n0                                                                                                 \n1                                                                                                 \n0                                                                                                 \n0                                                                                                 \n1                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n2                                                                                                 \n0                                                                                                 \n1                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n0                                                                                                 \n                                                                                                  \nD:\\Workspace\\tetris>\nMicrosoft Windows [Version 10.0.18363.1379]                                                 \n(c) 2019 Microsoft Corporation. All rights reserved.                                        \n                                                                                            \nD:\\Workspace\\tetris>",
 			"settings":
 			{
-				"buffer_size": 4289,
+				"buffer_size": 22253,
 				"line_ending": "Windows",
 				"name": "Command Prompt",
 				"scratch": true
-			}
-		},
-		{
-			"file": "src/game.rs",
-			"settings":
-			{
-				"buffer_size": 9262,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/block.rs",
-			"settings":
-			{
-				"buffer_size": 3401,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/vec2.rs",
-			"settings":
-			{
-				"buffer_size": 3094,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/unit.rs",
-			"settings":
-			{
-				"buffer_size": 3478,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "thoughts/TODO.md",
-			"settings":
-			{
-				"buffer_size": 2601,
-				"encoding": "UTF-8",
-				"line_ending": "Windows",
-				"name": "TODO"
-			}
-		},
-		{
-			"file": "src/player.rs",
-			"settings":
-			{
-				"buffer_size": 3681,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/config.rs",
-			"settings":
-			{
-				"buffer_size": 4770,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
 			}
 		},
 		{
@@ -617,6 +554,34 @@
 				"buffer_size": 1167,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/unit.rs",
+			"settings":
+			{
+				"buffer_size": 8965,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "src/player.rs",
+			"settings":
+			{
+				"buffer_size": 3877,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "thoughts/TODO.md",
+			"settings":
+			{
+				"buffer_size": 2709,
+				"encoding": "UTF-8",
+				"line_ending": "Windows",
+				"name": "TODO"
 			}
 		}
 	],
@@ -1240,13 +1205,49 @@
 			]
 		]
 	],
-	"build_varint": "",
+	"build_varint": "Run",
 	"command_palette":
 	{
 		"height": 104.0,
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"terminal:",
+				"Terminal: Open"
+			],
+			[
+				"restart",
+				"LSP: Restart Servers"
+			],
+			[
+				"pretty",
+				"Pretty JSON: Format (Pretty Print) JSON"
+			],
+			[
+				"set syntax sublime text key",
+				"Set Syntax: Sublime Text Keymap (JSON)"
+			],
+			[
+				"format",
+				"Pretty JSON: Format (Pretty Print) JSON"
+			],
+			[
+				"json",
+				"Set Syntax: JSON"
+			],
+			[
+				"pretty json:",
+				"Pretty JSON: Format (Pretty Print) JSON"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"bracket",
+				"BracketHighlighter: Documentation"
+			],
 			[
 				"sync",
 				"Sync Settings: Upload"
@@ -1262,10 +1263,6 @@
 			[
 				"hexviewer",
 				"HexViewer: Toggle Hex View"
-			],
-			[
-				"install",
-				"Package Control: Install Package"
 			],
 			[
 				"clear",
@@ -1310,10 +1307,6 @@
 			[
 				"bookma",
 				"Bookmarks: Clear All"
-			],
-			[
-				"restart",
-				"LSP: Restart Servers"
 			],
 			[
 				"new view",
@@ -1520,10 +1513,6 @@
 				"Package Control: Enable Package"
 			],
 			[
-				"json",
-				"Set Syntax: JSON"
-			],
-			[
 				"list packages",
 				"Package Control: List Packages"
 			],
@@ -1652,10 +1641,6 @@
 				"Origami: Restore Saved Layout"
 			],
 			[
-				"format",
-				"MarkdownTableFormatter: format table"
-			],
-			[
 				"formatter",
 				"MarkdownTableFormatter: format table"
 			],
@@ -1738,26 +1723,6 @@
 			[
 				"package contro: enable",
 				"Package Control: Enable Package"
-			],
-			[
-				"disabl",
-				"LSP: Disable Language Server Globally"
-			],
-			[
-				"download",
-				"Sync Settings: Download"
-			],
-			[
-				"package Control",
-				"Package Control: List Packages"
-			],
-			[
-				"uploa",
-				"Sync Settings: Upload"
-			],
-			[
-				"filedi",
-				"FileDiffs: Menu"
 			]
 		],
 		"width": 436.0
@@ -1767,6 +1732,8 @@
 		"height": 426.0,
 		"history":
 		[
+			"self.run",
+			"run()",
 			"view.run_command(\"side_bar_files_open_with\", {\"application\": \"C:\\\\Program Files\\\\paint.net\\\\PaintDotNet.exe\"})",
 			"view.run_command(\"side_bar_files_open_with\", {\"C:\\\\Program Files\\\\paint.net\\\\PaintDotNet.exe\"})",
 			"view.run_command(\"side_bar_files_open_with\", {\"application\": \"C:\\\\WINDOWS\\\\system32\\\\cmd.exe\"})",
@@ -1814,21 +1781,27 @@
 	"file_history":
 	[
 		"/D/Workspace/tetris/src/game.rs",
+		"/D/Workspace/tetris/src/player.rs",
+		"/C/Users/Andrei/Downloads/gme.cpp",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
+		"/C/Users/Andrei/Desktop/salam.json",
+		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/BracketHighlighter/Example.sublime-keymap",
+		"/D/Workspace/tetris/src/config.rs",
+		"/D/Workspace/tetris/src/block.rs",
+		"/D/Workspace/tetris/src/vec2.rs",
+		"/D/Workspace/tetris/src/unit.rs",
 		"/C/Program Files/TC4Shell/TC4ShellHost.64.exe",
 		"/C/Users/Andrei/AppData/Local/Temp/TC4Shell/D0000/__init__.py",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Rust/salam.sublime-build",
 		"/C/Users/Andrei/AppData/Local/Temp/7zE8BE0E31F/RustEnhanced.sublime-build",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Installed Packages/RustEnhanced.sublime-build",
 		"/D/Workspace/tetris/tetris.sublime-project",
-		"/D/Workspace/tetris/src/unit.rs",
 		"/D/Workspace/tetris/tetris.sublime-workspace",
 		"/D/Workspace/tetris/src/main.rs",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Local/Session.sublime_session",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Local/Auto Save Session.sublime_session",
-		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/Terminal/Default (Windows).sublime-keymap",
 		"/D/Workspace/tetris/good_config.toml",
-		"/D/Workspace/tetris/src/block.rs",
 		"/D/Workspace/tetris/src/mino.rs",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/C++ Console.sublime-build",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/Terminal/Terminal.sublime-settings",
@@ -1844,7 +1817,6 @@
 		"/D/Workspace/tetris/save",
 		"/D/Workspace/tetris/thoughts/Should falling mino be optional.md",
 		"/D/Workspace/indeletniciri curente/ACSL 2/test.py",
-		"/D/Workspace/tetris/src/player.rs",
 		"/D/Workspace/tetris/src/old/storage.rs",
 		"/D/Workspace/tetris/src/old/adding.rs",
 		"/D/Workspace/tetris/src/util.rs",
@@ -1858,9 +1830,7 @@
 		"/C/Users/Andrei/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-1.1.1/src/net/tcp/listener.rs",
 		"/D/Workspace/tetris/thoughts/Networking.md",
 		"/D/Workspace/tetris/thoughts/TCP vs UDP",
-		"/D/Workspace/tetris/src/config.rs",
 		"/D/Workspace/tetris-build/config.toml",
-		"/D/Workspace/tetris/src/vec2.rs",
 		"/D/Workspace/tetris/src/text_builder.rs",
 		"/D/Workspace/tetris/target/debug/deps/getrandom-771d8f00cd9d76de.d",
 		"/D/Workspace/tetris/TOML or JSON for settings.md",
@@ -1937,14 +1907,11 @@
 		"/D/Workspace/indeletniciri curente/fractzii.cpp",
 		"/D/Workspace/indeletniciri curente/.tabnine_root ",
 		"/D/Workspace/indeletniciri curente/pere.cpp",
-		"/D/Workspace/indeletniciri curente/hard_ssc.cpp",
-		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/for loop.sublime-snippet",
-		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/foi loop.sublime-snippet",
-		"/D/Workspace/indeletniciri curente/egal.out"
+		"/D/Workspace/indeletniciri curente/hard_ssc.cpp"
 	],
 	"find":
 	{
-		"height": 40.0
+		"height": 41.0
 	},
 	"find_in_files":
 	{
@@ -1956,9 +1923,33 @@
 	},
 	"find_state":
 	{
-		"case_sensitive": true,
+		"case_sensitive": false,
 		"find_history":
 		[
+			"SmallRng",
+			"just_saved",
+			"save",
+			" ",
+			"unit::",
+			"get_fall_duration",
+			"where",
+			" ",
+			"apply_unit_event",
+			"Unit<Network>",
+			"Unit<Local>",
+			"print",
+			"chosen_game_mode",
+			"ctors",
+			"2",
+			"chosen_game_mode",
+			"selected_network",
+			" ",
+			"  ",
+			"\t",
+			" ",
+			"\n\t",
+			"versus",
+			"900",
 			"700",
 			".into()",
 			"config.block_size",
@@ -2062,31 +2053,7 @@
 			"())",
 			"ip",
 			"PlayerType",
-			"player",
-			"config_id",
-			"PlayerType",
-			"match network_state",
-			"NetworkState",
-			"match network",
-			"serialize",
-			"ref mut ",
-			" &mut",
-			"mut",
-			"NetworkEvent",
-			"key",
-			"toml",
-			"v",
-			"State::LobbyHos",
-			"host_start_text",
-			"network_text",
-			"LobbyHost",
-			"PlayerType::Online",
-			"Online",
-			"PlayerType::Offline",
-			"PlayerType",
-			"offline",
-			"Offline",
-			"offline"
+			"player"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2117,15 +2084,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 592,
+						"buffer_size": 601,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								368,
-								368
+								375,
+								375
 							]
 						],
 						"settings":
@@ -2137,24 +2104,24 @@
 								{
 									"1":
 									[
-										367,
-										368
+										375,
+										376
 									]
 								},
 								"icon":
 								{
 									"1":
 									[
-										"Packages/BracketHighlighter/icons/square_bracket.png",
-										"region.bluish"
+										"Packages/BracketHighlighter/icons/double_quote.png",
+										"region.greenish"
 									]
 								},
 								"open":
 								{
 									"1":
 									[
-										355,
-										356
+										368,
+										369
 									]
 								},
 								"unmatched":
@@ -2163,56 +2130,56 @@
 							},
 							"bracket_highlighter.regions":
 							[
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
 								"bh_c_define",
 								"bh_c_define_center",
 								"bh_c_define_open",
 								"bh_c_define_close",
 								"bh_c_define_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
 								"bh_single_quote",
 								"bh_single_quote_center",
 								"bh_single_quote_open",
 								"bh_single_quote_close",
 								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
@@ -2225,7 +2192,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 10,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
@@ -2234,7 +2201,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 37307,
+						"buffer_size": 32567,
 						"regions":
 						{
 							"bookmarks":
@@ -2250,16 +2217,16 @@
 						"selection":
 						[
 							[
-								34644,
-								34644
+								10675,
+								10675
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 784,
-								"count": 1574,
+								"changes": 159,
+								"count": 1395,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -2277,30 +2244,20 @@
 							{
 								"close":
 								{
-									"1":
-									[
-										34735,
-										34736
-									]
 								},
 								"icon":
 								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
-									]
 								},
 								"open":
 								{
-									"1":
-									[
-										34625,
-										34626
-									]
 								},
 								"unmatched":
 								{
+									"1":
+									[
+										4282,
+										4283
+									]
 								}
 							},
 							"bracket_highlighter.regions":
@@ -2310,41 +2267,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
 								"bh_double_quote",
 								"bh_double_quote_center",
 								"bh_double_quote_open",
 								"bh_double_quote_close",
 								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
@@ -2355,13 +2287,39 @@
 								"bh_c_define_open",
 								"bh_c_define_close",
 								"bh_c_define_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
 								"bh_unmatched_close",
-								"bh_unmatched_content"
+								"bh_unmatched_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content"
 							],
 							"lsp_active": true,
+							"lsp_diagnostic_phantom": false,
 							"lsp_language":
 							{
 								"rust-analyzer": "rust"
@@ -2371,17 +2329,17 @@
 							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 0.0,
-						"translation.y": 20301.0,
+						"translation.x": 3.0,
+						"translation.y": 7665.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 3,
 					"type": "text"
 				}
 			]
 		},
 		{
-			"selected": 8,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -2389,27 +2347,19 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4289,
+						"buffer_size": 22253,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4289,
-								4289
+								22253,
+								22253
 							]
 						],
 						"settings":
 						{
-							"WordCount":
-							{
-								"changes": -1,
-								"modified": true,
-								"selection": true,
-								"status": -1,
-								"syntax": "plain text"
-							},
 							"__vi_external_disable": true,
 							"auto_complete": false,
 							"auto_complete_commit_on_tab": false,
@@ -2465,951 +2415,18 @@
 							"terminus_view.natural_keyboard": true,
 							"terminus_view.panel_name": null,
 							"terminus_view.tag": null,
-							"terminus_view.viewport_y": 828.0,
+							"terminus_view.viewport_y": 4370.0,
 							"word_wrap": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 828.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 9,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/game.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 9262,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								8471,
-								8471
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 604,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										8592,
-										8593
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										8397,
-										8398
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 5534.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 8,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/block.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3401,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1096,
-								1096
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 32,
-								"count": 216,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										3400,
-										3401
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										1095,
-										1096
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 325.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "src/vec2.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3094,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								579,
-								579
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 225,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										579,
-										580
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										516,
-										517
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "src/unit.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3478,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1839,
-								1839
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 245,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										1904,
-										1905
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										1642,
-										1643
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1430.0,
+						"translation.y": 4370.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 5,
 					"type": "text"
 				},
 				{
-					"buffer": 7,
-					"file": "thoughts/TODO.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2601,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								239,
-								239
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 454,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"spell_check": false,
-							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "src/player.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3681,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								409,
-								409
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 154,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										410,
-										411
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										379,
-										380
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "src/config.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4770,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3688,
-								3688
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 103,
-								"count": 216,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content"
-							],
-							"lsp_active": true,
-							"lsp_diagnostic_phantom": false,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"open_with_edit": true,
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2594.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 10,
+					"buffer": 3,
 					"file": "config.toml",
 					"semi_transient": false,
 					"settings":
@@ -3421,15 +2438,15 @@
 						"selection":
 						[
 							[
-								59,
-								59
+								182,
+								182
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 38,
+								"changes": 0,
 								"count": 90,
 								"modified": false,
 								"selection": false,
@@ -3459,41 +2476,16 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
 								"bh_double_quote",
 								"bh_double_quote_center",
 								"bh_double_quote_open",
 								"bh_double_quote_close",
 								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
@@ -3504,11 +2496,36 @@
 								"bh_c_define_open",
 								"bh_c_define_close",
 								"bh_c_define_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
 								"bh_unmatched_close",
-								"bh_unmatched_content"
+								"bh_unmatched_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content"
 							],
 							"syntax": "Packages/TOML/TOML.sublime-syntax"
 						},
@@ -3516,7 +2533,390 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/unit.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8965,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4944,
+								4944
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 332,
+								"count": 473,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+									"1":
+									[
+										7457,
+										7458
+									]
+								},
+								"icon":
+								{
+									"1":
+									[
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
+									]
+								},
+								"open":
+								{
+									"1":
+									[
+										4406,
+										4407
+									]
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content"
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 4047.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/player.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3877,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1212,
+								1212
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 49,
+								"count": 163,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+									"1":
+									[
+										1378,
+										1379
+									]
+								},
+								"icon":
+								{
+									"1":
+									[
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
+									]
+								},
+								"open":
+								{
+									"1":
+									[
+										1026,
+										1027
+									]
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content"
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 570.0,
+						"zoom_level": 1.0
+					},
 					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "thoughts/TODO.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2709,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2709,
+								2709
+							]
+						],
+						"settings":
+						{
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+								},
+								"icon":
+								{
+								},
+								"open":
+								{
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
+							],
+							"spell_check": false,
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 983.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
 					"type": "text"
 				}
 			]
@@ -3524,7 +2924,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 27.0
+		"height": 28.0
 	},
 	"input":
 	{
@@ -3550,7 +2950,7 @@
 		"cols":
 		[
 			0.0,
-			0.494687131051,
+			0.490554899646,
 			1.0
 		],
 		"rows":
@@ -3566,7 +2966,7 @@
 	},
 	"output.diagnostics":
 	{
-		"height": 151.0
+		"height": 139.0
 	},
 	"output.exec":
 	{
@@ -3600,7 +3000,7 @@
 	"project": "tetris.sublime-project",
 	"replace":
 	{
-		"height": 50.0
+		"height": 52.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -3646,7 +3046,7 @@
 		],
 		"width": 628.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},
