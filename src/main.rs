@@ -24,6 +24,7 @@ pub mod game;
 pub mod util;
 pub mod player;
 pub mod unit;
+pub mod ui;
 use util::*;
 use vec2::vec2i;
 use text_builder::TextBuilder;
@@ -43,6 +44,8 @@ use std::io::stdin;
 use mino::Mino;
 
 use player::Player;
+
+use ui::{EnumSelect, Layout, NetworkStateSelection, PauseSelection, StartLayout, StartSelection};
 
 // #[derive(PartialEq, Eq, Clone)]
 enum State {
@@ -71,48 +74,6 @@ fn create_level_text<'a>(
 		.build(font, texture_creator)
 }
 
-#[derive(Default)]
-struct Layout {
-	x: i32,
-	y: i32,
-	width: i32,
-	expected_width: i32,
-}
-
-impl Layout {
-	fn centered_x(&self) -> i32 {
-		((self.width-self.expected_width) / 2) as i32
-	}
-	fn x(&self) -> i32 {
-		return self.centered_x()+self.x;
-	}
-	fn y(&self) -> i32 {
-		return self.y;
-	}
-	fn as_vec2i(&self) -> vec2i {
-		vec2i!(self.x(),self.y())
-	}
-	fn row(&mut self, y: i32) {
-		self.y += y;
-	}
-	fn row_margin(&mut self, y: i32) {
-		self.y += y;
-	}
-	fn col(&mut self, x: i32) {
-		self.y = 0;
-		self.x += x;
-	}
-	fn col_margin(&mut self, x: i32) {
-		self.y = 0;
-		self.x += x;
-	}
-}
-struct StartLayout {
-	x: i32,
-	y: i32,
-	width: u32
-}
-
 use vec2::vec2f;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -133,19 +94,7 @@ enum NetworkEvent {
 	StartGame,
 }
 
-impl StartLayout {
-	fn centered_x(&self, obj_width: u32) -> i32 {
-		((self.width-obj_width) / 2) as i32
-	}
-	fn row(&mut self, y: i32) {
-		self.y += y;
-	}
-	fn row_margin(&mut self, y: i32) {
-		self.y += y;
-	}
-}
-
-fn draw_menu_select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect) {
+fn draw_select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect) {
 	canvas.set_draw_color(Color::RGBA(255, 255, 0, 127));
 	let _ = canvas.draw_rect(rect);
 }
@@ -186,17 +135,18 @@ struct NetworkInit {
 	units: Vec<Unit>,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-enum StartSelection {
-	Continue,
-	NewGame,
-	GameMode,	
-	NetworkMode,
-}
-
 fn darken(canvas: &mut WindowCanvas) {
 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
 	let _ = canvas.fill_rect(None);
+}
+
+fn get_texture_dim(texture: &Texture) -> (u32,u32) {
+	let TextureQuery {width, height,..} = texture.query();
+	(width, height)
+}
+
+fn draw_no_scale(canvas: &mut WindowCanvas, texture: &Texture, rect: sdl2::rect::Rect) {
+	let _ = canvas.copy(&texture, Rect::new(0, 0, rect.width(), rect.height()), rect);
 }
 
 fn ask_for_ip(stdin: &std::io::Stdin) -> SocketAddr {
@@ -287,8 +237,7 @@ fn main() {
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
 	let mut paused = false;
-	let paused_text = TextBuilder::new("Paused press q to save".to_string(), Color::WHITE)
-		.with_wrap(120)
+	let paused_text = TextBuilder::new("Paused".to_string(), Color::WHITE)
 		.build(&font, &texture_creator);
 	
 	let game_over_text = TextBuilder::new("Game over".to_string(), Color::WHITE)
@@ -329,19 +278,17 @@ fn main() {
 		Mode::default_versus,
 	];
 	
-	let mut network_states = (0..3i32).cycle();
-	let mut selected_network_state = network_states.next().unwrap();
+	let mut selected_network_state = NetworkStateSelection::Offline;
 	let mut network_state = NetworkState::Offline;
 	
 	let offline_text = TextBuilder::new("Offline".to_string(), Color::WHITE).build(&font, &texture_creator);
 	let host_text = TextBuilder::new("Host".to_string(),Color::WHITE).build(&font, &texture_creator);
 	let client_text = TextBuilder::new("Client".to_string(),Color::WHITE).build(&font, &texture_creator);
-	let get_network_text = |selected_network_state: i32|
+	let get_network_text = |ref selected_network_state: &NetworkStateSelection|
 		match selected_network_state {
-			0 => &offline_text,
-			1 => &host_text,
-			2 => &client_text,
-			_ => panic!(),
+			NetworkStateSelection::Offline => &offline_text,
+			NetworkStateSelection::Host => &host_text,
+			NetworkStateSelection::Client => &client_text,
 		};
 	
 	let mut lines_cleared_text = [
@@ -365,12 +312,6 @@ fn main() {
 	let block_canvas = block::Canvas::new(&texture, config.block_size);
 	
 	let mut state = State::Start;
-	
-	let start_text = TextBuilder::new(
-			"Welcome to tetris! Please choose a game mode, and press enter.".to_string(), 
-			Color::WHITE)
-		.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
-		.build(&font, &texture_creator);
 	
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
@@ -420,7 +361,12 @@ fn main() {
 	
 	let mut other_rng = SmallRng::from_entropy();
 	
-	let mut asking_for_text = false;
+	let resume_text = TextBuilder::new("Resume".into(), Color::WHITE).build(&font, &texture_creator);
+	let save_text = TextBuilder::new("Save".into(), Color::WHITE).build(&font, &texture_creator);
+	let quit_to_title_text = TextBuilder::new("Quit to title".into(), Color::WHITE).build(&font, &texture_creator);
+	let quit_to_desktop_text = TextBuilder::new("Quit to desktop".into(), Color::WHITE).build(&font, &texture_creator);
+	
+	let mut pause_selection = PauseSelection::Resume;
 	
 	'running: loop {
 		let start = Instant::now();
@@ -439,6 +385,36 @@ fn main() {
 							player.update(&mut config.players, &event)
 						}
 					}
+					
+					if paused {
+						if is_any_up_down(&event) {
+							pause_selection = pause_selection.prev_variant();
+						}
+						if is_any_down_down(&event) {
+							pause_selection = pause_selection.next_variant();
+						}
+						if is_key_down(&event, Some(Keycode::Return)) {
+							match pause_selection {
+								PauseSelection::Resume => paused = false,
+								PauseSelection::Save => {
+									if let NetworkState::Offline = network_state {
+										use std::fs::File;
+										use std::io::prelude::*;
+										let mut file = File::create("save").unwrap();
+										file.write_all(&serialize(&units[0]).unwrap()).unwrap();
+										just_saved = true;
+									}
+								}
+								PauseSelection::QuitToTitle => {
+									state = State::Start;
+								}
+								PauseSelection::QuitToDesktop => {
+									break 'running;
+								}
+							}
+						}
+					}
+					
 					match event{
 						// Not adding restart keybind for now
 						// Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..}
@@ -492,28 +468,18 @@ fn main() {
 				State::Start => {
 					let keybinds = &mut config.players[0];
 					
-					use StartSelection::*;
-					if is_key_down(&event, Some(Keycode::S)) {
-						start_selection = match start_selection {
-							Continue => NewGame,
-							NewGame => GameMode,
-							GameMode => NetworkMode,
-							NetworkMode => Continue,
-						}
+					if is_any_up_down(&event) {
+						start_selection = start_selection.prev_variant()
 					}
-					if is_key_down(&event, Some(Keycode::W)) {
-						start_selection = match start_selection {
-							Continue => NetworkMode,
-							NewGame => Continue,
-							GameMode => NewGame,
-							NetworkMode => GameMode,
-						}
+					if is_any_down_down(&event) {
+						start_selection = start_selection.next_variant()
 					}
 					
+					use StartSelection::*;
 					match start_selection {
 						Continue => {
 							if is_key_down(&event, Some(Keycode::Return)) {
-								if selected_network_state == 0 {
+								if selected_network_state == NetworkStateSelection::Offline {
 									network_state = NetworkState::Offline;
 									state = State::Play;
 									
@@ -545,12 +511,12 @@ fn main() {
 									units.push(unit);
 								}else {
 									network_state = match selected_network_state {
-										0 => {
+										NetworkStateSelection::Offline => {
 											state = State::Lobby;
 											
 											NetworkState::Offline
 										}
-										1 => {
+										NetworkStateSelection::Host => {
 											let addr = ask_for_ip(&stdin);
 											
 											let listener = TcpListener::bind(addr)
@@ -565,7 +531,7 @@ fn main() {
 												streams: Vec::new(),
 											}
 										}
-										2 => {
+										NetworkStateSelection::Client => {
 											let addr = ask_for_ip(&stdin);
 											let name = ask_for_name(&stdin);
 											
@@ -588,38 +554,31 @@ fn main() {
 												stream,
 											}
 										}
-										_ => panic!()
 									}
 								}
 							}
-							if is_key_down(&event, Some(Keycode::A)) ||
-							is_key_down(&event, Some(Keycode::D)) {
+							if is_any_left_down(&event, keybinds, None) ||
+							is_any_right_down(&event, keybinds, None) {
 								quick_game = !quick_game;
 							}
 						},
 						GameMode => {
-							if is_key_down(&event, keybinds.left) ||
-							is_key_down(&event, keybinds.left_alt) ||
-							is_controlcode_down(&event, &mut keybinds.controller_left, None) {
+							if is_any_left_down(&event, keybinds, None) {
 								selected_game_mode = (selected_game_mode as i32 - 1).rem_euclid(3) as usize;
 							}
-							
-							if is_key_down(&event, keybinds.right) ||
-							is_key_down(&event, keybinds.right_alt) ||
-							is_controlcode_down(&event, &mut keybinds.controller_right, None) {
+							if is_any_right_down(&event, keybinds, None) {
 								selected_game_mode = (selected_game_mode + 1).rem_euclid(3);
 							}
 						},
 						NetworkMode => {
-							if is_key_down(&event, keybinds.right) ||
-							is_key_down(&event, keybinds.right_alt) ||
-							is_controlcode_down(&event, &mut keybinds.controller_right, None) {
-								selected_network_state = network_states.next().unwrap();
+							if is_any_left_down(&event, keybinds, None) {
+								selected_network_state = selected_network_state.next_variant();
+							}
+							if is_any_right_down(&event, keybinds, None) {
+								selected_network_state = selected_network_state.prev_variant();
 							}
 						},
 					}
-					
-					
 				}
 				State::Lobby => {
 					if let NetworkState::Host {..} | NetworkState::Offline = network_state {
@@ -857,82 +816,61 @@ fn main() {
 		canvas.clear();
 		if let State::Start = state {
 			
-			let mut layout = StartLayout {x:0,y:0,width:window_rect.width()};
+			let mut layout = StartLayout {y:0,width:window_rect.width()};
 			
 			layout.row_margin(15);
 			
-			let TextureQuery {width, height, ..} = title.query();
-			let _ = canvas.copy(
-				&title,
-				Rect::new(0, 0, width, height),
-				Rect::new(layout.centered_x(width), layout.y, width, height));
-			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let TextureQuery {width, height, ..} = start_text.query();
-			let _ = canvas.copy(
-				&start_text,
-				Rect::new(0, 0, width, height),
-				Rect::new(layout.centered_x(width), layout.y, width, height));
-			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == 0);
-			
-			let TextureQuery {width, height, ..} = continue_text.query();
+			let (width, height) = get_texture_dim(&title);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			let _ = canvas.copy(
-				&continue_text,
-				Rect::new(0, 0, width, height),
-				rect);
+			draw_no_scale(&mut canvas, &title, rect);
+			
+			layout.row(height as i32);
+			layout.row_margin(30);
+			
+			let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == NetworkStateSelection::Offline);
+			let (width, height) = get_texture_dim(&continue_text);
+			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+			draw_no_scale(&mut canvas, &continue_text, rect);
+			
 			if start_selection == StartSelection::Continue {
-				draw_menu_select(&mut canvas, rect);
+				draw_select(&mut canvas, rect);
 			}
 			
 			layout.row(height as i32);
 			layout.row_margin(15);
 			
 			let game_text = get_game_text(quick_game);
-			let TextureQuery {width, height, ..} = game_text.query();
+			let (width, height) = get_texture_dim(&game_text);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			let _ = canvas.copy(
-				&game_text,
-				Rect::new(0, 0, width, height),
-				rect);
+			draw_no_scale(&mut canvas, &game_text, rect);
+			
 			if start_selection == StartSelection::NewGame {
-				draw_menu_select(&mut canvas, rect);
+				draw_select(&mut canvas, rect);
 			}
 			
 			if !quick_game {
 				layout.row(height as i32);
 				layout.row_margin(15);
 				
-				let game_mode_text =
-					&game_mode_text[selected_game_mode];
-				let TextureQuery {width, height, ..} = game_mode_text.query();
+				let game_mode_text = &game_mode_text[selected_game_mode];
+				let (width, height) = get_texture_dim(&game_mode_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				let _ = canvas.copy(
-					&game_mode_text,
-					Rect::new(0, 0, width, height),
-					rect);
+				draw_no_scale(&mut canvas, &game_mode_text, rect);
+				
 				if start_selection == StartSelection::GameMode {
-					draw_menu_select(&mut canvas, rect);
+					draw_select(&mut canvas, rect);
 				}
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
 				
-				let network_text = get_network_text(selected_network_state);
-				let TextureQuery {width, height, ..} = network_text.query();
+				let network_text = get_network_text(&selected_network_state);
+				let (width, height) = get_texture_dim(&network_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				let _ = canvas.copy(
-					&network_text,
-					Rect::new(0, 0, width, height),
-					rect);
+				draw_no_scale(&mut canvas, &network_text, rect);
+				
 				if start_selection == StartSelection::NetworkMode {
-					draw_menu_select(&mut canvas, rect);
+					draw_select(&mut canvas, rect);
 				}
 			}
 			
@@ -1053,11 +991,56 @@ fn main() {
 			if paused {
 				darken(&mut canvas);
 				
-				let TextureQuery {width, height, ..} = paused_text.query();
-				let _ = canvas.copy(
-					&paused_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+				let mut layout = StartLayout {y:0,width:window_rect.width()};
+				
+				layout.row_margin(15);
+				
+				let (width, height) = get_texture_dim(&paused_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_no_scale(&mut canvas, &paused_text, rect);
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let (width, height) = get_texture_dim(&resume_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_no_scale(&mut canvas, &resume_text, rect);
+				if let PauseSelection::Resume {..} = pause_selection {
+					draw_select(&mut canvas, rect);
+				}
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let (width, height) = get_texture_dim(&save_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_no_scale(&mut canvas, &save_text, rect);
+				if let PauseSelection::Save {..} = pause_selection {
+					draw_select(&mut canvas, rect);
+				}
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let (width, height) = get_texture_dim(&quit_to_title_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_no_scale(&mut canvas, &quit_to_title_text, rect);
+				if let PauseSelection::QuitToTitle {..} = pause_selection {
+					draw_select(&mut canvas, rect);
+				}
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let (width, height) = get_texture_dim(&quit_to_desktop_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_no_scale(&mut canvas, &quit_to_desktop_text, rect);
+				if let PauseSelection::QuitToDesktop {..} = pause_selection {
+					draw_select(&mut canvas, rect);
+				}
+				
+				layout.row(height as i32);
+				layout.row_margin(15);
 				
 				if let NetworkState::Offline = network_state {
 					if just_saved {

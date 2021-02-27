@@ -50,6 +50,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "enum-select-derive"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "generational-arena"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -215,6 +223,7 @@ version = "0.1.0"
 dependencies = [
  "array2d",
  "bincode",
+ "enum-select-derive",
  "generational-arena",
  "itertools",
  "rand",
