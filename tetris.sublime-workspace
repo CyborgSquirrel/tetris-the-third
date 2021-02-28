@@ -4,6 +4,66 @@
 		"selected_items":
 		[
 			[
+				"Pause",
+				"PauseSelection::QuitToTitle\t  ()"
+			],
+			[
+				"PauseS",
+				"PauseSelection::Resume\t  ()"
+			],
+			[
+				"Quit",
+				"QuitToTitle\t  ()"
+			],
+			[
+				"is_a",
+				"is_any_up_down(…)\t  -> bool"
+			],
+			[
+				"is_any",
+				"is_any_down_down(…)\t  -> bool"
+			],
+			[
+				"is_any_",
+				"is_any_up_down(…)\t  -> bool"
+			],
+			[
+				"pause",
+				"pause_selection\t  PauseSelection"
+			],
+			[
+				"Text",
+				"TextureQuery\t  TextureQuery { format$1, access$2, width$3, height$4 }$0"
+			],
+			[
+				"window",
+				"window_rect\t  Rect"
+			],
+			[
+				"NetworkState",
+				"NetworkStateSelection::Client\t  ()"
+			],
+			[
+				"NetowrkState",
+				"NetworkStateSelection\t  Enum"
+			],
+			[
+				"NetworkSa",
+				"NetworkStateSelection\t  Enum"
+			],
+			[
+				"NetworkSta",
+				"NetworkStateSelection\t  Enum"
+			],
+			[
+				"sele",
+				"selected_network_state\t  NetworkStateSelection"
+			],
+			[
+				"Cl",
+				"Clone, Copy\t  EnumMember"
+			],
+			[
 				"flat",
 				"flat_map(…)\t  -> FlatMap<Self, U, F>"
 			],
@@ -158,10 +218,6 @@
 			[
 				"ce",
 				"from_center(…)\t  pub fn from_center<P>(center: P, width: u32, height: u32) -> Rect\nwhere P: Into<Point>"
-			],
-			[
-				"sele",
-				"selected_network_state\t  i32"
 			],
 			[
 				"net",
@@ -458,62 +514,6 @@
 			[
 				"Game",
 				"GameEvent"
-			],
-			[
-				"conf",
-				"config_id\t  usize"
-			],
-			[
-				"rot",
-				"rot_right"
-			],
-			[
-				"controller",
-				"controller_left\t  Option<Controlcode>"
-			],
-			[
-				"Pl",
-				"PlayerType::Local(…)\t  (Player)"
-			],
-			[
-				"defa",
-				"default_marathon()\t  fn default_marathon() -> Mode"
-			],
-			[
-				"get_",
-				"get_player_text\t  |&PlayerType| -> &Texture"
-			],
-			[
-				"units",
-				"units\t  Vec<Unit>"
-			],
-			[
-				"Pla",
-				"Player\t  Player { move_direction$1, move_state$2, rot_direction$3, fall_state$4, store$5, fall_countdown$6, move_repeat_countdown$7, fall_duration$8, joystick_id$9 }$0"
-			],
-			[
-				"host",
-				"host_start_text\t  Texture"
-			],
-			[
-				"texture",
-				"texture_creator\t  TextureCreator<WindowContext>"
-			],
-			[
-				"to",
-				"to_string()\t  fn to_string(&self) -> String"
-			],
-			[
-				"de",
-				"default_marathon()\t  fn default_marathon() -> Mode"
-			],
-			[
-				"str",
-				"stream\t  LenReader<TcpStream>"
-			],
-			[
-				"r",
-				"read()\t  pub fn read(&mut self) -> Result<&[u8]>"
 			]
 		]
 	},
@@ -523,24 +523,16 @@
 			"file": "enum-select-derive/src/lib.rs",
 			"settings":
 			{
-				"buffer_size": 1002,
+				"buffer_size": 1033,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"contents": "use proc_macro::TokenStream;\nuse quote::quote;\nuse syn::{Data, DataEnum, DeriveInput, parse_macro_input};\n\n#[proc_macro_derive(Hello)]\npub fn hello(input: TokenStream) -> TokenStream {\n\tlet DeriveInput {data,ident,..} = parse_macro_input!(input);\n\tmatch data {\n\t\tData::Enum(DataEnum{variants,..}) => {\n\t\t\tprintln!(\"{:?}\", ident);\n\t\t\tfor variant in variants.iter() {\n\t\t\t\tprintln!(\"{:?}\", variant.ident);\n\t\t\t}\n\t\t\t\n\t\t\tlet curr1 = variants.iter();\n\t\t\tlet next = variants.iter();\n\t\t\tlet curr2 = variants.iter();\n\t\t\tlet prev = variants.iter();\n\t\t\tquote!(\n\t\t\t\timpl EnumSelect for #ident {\n\t\t\t\t\tfn next_variant(&self) -> Self {\n\t\t\t\t\t\tmatch *self {\n\t\t\t\t\t\t\t#(#curr1 => #next),*\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tfn prev_variant(&self) -> Self {\n\t\t\t\t\t\tmatch *self {\n\t\t\t\t\t\t\t#(#curr2 => #prev),*\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t).into()\n\t\t}\n\t\tData::Struct(_) => panic!(\"This macro doesn't work for structs\"),\n\t\tData::Union(_) => panic!(\"This macro doesn't work for unions\"),\n\t}\n}\n\n// match start_selection {\n// \tContinue => NewGame,\n// \tNewGame => GameMode,\n// \tGameMode => NetworkMode,\n// \tNetworkMode => Continue,\n// }",
+			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 1085,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/ui.rs",
-			"settings":
-			{
-				"buffer_size": 1210,
+				"buffer_size": 33648,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -1106,7 +1098,7 @@
 			],
 			[
 				"Packages/Rust Enhanced/RustEnhanced.sublime-build",
-				""
+				"Run"
 			]
 		],
 		[
@@ -1166,13 +1158,25 @@
 			]
 		]
 	],
-	"build_varint": "",
+	"build_varint": "Run",
 	"command_palette":
 	{
 		"height": 104.0,
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"terminal: o",
+				"Terminal: Open in project folder"
+			],
+			[
+				"bookmar",
+				"Bookmarks: Clear All"
+			],
+			[
+				"restat",
+				"LSP: Restart Servers"
+			],
 			[
 				"restart",
 				"LSP: Restart Servers"
@@ -1287,10 +1291,6 @@
 			],
 			[
 				"bookm",
-				"Bookmarks: Clear All"
-			],
-			[
-				"bookmar",
 				"Bookmarks: Clear All"
 			],
 			[
@@ -1676,14 +1676,6 @@
 			[
 				"zero",
 				"Snippet: zero inb"
-			],
-			[
-				"Snippet: ",
-				"Snippet: html"
-			],
-			[
-				"package contro: enable",
-				"Package Control: Enable Package"
 			]
 		],
 		"width": 436.0
@@ -1742,12 +1734,13 @@
 	],
 	"file_history":
 	[
+		"/D/Workspace/tetris/src/ui.rs",
+		"/D/Workspace/tetris/src/util.rs",
 		"/D/Workspace/tetris/enum-select-derive/Cargo.toml",
 		"/D/Workspace/tetris/Cargo.toml",
 		"/D/Workspace/tetris/thoughts/TODO.md",
 		"/D/Workspace/tetris/src/player.rs",
 		"/D/Workspace/tetris/src/unit.rs",
-		"/D/Workspace/tetris/src/ui.rs",
 		"/D/Workspace/tetris/src/main.rs",
 		"/D/Workspace/tetris/enum-select/Cargo.toml",
 		"/D/Workspace/tetris/enum-select/src/lib.rs",
@@ -1791,7 +1784,6 @@
 		"/D/Workspace/indeletniciri curente/ACSL 2/test.py",
 		"/D/Workspace/tetris/src/old/storage.rs",
 		"/D/Workspace/tetris/src/old/adding.rs",
-		"/D/Workspace/tetris/src/util.rs",
 		"/C/Users/Andrei/.cargo/registry/src/github.com-1ecc6299db9ec823/rand_core-0.6.1/src/lib.rs",
 		"/D/Workspace/tetris/src/lenio.rs",
 		"/C/Users/Andrei/Downloads/guitar.obj",
@@ -1873,7 +1865,7 @@
 	],
 	"find":
 	{
-		"height": 41.0
+		"height": 42.0
 	},
 	"find_in_files":
 	{
@@ -1888,6 +1880,25 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"text",
+			"draw_text",
+			"game_text",
+			"game_mode_text",
+			"network_text",
+			"paused_text",
+			"if pause",
+			"draw_menu_select",
+			"resume",
+			"paused_text",
+			"fn",
+			"paused_text",
+			"Pause",
+			"left",
+			"right",
+			"next_variant",
+			"\t\t\t\t\t\n",
+			"next",
+			"NextEnumVariant",
 			"len",
 			"ident",
 			"DataEnum",
@@ -1996,26 +2007,7 @@
 			"MoveDirection",
 			"RotDirection",
 			"RotDirection::",
-			"fn",
-			"enum",
-			"config::",
-			"config::Controlcode",
-			"get_fall_d",
-			"StartGame",
-			"units.push",
-			"StartGame",
-			"InitBegin",
-			"Return",
-			"network_init",
-			"NetworkInit",
-			"player_name",
-			"rng",
-			"GenerateMino",
-			"player_text",
-			"player_name",
-			"NetworkEvent",
-			"name",
-			"Q"
+			"fn"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2037,7 +2029,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -2046,23 +2038,23 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1002,
+						"buffer_size": 1033,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								392,
-								392
+								628,
+								628
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 259,
-								"count": 57,
+								"changes": 230,
+								"count": 45,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -2082,8 +2074,8 @@
 								{
 									"1":
 									[
-										721,
-										722
+										877,
+										878
 									]
 								},
 								"icon":
@@ -2098,8 +2090,8 @@
 								{
 									"1":
 									[
-										391,
-										392
+										607,
+										608
 									]
 								},
 								"unmatched":
@@ -2108,41 +2100,6 @@
 							},
 							"bracket_highlighter.regions":
 							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
 								"bh_curly",
 								"bh_curly_center",
 								"bh_curly_open",
@@ -2153,259 +2110,51 @@
 								"bh_single_quote_open",
 								"bh_single_quote_close",
 								"bh_single_quote_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1085,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1085,
-								1085
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 1,
-								"count": 63,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
 								"bh_angle",
 								"bh_angle_center",
 								"bh_angle_open",
 								"bh_angle_close",
 								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
 								"bh_round",
 								"bh_round_center",
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
 								"bh_double_quote",
 								"bh_double_quote_center",
 								"bh_double_quote_open",
 								"bh_double_quote_close",
 								"bh_double_quote_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
 								"bh_c_define",
 								"bh_c_define_center",
 								"bh_c_define_open",
 								"bh_c_define_close",
-								"bh_c_define_content"
-							],
-							"default_dir": "D:\\Workspace\\tetris\\enum-select-derive\\src",
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 4.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 2,
-					"file": "src/ui.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1210,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								354,
-								182
-							]
-						],
-						"settings":
-						{
-							"WordCount":
-							{
-								"changes": 288,
-								"count": 80,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
+								"bh_c_define_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
 								"bh_unmatched_close",
 								"bh_unmatched_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
 								"bh_regex",
 								"bh_regex_center",
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content"
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2422,7 +2171,164 @@
 					},
 					"stack_index": 1,
 					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/main.rs",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 33648,
+						"regions":
+						{
+							"bookmarks":
+							{
+								"flags": 144,
+								"icon": "bookmark",
+								"regions":
+								[
+									[
+										27262,
+										27262
+									]
+								],
+								"scope": "bookmarks"
+							}
+						},
+						"selection":
+						[
+							[
+								32649,
+								32649
+							]
+						],
+						"settings":
+						{
+							"WordCount":
+							{
+								"changes": 2707,
+								"count": 1373,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".:",
+									"selector": "source.rust"
+								}
+							],
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+									"1":
+									[
+										33402,
+										33403
+									]
+								},
+								"icon":
+								{
+									"1":
+									[
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
+									]
+								},
+								"open":
+								{
+									"1":
+									[
+										31180,
+										31181
+									]
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content"
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 14061.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
 				}
+			]
+		},
+		{
+			"sheets":
+			[
 			]
 		}
 	],
@@ -2454,7 +2360,7 @@
 		"cols":
 		[
 			0.0,
-			0.438606847697,
+			0.488783943329,
 			1.0
 		],
 		"rows":
@@ -2474,7 +2380,7 @@
 	},
 	"output.exec":
 	{
-		"height": 145.0
+		"height": 139.0
 	},
 	"output.find_results":
 	{
