@@ -35,7 +35,7 @@ pub enum FallState {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Player {
+pub struct MinoController {
 	pub move_direction: MoveDirection,
 	pub move_state: MoveState,
 	pub rot_direction: RotDirection,
@@ -52,9 +52,9 @@ pub struct Player {
 	pub config_id: usize,
 }
 
-impl Player {
+impl MinoController {
 	pub fn new(config_id: usize, joystick_id: Option<u32>) -> Self {
-	    Player {
+	    MinoController {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
 			rot_direction: RotDirection::None,
@@ -72,7 +72,7 @@ impl Player {
 	    }
 	}
 	pub fn update(&mut self, keybinds: &mut [config::Player;4], event: &Event) {
-		let Player {
+		let MinoController {
 			move_direction,
 			move_state,
 			rot_direction,

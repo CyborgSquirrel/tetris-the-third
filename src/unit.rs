@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 use rand::RngCore;
 use serde::{Serialize,Deserialize};
-use crate::game;
-use crate::player;
+use crate::{game, mino_controller::MinoController};
+use crate::mino_controller;
 use crate::mino::Mino;
 use std::time::Duration;
 use crate::NetworkState;
@@ -41,7 +41,7 @@ pub struct Base {
 pub enum Kind {
 	Local {
 		rng: LocalMinoRng,
-		player: player::Player,
+		mino_controller: MinoController,
 	},
 	Network {
 		rng_queue: VecDeque<Mino>,
@@ -49,10 +49,10 @@ pub enum Kind {
 }
 
 impl Kind {
-	pub fn local(player: player::Player) -> Kind {
+	pub fn local(mino_controller: MinoController) -> Kind {
 		let mut rng = game::MinoRng::fair();
 		Kind::Local {
-			player,
+			mino_controller,
 			rng: LocalMinoRng {
 				queue: {
 					let mut queue = VecDeque::with_capacity(5);
@@ -68,9 +68,9 @@ impl Kind {
 }
 
 impl Unit {
-	pub fn local(mode: Mode, player: player::Player) -> Unit {
+	pub fn local(mode: Mode, mino_controller: MinoController) -> Unit {
 		let well = game::Well::filled_with(None, 10, 20);
-		let kind = Kind::local(player);
+		let kind = Kind::local(mino_controller);
 		Unit {
 			base: Base {
 				animate_line: vec![false; 20],
@@ -211,9 +211,9 @@ pub fn update_local<F1,F2>(
 ) 
 where F1: FnMut(u32), F2: FnMut(u32) {
 	let Unit{base:Base{well,animate_line,lines_cleared,mode,falling_mino,can_store_mino,stored_mino,state},kind}= &mut units[unit_id];
-	if let Kind::Local {player,rng} = kind {
-		let player::Player {store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
-		fall_duration,fall_state,..} = player;
+	if let Kind::Local {mino_controller,rng} = kind {
+		let mino_controller::MinoController {store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
+		fall_duration,fall_state,..} = mino_controller;
 		
 		if let Some(falling_mino) = falling_mino {
 
@@ -239,7 +239,7 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 			
 			let mut mino_translated = false;
 			
-			let crate::config::Player {move_prepeat_duration,move_repeat_duration,..} = &config.players[player.config_id];
+			let crate::config::Player {move_prepeat_duration,move_repeat_duration,..} = &config.players[mino_controller.config_id];
 			
 			mino_translated |= 
 				game::mino_rotation_system(

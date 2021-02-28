@@ -1,7 +1,7 @@
 use crate::block;
 use crate::Mino;
 use std::{mem::swap, time::Duration};
-use crate::player;
+use crate::mino_controller;
 use crate::vec2i;
 use itertools::izip;
 use rand::{Rng,SeedableRng,rngs::SmallRng};
@@ -93,20 +93,20 @@ pub fn mino_falling_system(
 	fall_countdown: &mut Duration,
 	fall_duration: Duration,
 	softdrop_duration: Duration,
-	fall_state: &mut player::FallState)
--> (bool, bool) {
+	fall_state: &mut mino_controller::FallState
+) -> (bool, bool) {
 	let fall_duration = match fall_state {
-		player::FallState::Fall => fall_duration,
-		player::FallState::Softdrop => softdrop_duration,
-		player::FallState::Harddrop => Duration::from_secs(0),
+		mino_controller::FallState::Fall => fall_duration,
+		mino_controller::FallState::Softdrop => softdrop_duration,
+		mino_controller::FallState::Harddrop => Duration::from_secs(0),
 	};
 	
-	if player::FallState::Softdrop == *fall_state {
+	if mino_controller::FallState::Softdrop == *fall_state {
 		*fall_countdown = std::cmp::min(*fall_countdown, softdrop_duration);
 	}
 	
-	if player::FallState::Harddrop == *fall_state {
-		*fall_state = player::FallState::Fall;
+	if mino_controller::FallState::Harddrop == *fall_state {
+		*fall_state = mino_controller::FallState::Fall;
 		*fall_countdown = Duration::from_secs(0);
 	}
 	
@@ -217,10 +217,10 @@ pub fn try_rotr_mino(mino: &mut Mino, well: &Well) -> bool{
 pub fn mino_rotation_system(
 	falling_mino: &mut Mino,
 	well: &Well,
-	rot_direction: &mut player::RotDirection,
+	rot_direction: &mut mino_controller::RotDirection,
 ) -> bool
 {
-	use player::RotDirection;
+	use mino_controller::RotDirection;
 	let mino_mutated = match rot_direction {
 		RotDirection::Left => try_rotl_mino(falling_mino, well),
 		RotDirection::Right => try_rotr_mino(falling_mino, well),
@@ -233,15 +233,15 @@ pub fn mino_rotation_system(
 pub fn mino_movement_system(
 	falling_mino: &mut Mino,
 	well: &Well,
-	move_state: &mut player::MoveState,
-	move_direction: &mut player::MoveDirection,
+	move_state: &mut mino_controller::MoveState,
+	move_direction: &mut mino_controller::MoveDirection,
 	move_repeat_countdown: &mut Duration,
 	move_prepeat_duration: Duration,
 	move_repeat_duration: Duration,
 	dpf: Duration,
 ) -> bool {
-	use player::MoveState;
-	use player::MoveDirection;
+	use mino_controller::MoveState;
+	use mino_controller::MoveDirection;
 	let mut mino_mutated = false;
 	if MoveState::Instant == *move_state {
 		mino_mutated |= match move_direction{

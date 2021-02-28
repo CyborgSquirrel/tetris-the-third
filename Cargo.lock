@@ -58,15 +58,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "generational-arena"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e1d3b771574f62d0548cee0ad9057857e9fc25d7a3335f140c84f6acd0bf601"
-dependencies = [
- "cfg-if 0.1.10",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -132,7 +123,6 @@ dependencies = [
  "rand_chacha",
  "rand_core",
  "rand_hc",
- "serde",
 ]
 
 [[package]]
@@ -207,6 +197,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "slotmap"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab3003725ae562cf995f3dc82bb99e70926e09000396816765bb6d7adbe740b1"
+dependencies = [
+ "serde",
+ "version_check",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -224,11 +224,11 @@ dependencies = [
  "array2d",
  "bincode",
  "enum-select-derive",
- "generational-arena",
  "itertools",
  "rand",
  "sdl2",
  "serde",
+ "slotmap",
  "toml",
 ]
 
@@ -252,6 +252,12 @@ name = "version-compare"
 version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d63556a25bae6ea31b52e640d7c41d1ab27faba4ccb600013837a3d0b3994ca1"
+
+[[package]]
+name = "version_check"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5a972e5669d67ba988ce3dc826706fb0a8b01471c088cb0b6110b805cc36aed"
 
 [[package]]
 name = "wasi"

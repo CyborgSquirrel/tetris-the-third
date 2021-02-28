@@ -10,6 +10,7 @@ use std::thread::sleep;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use rand::{SeedableRng, rngs::SmallRng};
+use slotmap::{DefaultKey, SlotMap};
 
 use itertools::izip;
 
@@ -22,7 +23,7 @@ pub mod config;
 pub mod lenio;
 pub mod game;
 pub mod util;
-pub mod player;
+pub mod mino_controller;
 pub mod unit;
 pub mod ui;
 use util::*;
@@ -43,11 +44,10 @@ use std::io::stdin;
 
 use mino::Mino;
 
-use player::Player;
+use mino_controller::MinoController;
 
 use ui::{EnumSelect, Layout, NetworkStateSelection, PauseSelection, StartLayout, StartSelection};
 
-// #[derive(PartialEq, Eq, Clone)]
 enum State {
 	Play,
 	Start,
@@ -57,8 +57,8 @@ enum State {
 fn create_lines_cleared_text<'a>(
 	lines_cleared: u32,
 	font: &sdl2::ttf::Font,
-	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>)
--> Texture<'a> {
+	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>
+) -> Texture<'a> {
 	TextBuilder::new(format!("Lines: {}", lines_cleared), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -67,8 +67,8 @@ fn create_lines_cleared_text<'a>(
 fn create_level_text<'a>(
 	level: u32,
 	font: &sdl2::ttf::Font,
-	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>)
--> Texture<'a> {
+	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>
+) -> Texture<'a> {
 	TextBuilder::new(format!("Level: {}", level), Color::WHITE)
 		.with_wrap(120)
 		.build(font, texture_creator)
@@ -82,12 +82,10 @@ enum NetworkEvent {
 		unit_id: usize,
 		event: UnitEvent,
 	},
-	InitBegin,
-	InitPlayer {
-		name: String,
+	Init {
+		init_players: SlotMap<DefaultKey, Player>,
+		init_player_keys: Vec<DefaultKey>,
 	},
-	InitEnd,
-	
 	AddPlayer {
 		name: String,
 	},
@@ -129,9 +127,10 @@ impl NetworkState {
 	}
 }
 
-#[derive(Default)]
+#[derive(Default,Serialize,Deserialize)]
 struct NetworkInit {
-	player_names: Vec<String>,
+	players: SlotMap<DefaultKey, Player>,
+	player_keys: Vec<DefaultKey>,
 	units: Vec<Unit>,
 }
 
@@ -145,7 +144,7 @@ fn get_texture_dim(texture: &Texture) -> (u32,u32) {
 	(width, height)
 }
 
-fn draw_no_scale(canvas: &mut WindowCanvas, texture: &Texture, rect: sdl2::rect::Rect) {
+fn draw_same_scale(canvas: &mut WindowCanvas, texture: &Texture, rect: sdl2::rect::Rect) {
 	let _ = canvas.copy(&texture, Rect::new(0, 0, rect.width(), rect.height()), rect);
 }
 
@@ -173,6 +172,33 @@ fn ask_for_name(stdin: &std::io::Stdin) -> String {
 	stdin.read_line(&mut name).unwrap();
 	name = name.trim_end().into();
 	name
+}
+
+#[derive(Debug,Clone,Serialize,Deserialize)]
+enum PlayerKind {
+	Local,
+	Network,
+}
+
+#[derive(Debug,Clone,Serialize,Deserialize)]
+struct Player {
+	kind: PlayerKind,
+	name: String,
+}
+
+impl Player {
+	fn local(name: String) -> Player {
+		Player {
+			kind: PlayerKind::Local,
+			name,
+		}
+	}
+	fn network(name: String) -> Player {
+		Player {
+			kind: PlayerKind::Network,
+			name,
+		}
+	}
 }
 
 fn main() {
@@ -318,8 +344,6 @@ fn main() {
 	let mut player_names = Vec::<String>::new();
 	let mut player_names_text = Vec::<Texture>::new();
 	
-	let mut network_init: Option<NetworkInit> = None;
-	
 	let mut stopwatch = Duration::from_secs(0);
 	
 	let mut network_players = 0u32;
@@ -368,6 +392,9 @@ fn main() {
 	
 	let mut pause_selection = PauseSelection::Resume;
 	
+	let mut players = SlotMap::<DefaultKey, Player>::new();
+	let mut player_keys = Vec::<DefaultKey>::new();
+	
 	'running: loop {
 		let start = Instant::now();
 		
@@ -381,8 +408,8 @@ fn main() {
 			match state {
 				State::Play => {
 					for unit in units.iter_mut() {
-						if let unit::Kind::Local {player,..} = &mut unit.kind {
-							player.update(&mut config.players, &event)
+						if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
+							mino_controller.update(&mut config.players, &event)
 						}
 					}
 					
@@ -483,10 +510,10 @@ fn main() {
 									network_state = NetworkState::Offline;
 									state = State::Play;
 									
-									let new_player = Player::new(configs.next().unwrap(),None);
+									let new_controller = MinoController::new(configs.next().unwrap(),None);
 									let mut unit = saved_unit.take().unwrap();
-									if let unit::Kind::Local{player,..} = &mut unit.kind {
-										*player = new_player;
+									if let unit::Kind::Local{mino_controller,..} = &mut unit.kind {
+										*mino_controller = new_controller;
 									}
 									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
 									if let Unit{base:unit::Base{mode:Mode::Marathon{level,..},..},..} = unit {
@@ -501,7 +528,9 @@ fn main() {
 								if quick_game {
 									state = State::Play;
 									
-									let player = Player::new(configs.next().unwrap(),None);
+									let key = players.insert(Player::local("no name".into()));
+									player_keys.push(key);
+									let player = MinoController::new(configs.next().unwrap(),None);
 									let mut unit = Unit::local(Mode::default_marathon(), player);
 									if let unit::Kind::Local {rng,..} = &mut unit.kind {
 										unit.base.falling_mino.replace(
@@ -542,13 +571,15 @@ fn main() {
 											let mut stream = LenIO::new(stream);
 											
 											state = State::Lobby;
-											units.push(Unit::local(game_mode_ctors[selected_game_mode](), Player::new(configs.next().unwrap(),None)));
+											units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),None)));
+											
+											let key = players.insert(Player::local(name.clone()));
+											player_keys.push(key);
 											
 											stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
 											player_names_text.push(
 												TextBuilder::new(name.clone(), Color::WHITE)
 												.build(&font, &texture_creator));
-											player_names.push(name);
 											
 											NetworkState::Client {
 												stream,
@@ -588,11 +619,13 @@ fn main() {
 						}
 						if is_key_down(&event, Some(Keycode::Q)) {
 							let name = String::from("salam");//ask_for_name(&stdin); //TODO: put name back
+							let key = players.insert(Player::local(name.clone()));
+							player_keys.push(key);
 							player_names_text.push(
 								TextBuilder::new(name.clone(), Color::WHITE)
 								.build(&font, &texture_creator));
 							
-							units.push(Unit::local(game_mode_ctors[selected_game_mode](), Player::new(configs.next().unwrap(),None)));
+							units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),None)));
 							if let NetworkState::Host{streams,..} = &mut network_state {
 								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
 								for stream in streams {
@@ -627,6 +660,9 @@ fn main() {
 								);
 							}
 							NetworkEvent::AddPlayer {name} => {
+								network_players += 1;
+								let key = players.insert(Player::network(name.clone()));
+								player_keys.push(key);
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
@@ -634,8 +670,7 @@ fn main() {
 								units.push(Unit::network(Mode::default_marathon()))
 							}
 							NetworkEvent::StartGame => {} //only host gets to start game
-							NetworkEvent::InitBegin | NetworkEvent::InitEnd | NetworkEvent::InitPlayer {..}
-							=> {} //host already has players initted
+							_ => {} //host already has players initted
 						}
 					}
 				}
@@ -654,6 +689,8 @@ fn main() {
 						}
 						NetworkEvent::AddPlayer {name} => {
 								network_players += 1;
+								let key = players.insert(Player::network(name.clone()));
+								player_keys.push(key);
 								player_names_text.push(
 									TextBuilder::new(name.clone(), Color::WHITE)
 									.build(&font, &texture_creator));
@@ -661,33 +698,29 @@ fn main() {
 								units.push(Unit::network(Mode::default_marathon()));
 							}
 						NetworkEvent::StartGame => {start_game = true}
-						NetworkEvent::InitBegin => {
-							network_init = Some(NetworkInit::default());
-						}
-						NetworkEvent::InitPlayer {name} => {
-							if let Some(ref mut network_init) = network_init {
-								network_players += 1;
-								network_init.player_names.push(name);
-								network_init.units.push(Unit::network(Mode::default_marathon()));
-							}else { panic!(); }
-						}
-						NetworkEvent::InitEnd => {
-							if let Some(mut network_init) = network_init {
-								let mut player_names_text_init = Vec::<Texture>::new();
-								for name in &network_init.player_names {
-									player_names_text_init.push(
-										TextBuilder::new(name.clone(), Color::WHITE)
-										.build(&font, &texture_creator));
-								}
-								player_names_text_init.append(&mut player_names_text);
-								player_names_text = player_names_text_init;
-								
-								network_init.player_names.append(&mut player_names);
-								player_names = network_init.player_names;
-								network_init.units.append(&mut units);
-								units = network_init.units;
-							}else { panic!(); }
-							network_init = None;
+						NetworkEvent::Init {mut init_players, mut init_player_keys} => {
+							network_players += init_players.len() as u32;
+							
+							let mut init_units = Vec::<Unit>::new();
+							let mut init_player_names_text = Vec::<Texture>::new();
+							for (_,player) in &init_players {
+								init_units.push(Unit::network(Mode::default_marathon()));
+								init_player_names_text.push(
+									TextBuilder::new(player.name.clone(), Color::WHITE)
+									.build(&font, &texture_creator));
+							}
+							init_units.append(&mut units);
+							init_player_names_text.append(&mut player_names_text);
+							units = init_units;
+							player_names_text = init_player_names_text;
+							
+							for (_,player) in players.drain() {
+								let key = init_players.insert(player);
+								init_player_keys.push(key);
+							}
+							
+							players = init_players;
+							player_keys = init_player_keys;
 						}
 					}
 				}
@@ -792,11 +825,14 @@ fn main() {
 						network_players += 1;
 						let mut stream = LenIO::new(incoming.0);
 						
-						stream.write(&serialize(&NetworkEvent::InitBegin).unwrap()).unwrap();
-						for name in &player_names {
-							stream.write(&serialize(&NetworkEvent::InitPlayer{name:name.clone()}).unwrap()).unwrap();
-						}
-						stream.write(&serialize(&NetworkEvent::InitEnd).unwrap()).unwrap();
+						stream.write(
+							&serialize(
+								&NetworkEvent::Init {
+									init_players: players.clone(),
+									init_player_keys: player_keys.clone(),
+								}
+							).unwrap()
+						).unwrap();
 						
 						streams.push(stream);
 						println!("{:?}", incoming.1);
@@ -822,7 +858,7 @@ fn main() {
 			
 			let (width, height) = get_texture_dim(&title);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_no_scale(&mut canvas, &title, rect);
+			draw_same_scale(&mut canvas, &title, rect);
 			
 			layout.row(height as i32);
 			layout.row_margin(30);
@@ -830,7 +866,7 @@ fn main() {
 			let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == NetworkStateSelection::Offline);
 			let (width, height) = get_texture_dim(&continue_text);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_no_scale(&mut canvas, &continue_text, rect);
+			draw_same_scale(&mut canvas, &continue_text, rect);
 			
 			if start_selection == StartSelection::Continue {
 				draw_select(&mut canvas, rect);
@@ -842,7 +878,7 @@ fn main() {
 			let game_text = get_game_text(quick_game);
 			let (width, height) = get_texture_dim(&game_text);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_no_scale(&mut canvas, &game_text, rect);
+			draw_same_scale(&mut canvas, &game_text, rect);
 			
 			if start_selection == StartSelection::NewGame {
 				draw_select(&mut canvas, rect);
@@ -855,7 +891,7 @@ fn main() {
 				let game_mode_text = &game_mode_text[selected_game_mode];
 				let (width, height) = get_texture_dim(&game_mode_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &game_mode_text, rect);
+				draw_same_scale(&mut canvas, &game_mode_text, rect);
 				
 				if start_selection == StartSelection::GameMode {
 					draw_select(&mut canvas, rect);
@@ -867,7 +903,7 @@ fn main() {
 				let network_text = get_network_text(&selected_network_state);
 				let (width, height) = get_texture_dim(&network_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &network_text, rect);
+				draw_same_scale(&mut canvas, &network_text, rect);
 				
 				if start_selection == StartSelection::NetworkMode {
 					draw_select(&mut canvas, rect);
@@ -997,14 +1033,14 @@ fn main() {
 				
 				let (width, height) = get_texture_dim(&paused_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &paused_text, rect);
+				draw_same_scale(&mut canvas, &paused_text, rect);
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
 				
 				let (width, height) = get_texture_dim(&resume_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &resume_text, rect);
+				draw_same_scale(&mut canvas, &resume_text, rect);
 				if let PauseSelection::Resume {..} = pause_selection {
 					draw_select(&mut canvas, rect);
 				}
@@ -1014,7 +1050,7 @@ fn main() {
 				
 				let (width, height) = get_texture_dim(&save_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &save_text, rect);
+				draw_same_scale(&mut canvas, &save_text, rect);
 				if let PauseSelection::Save {..} = pause_selection {
 					draw_select(&mut canvas, rect);
 				}
@@ -1024,7 +1060,7 @@ fn main() {
 				
 				let (width, height) = get_texture_dim(&quit_to_title_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &quit_to_title_text, rect);
+				draw_same_scale(&mut canvas, &quit_to_title_text, rect);
 				if let PauseSelection::QuitToTitle {..} = pause_selection {
 					draw_select(&mut canvas, rect);
 				}
@@ -1034,7 +1070,7 @@ fn main() {
 				
 				let (width, height) = get_texture_dim(&quit_to_desktop_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_no_scale(&mut canvas, &quit_to_desktop_text, rect);
+				draw_same_scale(&mut canvas, &quit_to_desktop_text, rect);
 				if let PauseSelection::QuitToDesktop {..} = pause_selection {
 					draw_select(&mut canvas, rect);
 				}
