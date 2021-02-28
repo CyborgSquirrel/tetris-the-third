@@ -1,3 +1,5 @@
+use sdl2::{render::TextureCreator, video::WindowContext};
+
 use crate::Color;
 
 pub struct TextBuilder {

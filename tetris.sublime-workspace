@@ -4,6 +4,54 @@
 		"selected_items":
 		[
 			[
+				"init_",
+				"init_player_keys\t  Vec<DefaultKey>"
+			],
+			[
+				"player_names",
+				"player_names_text\t  Vec<Texture>"
+			],
+			[
+				"init",
+				"init_player_names_text\t  Vec<Texture>"
+			],
+			[
+				"init_player",
+				"init_player_names_text\t  Vec<Texture>"
+			],
+			[
+				"init_palye",
+				"init_player_keys\t  Vec<DefaultKey>"
+			],
+			[
+				"init_pla",
+				"init_player_keys\t  Vec<DefaultKey>"
+			],
+			[
+				"network",
+				"network_init"
+			],
+			[
+				"PlayerK",
+				"PlayerKind::Local\t  ()"
+			],
+			[
+				"Playe",
+				"PlayerType\t  Enum"
+			],
+			[
+				"player",
+				"players\t  SlotMap<DefaultKey, PlayerType>"
+			],
+			[
+				"Defau",
+				"DefaultKey\t  Struct"
+			],
+			[
+				"Sl",
+				"SlotMap\t  Struct"
+			],
+			[
 				"Pause",
 				"PauseSelection::QuitToTitle\t  ()"
 			],
@@ -332,10 +380,6 @@
 				"network_players\t  u32"
 			],
 			[
-				"network",
-				"network_players\t  u32"
-			],
-			[
 				"from",
 				"from_secs\t  pub const fn from_secs(secs: u64) -> Duration"
 			],
@@ -358,14 +402,6 @@
 			[
 				"Uni",
 				"UnitKind\t  Enum"
-			],
-			[
-				"player_names",
-				"player_names_text_init\t  Vec<Texture>"
-			],
-			[
-				"player",
-				"player_names_text\t  Vec<Texture>"
 			],
 			[
 				"player_",
@@ -478,61 +514,25 @@
 			[
 				"std",
 				"stdin()\t  pub fn stdin() -> Stdin"
-			],
-			[
-				"move_",
-				"move_repeat_countdown\t  Duration"
-			],
-			[
-				"config",
-				"config_id\t  &mut usize"
-			],
-			[
-				"pla",
-				"PlayerType::Network(…)\t  (ClientPlayer)"
-			],
-			[
-				"Lobb",
-				"LobbyClient"
-			],
-			[
-				"P",
-				"Play\t  ()"
-			],
-			[
-				"Netow",
-				"NetworkEvent"
-			],
-			[
-				"can_",
-				"can_store_mino\t  bool"
-			],
-			[
-				"con",
-				"continue\tcontinue;"
-			],
-			[
-				"Game",
-				"GameEvent"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "enum-select-derive/src/lib.rs",
+			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 1033,
+				"buffer_size": 34432,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "src/main.rs",
+			"file": "src/text_builder.rs",
 			"settings":
 			{
-				"buffer_size": 33648,
+				"buffer_size": 992,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -1098,7 +1098,7 @@
 			],
 			[
 				"Packages/Rust Enhanced/RustEnhanced.sublime-build",
-				"Run"
+				""
 			]
 		],
 		[
@@ -1166,6 +1166,30 @@
 		"selected_items":
 		[
 			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"terminus",
+				"Terminus: Open Default Shell in Tab (View)"
+			],
+			[
+				"lsp: rena",
+				"LSP: Rename Symbol"
+			],
+			[
+				"rename",
+				"Rename File"
+			],
+			[
+				"lsp: rename",
+				"LSP: Rename Symbol"
+			],
+			[
+				"restart",
+				"LSP: Restart Servers"
+			],
+			[
 				"synce",
 				"Sync Settings: Upload"
 			],
@@ -1180,14 +1204,6 @@
 			[
 				"restat",
 				"LSP: Restart Servers"
-			],
-			[
-				"restart",
-				"LSP: Restart Servers"
-			],
-			[
-				"rename",
-				"Rename File"
 			],
 			[
 				"terminal:",
@@ -1212,10 +1228,6 @@
 			[
 				"pretty json:",
 				"Pretty JSON: Format (Pretty Print) JSON"
-			],
-			[
-				"install",
-				"Package Control: Install Package"
 			],
 			[
 				"bracket",
@@ -1252,10 +1264,6 @@
 			[
 				"termin",
 				"Terminus: Open Default Shell in Panel"
-			],
-			[
-				"terminus",
-				"Terminus: Open Default Shell in Tab (View)"
 			],
 			[
 				"terminu",
@@ -1668,14 +1676,6 @@
 			[
 				"inbone",
 				"Snippet: inbone"
-			],
-			[
-				"packge list",
-				"Package Control: List Packages"
-			],
-			[
-				"enabla",
-				"Package Control: Enable Package"
 			]
 		],
 		"width": 436.0
@@ -1734,21 +1734,25 @@
 	],
 	"file_history":
 	[
+		"/C/Users/Andrei/Downloads/caca",
+		"/D/Workspace/tetris/src/mino_controller.rs",
+		"/D/Workspace/tetris/src/unit.rs",
+		"/D/Workspace/tetris/Cargo.toml",
+		"/D/Workspace/tetris/enum-select-derive/src/lib.rs",
+		"/D/Workspace/tetris/src/main.rs",
+		"/D/Workspace/tetris/src/game.rs",
+		"/D/Workspace/tetris/src/src/main.rs",
 		"/D/Workspace/tetris/src/ui.rs",
 		"/D/Workspace/tetris/src/util.rs",
 		"/D/Workspace/tetris/enum-select-derive/Cargo.toml",
-		"/D/Workspace/tetris/Cargo.toml",
 		"/D/Workspace/tetris/thoughts/TODO.md",
 		"/D/Workspace/tetris/src/player.rs",
-		"/D/Workspace/tetris/src/unit.rs",
-		"/D/Workspace/tetris/src/main.rs",
 		"/D/Workspace/tetris/enum-select/Cargo.toml",
 		"/D/Workspace/tetris/enum-select/src/lib.rs",
 		"/D/Workspace/tetris/good-config.toml",
 		"/D/Workspace/tetris/enum_select/lib.rs",
 		"/D/Workspace/tetris/enum_select/Cargo.toml",
 		"/D/Workspace/tetris/config.toml",
-		"/D/Workspace/tetris/src/game.rs",
 		"/C/Users/Andrei/Downloads/gme.cpp",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Andrei/Desktop/salam.json",
@@ -1857,15 +1861,11 @@
 		"/D/Workspace/indeletniciri curente/apm.cpp",
 		"/D/Workspace/indeletniciri curente/dmin.cpp",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/C++/Snippets/fori loop.sublime-snippet",
-		"/D/Workspace/indeletniciri curente/disjoint.cpp",
-		"/D/Workspace/indeletniciri curente/disjoint.out",
-		"/D/Workspace/indeletniciri curente/disjoint.in",
-		"/D/Workspace/pseudocod/doc.md",
-		"/D/Workspace/indeletniciri curente/salam.cpp"
+		"/D/Workspace/indeletniciri curente/disjoint.cpp"
 	],
 	"find":
 	{
-		"height": 42.0
+		"height": 29.0
 	},
 	"find_in_files":
 	{
@@ -1880,6 +1880,11 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"WindowContext",
+			"new_player",
+			"player",
+			"units",
+			"draw_no_scale",
 			"text",
 			"draw_text",
 			"game_text",
@@ -2002,12 +2007,7 @@
 			"units",
 			"player::Player::Network",
 			"Offline",
-			"&mut ",
-			"MoveState",
-			"MoveDirection",
-			"RotDirection",
-			"RotDirection::",
-			"fn"
+			"&mut "
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2029,28 +2029,37 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "enum-select-derive/src/lib.rs",
+					"file": "src/main.rs",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1033,
+						"buffer_size": 34432,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								628,
-								628
+								5655,
+								5655
 							]
 						],
 						"settings":
 						{
+							"WordCount":
+							{
+								"changes": 0,
+								"count": 1410,
+								"modified": false,
+								"selection": false,
+								"status": -1,
+								"syntax": "plain text"
+							},
 							"auto_complete_triggers":
 							[
 								{
@@ -2063,44 +2072,54 @@
 							{
 								"close":
 								{
-									"1":
-									[
-										877,
-										878
-									]
 								},
 								"icon":
 								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
 								},
 								"open":
 								{
-									"1":
-									[
-										607,
-										608
-									]
 								},
 								"unmatched":
 								{
+									"1":
+									[
+										4248,
+										4249
+									]
 								}
 							},
 							"bracket_highlighter.regions":
 							[
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
 								"bh_curly",
 								"bh_curly_center",
 								"bh_curly_open",
 								"bh_curly_close",
 								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
 								"bh_angle",
 								"bh_angle_center",
 								"bh_angle_open",
@@ -2111,41 +2130,21 @@
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
 								"bh_regex",
 								"bh_regex_center",
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content"
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2157,48 +2156,41 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 4692.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 0,
 					"type": "text"
-				},
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
 				{
 					"buffer": 1,
-					"file": "src/main.rs",
+					"file": "src/text_builder.rs",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 33648,
+						"buffer_size": 992,
 						"regions":
 						{
-							"bookmarks":
-							{
-								"flags": 144,
-								"icon": "bookmark",
-								"regions":
-								[
-									[
-										27262,
-										27262
-									]
-								],
-								"scope": "bookmarks"
-							}
 						},
 						"selection":
 						[
 							[
-								22428,
-								22428
+								136,
+								149
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 0,
-								"count": 1373,
+								"changes": 60,
+								"count": 53,
 								"modified": false,
 								"selection": false,
 								"status": -1,
@@ -2218,24 +2210,24 @@
 								{
 									"1":
 									[
-										22473,
-										22474
+										212,
+										213
 									]
 								},
 								"icon":
 								{
 									"1":
 									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
 									]
 								},
 								"open":
 								{
 									"1":
 									[
-										22401,
-										22402
+										101,
+										102
 									]
 								},
 								"unmatched":
@@ -2249,36 +2241,41 @@
 								"bh_tag_open",
 								"bh_tag_close",
 								"bh_tag_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
 								"bh_double_quote",
 								"bh_double_quote_center",
 								"bh_double_quote_open",
 								"bh_double_quote_close",
 								"bh_double_quote_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
 								"bh_square",
 								"bh_square_center",
 								"bh_square_open",
 								"bh_square_close",
 								"bh_square_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
 								"bh_regex",
 								"bh_regex_center",
 								"bh_regex_open",
@@ -2289,11 +2286,6 @@
 								"bh_single_quote_open",
 								"bh_single_quote_close",
 								"bh_single_quote_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
@@ -2309,23 +2301,18 @@
 							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax"
 						},
 						"translation.x": 0.0,
-						"translation.y": 14061.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 1,
 					"type": "text"
 				}
-			]
-		},
-		{
-			"sheets":
-			[
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 34.0
+		"height": 29.0
 	},
 	"input":
 	{
@@ -2351,7 +2338,7 @@
 		"cols":
 		[
 			0.0,
-			0.488783943329,
+			0.428571428572,
 			1.0
 		],
 		"rows":
@@ -2367,7 +2354,7 @@
 	},
 	"output.diagnostics":
 	{
-		"height": 149.0
+		"height": 139.0
 	},
 	"output.exec":
 	{
@@ -2401,7 +2388,7 @@
 	"project": "tetris.sublime-project",
 	"replace":
 	{
-		"height": 64.0
+		"height": 54.0
 	},
 	"save_all_on_build": true,
 	"select_file":
