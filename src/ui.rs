@@ -14,12 +14,15 @@ pub enum StartSelection {
 	NetworkMode,
 }
 
-#[derive(EnumSelect)]
+#[derive(EnumSelect,Clone,Copy)]
 pub enum PauseSelection {
 	Resume,
 	Save,
 	QuitToTitle,
 	QuitToDesktop,
+}
+impl Default for PauseSelection {
+	fn default() -> Self {PauseSelection::Resume}
 }
 
 #[derive(PartialEq,EnumSelect)]
@@ -81,4 +84,9 @@ impl StartLayout {
 	pub fn row_margin(&mut self, y: i32) {
 		self.y += y;
 	}
+}
+
+#[derive(Default)]
+pub struct Pause {
+	pub selection: PauseSelection,
 }

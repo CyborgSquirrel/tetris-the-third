@@ -194,6 +194,10 @@ pub enum UnitEvent {
 	GenerateMino {
 		mino: Mino,
 	},
+	AddBottomLines {
+		lines: usize,
+		gap: usize,
+	},
 	StoreMino,
 	Init,
 }
@@ -284,6 +288,7 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 					animate_line,
 					can_store_mino,
 					||rng.next_mino(network_state, unit_id));
+				
 				network_state.broadcast_event(
 					&NetworkEvent::UnitEvent {
 						unit_id,
@@ -296,9 +301,20 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 				}else {
 					if let Mode::Versus {lines_received,..} = mode {
 						while !lines_received.is_empty() {
+							let lines = lines_received.pop_front().unwrap() as usize;
+							let gap = other_rng.next_u32() as usize % well.num_rows();
+							
 							game::try_add_bottom_line_with_gap(
-								well, lines_received.pop_front().unwrap() as usize,
-								other_rng.next_u32() as usize % well.num_rows());
+								well, lines, gap);
+							
+							network_state.broadcast_event(
+								&NetworkEvent::UnitEvent {
+									unit_id,
+									event: UnitEvent::AddBottomLines {
+										lines, gap
+									}
+								}
+							);
 						}
 					}
 					if clearable_lines > 0 {
@@ -327,13 +343,14 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 }
 
 pub fn update_network<F1,F2>(
-	unit: &mut Unit,
+	unit_id: usize,
+	units: &mut [Unit],
 	event: UnitEvent,
 	mut on_lines_cleared: F1,
 	mut on_level_changed: F2,
 ) 
 where F1: FnMut(u32), F2: FnMut(u32) {
-	if let Unit{base:Base{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,state,mode},kind:Kind::Network{rng_queue},..} = unit {
+	if let Unit{base:Base{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,state,mode},kind:Kind::Network{rng_queue},..} = &mut units[unit_id] {
 		match event {
 			UnitEvent::TranslateMino {origin, blocks} => {
 				if let Some(falling_mino) = falling_mino {
@@ -344,7 +361,7 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 			UnitEvent::AddMinoToWell => {
 				let falling_mino = falling_mino.as_mut().unwrap();
 				*state = State::LineClear {countdown:Duration::from_secs(0)};
-				let (_can_add, clearable_lines, _sendable_lines) = game::mino_adding_system(
+				let (_can_add, clearable_lines, sendable_lines) = game::mino_adding_system(
 					falling_mino, well,
 					None,
 					animate_line,
@@ -360,8 +377,17 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 						if level_changed {
 							on_level_changed(*level);
 						}
+					}else if let Mode::Versus {target_unit_id,..} = mode {
+						let target_unit_id = *target_unit_id;
+						if let Unit{base:Base{mode:Mode::Versus{lines_received,..},..},..} = &mut units[target_unit_id] {
+							lines_received.push_back(sendable_lines);
+						}
 					}
 				}
+			}
+			UnitEvent::AddBottomLines {lines, gap} => {
+				game::try_add_bottom_line_with_gap(
+					well, lines, gap);
 			}
 			UnitEvent::GenerateMino {mino} => {
 				rng_queue.push_back(mino);

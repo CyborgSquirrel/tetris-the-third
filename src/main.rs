@@ -2,10 +2,10 @@
 
 use sdl2::render::{BlendMode, TextureQuery};
 use sdl2::render::WindowCanvas;
-use sdl2::{event::Event, render::{Texture,TextureCreator}};
+use sdl2::{event::Event, render::Texture};
 use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
-use std::{net::SocketAddr, time::{Duration,Instant}};
+use std::{net::SocketAddr, time::{Duration, Instant}};
 use std::thread::sleep;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -18,7 +18,7 @@ use itertools::izip;
 pub mod vec2;
 pub mod mino;
 pub mod block;
-pub mod text_builder;
+pub mod text;
 pub mod config;
 pub mod lenio;
 pub mod game;
@@ -28,14 +28,11 @@ pub mod unit;
 pub mod ui;
 use util::*;
 use vec2::vec2i;
-use text_builder::TextBuilder;
+use text::TextCreator;
 use config::Config;
-use unit::{UnitEvent,Unit,Mode};
+use unit::{UnitEvent, Unit, Mode};
 
-use std::net::TcpListener;
-use std::net::TcpStream;
-use std::net::ToSocketAddrs;
-
+use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use lenio::LenIO;
 
 use serde::{Serialize,Deserialize};
@@ -46,7 +43,7 @@ use mino::Mino;
 
 use mino_controller::MinoController;
 
-use ui::{EnumSelect, Layout, NetworkStateSelection, PauseSelection, StartLayout, StartSelection};
+use ui::{EnumSelect, Layout, NetworkStateSelection, Pause, PauseSelection, StartLayout, StartSelection};
 
 enum State {
 	Play,
@@ -56,22 +53,18 @@ enum State {
 
 fn create_lines_cleared_text<'a>(
 	lines_cleared: u32,
-	font: &sdl2::ttf::Font,
-	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>
+	text_creator: &'a TextCreator,
 ) -> Texture<'a> {
-	TextBuilder::new(format!("Lines: {}", lines_cleared), Color::WHITE)
-		.with_wrap(120)
-		.build(font, texture_creator)
+	text_creator.builder(&format!("Lines: {}", lines_cleared))
+		.with_wrap(120).build()
 }
 
 fn create_level_text<'a>(
 	level: u32,
-	font: &sdl2::ttf::Font,
-	texture_creator: &'a TextureCreator<sdl2::video::WindowContext>
+	text_creator: &'a TextCreator,
 ) -> Texture<'a> {
-	TextBuilder::new(format!("Level: {}", level), Color::WHITE)
-		.with_wrap(120)
-		.build(font, texture_creator)
+	text_creator.builder(&format!("Level: {}", level))
+		.with_wrap(120).build()
 }
 
 use vec2::vec2f;
@@ -95,6 +88,12 @@ enum NetworkEvent {
 fn draw_select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect) {
 	canvas.set_draw_color(Color::RGBA(255, 255, 0, 127));
 	let _ = canvas.draw_rect(rect);
+}
+
+fn select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect, is_selected: bool) {
+	if is_selected {
+		draw_select(canvas, rect);
+	}
 }
 	
 #[derive(Debug)]
@@ -208,10 +207,10 @@ fn main() {
 		.expect("Failed to initialize sdl2");
 	let video_subsystem = sdl_context.video()
 		.expect("Failed to initialize video subsystem");
-	let ttf_context = sdl2::ttf::init()
-		.expect("Failed to initialize ttf");
 	let game_controller_subsystem = sdl_context.game_controller()
 		.expect("Failed to initialize controller subsystem");
+	let ttf_context = sdl2::ttf::init()
+		.expect("Failed to initialize ttf");
 	
 	let available = game_controller_subsystem
 		.num_joysticks()
@@ -235,9 +234,7 @@ fn main() {
 	};
 	
 	let mut window = video_subsystem.window(
-			"Tetris part 3",
-			window_rect.width(),
-			window_rect.height());
+		"Tetris part 3",window_rect.width(),window_rect.height());
 	window.position_centered();
 	if config.borderless {
 		window.borderless();
@@ -260,27 +257,22 @@ fn main() {
 	let font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", 32)
 		.expect("Failed to load font");
 	
+	let text_creator = TextCreator::new(&texture_creator, &font);
+	
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
-	let mut paused = false;
-	let paused_text = TextBuilder::new("Paused".to_string(), Color::WHITE)
-		.build(&font, &texture_creator);
+	let paused_text = text_creator.builder("Paused").build();
 	
-	let game_over_text = TextBuilder::new("Game over".to_string(), Color::WHITE)
-		.with_wrap(10*config.block_size)
-		.build(&font, &texture_creator);
-	let game_won_text = TextBuilder::new("You won".to_string(), Color::WHITE)
-		.with_wrap(10*config.block_size)
-		.build(&font, &texture_creator);
+	let game_over_text = text_creator.builder("Game over")
+		.with_wrap(10*config.block_size).build();
+	let game_won_text = text_creator.builder("You won")
+		.with_wrap(10*config.block_size).build();
 	
-	let host_start_text = TextBuilder::new("Press enter to start game".to_string(), Color::WHITE)
-		.with_wrap(window_rect.width() as u32)
-		.build(&font, &texture_creator);
+	let host_start_text = text_creator.builder("Press enter to start game")
+		.with_wrap(window_rect.width() as u32).build();
 	
-	let local_player_text = TextBuilder::new(" (Local)".to_string(), Color::WHITE)
-		.build(&font, &texture_creator);
-	let network_player_text = TextBuilder::new(" (Network)".to_string(), Color::WHITE)
-		.build(&font, &texture_creator);
+	let local_player_text = text_creator.builder(" (Local)").build();
+	let network_player_text = text_creator.builder(" (Network)").build();
 	
 	let get_player_text = |unit: &Unit| -> &Texture{
 		match unit.kind {
@@ -294,9 +286,9 @@ fn main() {
 	
 	let mut selected_game_mode: usize = 0;
 	let game_mode_text = [
-		TextBuilder::new("Marathon".to_string(),Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("Sprint".to_string(), Color::WHITE).build(&font, &texture_creator),
-		TextBuilder::new("Versus".to_string(), Color::WHITE).build(&font, &texture_creator),
+		text_creator.builder("Marathon").build(),
+		text_creator.builder("Sprint").build(),
+		text_creator.builder("Versus").build(),
 	];
 	let game_mode_ctors = [
 		Mode::default_marathon,
@@ -307,9 +299,9 @@ fn main() {
 	let mut selected_network_state = NetworkStateSelection::Offline;
 	let mut network_state = NetworkState::Offline;
 	
-	let offline_text = TextBuilder::new("Offline".to_string(), Color::WHITE).build(&font, &texture_creator);
-	let host_text = TextBuilder::new("Host".to_string(),Color::WHITE).build(&font, &texture_creator);
-	let client_text = TextBuilder::new("Client".to_string(),Color::WHITE).build(&font, &texture_creator);
+	let offline_text = text_creator.builder("Offline").build();
+	let host_text = text_creator.builder("Host").build();
+	let client_text = text_creator.builder("Client").build();
 	let get_network_text = |ref selected_network_state: &NetworkStateSelection|
 		match selected_network_state {
 			NetworkStateSelection::Offline => &offline_text,
@@ -318,17 +310,17 @@ fn main() {
 		};
 	
 	let mut lines_cleared_text = [
-		create_lines_cleared_text(0, &font, &texture_creator),
-		create_lines_cleared_text(0, &font, &texture_creator),
-		create_lines_cleared_text(0, &font, &texture_creator),
-		create_lines_cleared_text(0, &font, &texture_creator),
+		create_lines_cleared_text(0, &text_creator),
+		create_lines_cleared_text(0, &text_creator),
+		create_lines_cleared_text(0, &text_creator),
+		create_lines_cleared_text(0, &text_creator),
 	];
 	
 	let mut level_text = [
-		create_level_text(1, &font, &texture_creator),
-		create_level_text(1, &font, &texture_creator),
-		create_level_text(1, &font, &texture_creator),
-		create_level_text(1, &font, &texture_creator),
+		create_level_text(1, &text_creator),
+		create_level_text(1, &text_creator),
+		create_level_text(1, &text_creator),
+		create_level_text(1, &text_creator),
 	];
 	
 	let softdrop_duration = Duration::from_secs_f64(0.05);
@@ -341,17 +333,12 @@ fn main() {
 	
 	let line_clear_duration = Duration::from_secs_f64(0.1);
 	
-	let mut player_names = Vec::<String>::new();
-	let mut player_names_text = Vec::<Texture>::new();
-	
 	let mut stopwatch = Duration::from_secs(0);
-	
-	let mut network_players = 0u32;
 	
 	let mut start_game = false;
 	
-	let can_continue_text = TextBuilder::new("Continue".into(), Color::WHITE).build(&font, &texture_creator);
-	let cant_continue_text = TextBuilder::new("Continue".into(), Color::GRAY).build(&font, &texture_creator);
+	let can_continue_text = text_creator.builder("Continue").build();
+	let cant_continue_text = text_creator.builder("Continue").color(Color::GRAY).build();
 	let mut saved_unit: Option<Unit> = {
 		use std::fs::File;
 		use std::io::prelude::*;
@@ -370,30 +357,32 @@ fn main() {
 	};
 	
 	let mut quick_game = true;
-	let new_game_text = TextBuilder::new("New Game".into(), Color::WHITE).build(&font, &texture_creator);
-	let quick_game_text = TextBuilder::new("Quick Game".into(), Color::WHITE).build(&font, &texture_creator);
+	let new_game_text = text_creator.builder("New Game").build();
+	let quick_game_text = text_creator.builder("Quick Game").build();
 	
 	let get_game_text = |quick_game|{
 		if quick_game {&quick_game_text}
 		else {&new_game_text}
 	};
 	
-	let just_saved_text = TextBuilder::new("Saved!".into(), Color::WHITE).build(&font, &texture_creator);
+	let just_saved_text = text_creator.builder("Saved").build();
 	let mut just_saved = false;
 	
 	let mut start_selection = StartSelection::Continue;
 	
 	let mut other_rng = SmallRng::from_entropy();
 	
-	let resume_text = TextBuilder::new("Resume".into(), Color::WHITE).build(&font, &texture_creator);
-	let save_text = TextBuilder::new("Save".into(), Color::WHITE).build(&font, &texture_creator);
-	let quit_to_title_text = TextBuilder::new("Quit to title".into(), Color::WHITE).build(&font, &texture_creator);
-	let quit_to_desktop_text = TextBuilder::new("Quit to desktop".into(), Color::WHITE).build(&font, &texture_creator);
+	let resume_text = text_creator.builder("Resume").build();
+	let save_text = text_creator.builder("Save").build();
+	let quit_to_title_text = text_creator.builder("Quit to title").build();
+	let quit_to_desktop_text = text_creator.builder("Quit to desktop").build();
 	
-	let mut pause_selection = PauseSelection::Resume;
-	
+	let mut network_players = 0u32;
 	let mut players = SlotMap::<DefaultKey, Player>::new();
 	let mut player_keys = Vec::<DefaultKey>::new();
+	let mut player_names_text = Vec::<Texture>::new();
+	
+	let mut pause: Option<Pause> = None;
 	
 	'running: loop {
 		let start = Instant::now();
@@ -407,22 +396,17 @@ fn main() {
 			
 			match state {
 				State::Play => {
-					for unit in units.iter_mut() {
-						if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
-							mino_controller.update(&mut config.players, &event)
-						}
-					}
 					
-					if paused {
+					if let Some(Pause{selection}) = &mut pause {
 						if is_any_up_down(&event) {
-							pause_selection = pause_selection.prev_variant();
+							*selection = selection.prev_variant();
 						}
 						if is_any_down_down(&event) {
-							pause_selection = pause_selection.next_variant();
+							*selection = selection.next_variant();
 						}
 						if is_key_down(&event, Some(Keycode::Return)) {
-							match pause_selection {
-								PauseSelection::Resume => paused = false,
+							match selection {
+								PauseSelection::Resume => pause = None,
 								PauseSelection::Save => {
 									if let NetworkState::Offline = network_state {
 										use std::fs::File;
@@ -434,52 +418,33 @@ fn main() {
 								}
 								PauseSelection::QuitToTitle => {
 									state = State::Start;
+									units.clear();
+									configs = (0..4usize).cycle();
 								}
 								PauseSelection::QuitToDesktop => {
 									break 'running;
 								}
 							}
 						}
+					}else {
+						for unit in units.iter_mut() {
+							if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
+								mino_controller.update(&mut config.players, &event)
+							}
+						}
 					}
 					
 					match event{
-						// Not adding restart keybind for now
-						// Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..}
-						// 	=> if let State::Pause | State::Over = state {
-						// 	lines_cleared_text = [
-						// 		create_lines_cleared_text(0, &font, &texture_creator),
-						// 		create_lines_cleared_text(0, &font, &texture_creator),
-						// 		create_lines_cleared_text(0, &font, &texture_creator),
-						// 		create_lines_cleared_text(0, &font, &texture_creator),
-						// 	];
-							
-			
-						// 	level_text = [
-						// 		create_level_text(1, &font, &texture_creator),
-						// 		create_level_text(1, &font, &texture_creator),
-						// 		create_level_text(1, &font, &texture_creator),
-						// 		create_level_text(1, &font, &texture_creator),
-						// 	];
-							
-						// 	units.clear();
-						// 	for player in players.drain(..) {
-						// 		units.push(Unit::new(game_mode_ctors[selected_game_mode](), player));
-						// 	}
-							
-						// 	state = State::Play;
-						// 	prev_state = None;
-							
-						// 	stopwatch = Duration::from_secs(0);
-						// }
-						
 						// Deliberately not adding custom pause keybind
 						Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
-						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..}
-							=> {paused = !paused;just_saved = false;}
+						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..} => {
+							pause = if pause.is_some() {None} else {Some(Pause::default())};
+							just_saved = false;
+						}
 						
 						Event::KeyDown{keycode:Some(Keycode::Q), repeat:false, ..} => {
 							if let NetworkState::Offline = network_state {
-								if paused {
+								if pause.is_some() {
 									use std::fs::File;
 									use std::io::prelude::*;
 									let mut file = File::create("save").unwrap();
@@ -515,9 +480,9 @@ fn main() {
 									if let unit::Kind::Local{mino_controller,..} = &mut unit.kind {
 										*mino_controller = new_controller;
 									}
-									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &font, &texture_creator);
+									lines_cleared_text[0] = create_lines_cleared_text(unit.base.lines_cleared, &text_creator);
 									if let Unit{base:unit::Base{mode:Mode::Marathon{level,..},..},..} = unit {
-										level_text[0] = create_level_text(level, &font, &texture_creator);
+										level_text[0] = create_level_text(level, &text_creator);
 									}
 									units.push(unit);
 								}
@@ -577,9 +542,7 @@ fn main() {
 											player_keys.push(key);
 											
 											stream.write(&serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap()).unwrap();
-											player_names_text.push(
-												TextBuilder::new(name.clone(), Color::WHITE)
-												.build(&font, &texture_creator));
+											player_names_text.push(text_creator.builder(&name).build());
 											
 											NetworkState::Client {
 												stream,
@@ -621,9 +584,7 @@ fn main() {
 							let name = String::from("salam");//ask_for_name(&stdin); //TODO: put name back
 							let key = players.insert(Player::local(name.clone()));
 							player_keys.push(key);
-							player_names_text.push(
-								TextBuilder::new(name.clone(), Color::WHITE)
-								.build(&font, &texture_creator));
+							player_names_text.push(text_creator.builder(&name).build());
 							
 							units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),None)));
 							if let NetworkState::Host{streams,..} = &mut network_state {
@@ -632,7 +593,6 @@ fn main() {
 									stream.write(&event).unwrap();
 								}
 							}
-							player_names.push(name);
 						}
 					}
 				}
@@ -652,22 +612,19 @@ fn main() {
 						match event {
 							NetworkEvent::UnitEvent {unit_id, event} => {
 								unit::update_network(
-									&mut units[unit_id], event,
+									unit_id, &mut units, event,
 									|lines_cleared|lines_cleared_text[unit_id] =
-									create_lines_cleared_text(lines_cleared, &font, &texture_creator),
+									create_lines_cleared_text(lines_cleared, &text_creator),
 									|level|level_text[unit_id] =
-									create_level_text(level, &font, &texture_creator),
+									create_level_text(level, &text_creator),
 								);
 							}
 							NetworkEvent::AddPlayer {name} => {
 								network_players += 1;
 								let key = players.insert(Player::network(name.clone()));
 								player_keys.push(key);
-								player_names_text.push(
-									TextBuilder::new(name.clone(), Color::WHITE)
-									.build(&font, &texture_creator));
-								player_names.push(name);
-								units.push(Unit::network(Mode::default_marathon()))
+								player_names_text.push(text_creator.builder(&name).build());
+								units.push(Unit::network(Mode::default_versus()))
 							}
 							NetworkEvent::StartGame => {} //only host gets to start game
 							_ => {} //host already has players initted
@@ -680,22 +637,19 @@ fn main() {
 					match event {
 						NetworkEvent::UnitEvent {unit_id, event} => {
 							unit::update_network(
-								&mut units[unit_id], event,
+								unit_id, &mut units, event,
 								|lines_cleared|lines_cleared_text[unit_id] =
-								create_lines_cleared_text(lines_cleared, &font, &texture_creator),
+								create_lines_cleared_text(lines_cleared, &text_creator),
 								|level|level_text[unit_id] =
-								create_level_text(level, &font, &texture_creator),
+								create_level_text(level, &text_creator),
 							);
 						}
 						NetworkEvent::AddPlayer {name} => {
 								network_players += 1;
 								let key = players.insert(Player::network(name.clone()));
 								player_keys.push(key);
-								player_names_text.push(
-									TextBuilder::new(name.clone(), Color::WHITE)
-									.build(&font, &texture_creator));
-								player_names.push(name);
-								units.push(Unit::network(Mode::default_marathon()));
+								player_names_text.push(text_creator.builder(&name).build());
+								units.push(Unit::network(Mode::default_versus()));
 							}
 						NetworkEvent::StartGame => {start_game = true}
 						NetworkEvent::Init {mut init_players, mut init_player_keys} => {
@@ -703,11 +657,9 @@ fn main() {
 							
 							let mut init_units = Vec::<Unit>::new();
 							let mut init_player_names_text = Vec::<Texture>::new();
-							for (_,player) in &init_players {
-								init_units.push(Unit::network(Mode::default_marathon()));
-								init_player_names_text.push(
-									TextBuilder::new(player.name.clone(), Color::WHITE)
-									.build(&font, &texture_creator));
+							for (_,player) in init_players.iter() {
+								init_units.push(Unit::network(Mode::default_versus()));
+								init_player_names_text.push(text_creator.builder(&player.name).build());
 							}
 							init_units.append(&mut units);
 							init_player_names_text.append(&mut player_names_text);
@@ -760,7 +712,7 @@ fn main() {
 				in izip!(0usize..units.len(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
 					let unit = &mut units[unit_id];
 					match &mut unit.base.state {
-						unit::State::Play if (!paused || network_players > 0) => {
+						unit::State::Play if (!pause.is_some() || network_players > 0) => {
 							unit::update_local(
 								unit_id,
 								&mut units,
@@ -770,9 +722,9 @@ fn main() {
 								dpf,
 								&mut other_rng,
 								|lines_cleared|*lines_cleared_text =
-								create_lines_cleared_text(lines_cleared, &font, &texture_creator),
+								create_lines_cleared_text(lines_cleared, &text_creator),
 								|level|*level_text =
-								create_level_text(level, &font, &texture_creator)
+								create_level_text(level, &text_creator)
 							);
 						}
 							
@@ -867,10 +819,7 @@ fn main() {
 			let (width, height) = get_texture_dim(&continue_text);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 			draw_same_scale(&mut canvas, &continue_text, rect);
-			
-			if start_selection == StartSelection::Continue {
-				draw_select(&mut canvas, rect);
-			}
+			select(&mut canvas, rect, matches!(start_selection, StartSelection::Continue));
 			
 			layout.row(height as i32);
 			layout.row_margin(15);
@@ -879,10 +828,7 @@ fn main() {
 			let (width, height) = get_texture_dim(&game_text);
 			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 			draw_same_scale(&mut canvas, &game_text, rect);
-			
-			if start_selection == StartSelection::NewGame {
-				draw_select(&mut canvas, rect);
-			}
+			select(&mut canvas, rect, matches!(start_selection, StartSelection::NewGame));
 			
 			if !quick_game {
 				layout.row(height as i32);
@@ -892,10 +838,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&game_mode_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &game_mode_text, rect);
-				
-				if start_selection == StartSelection::GameMode {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(start_selection, StartSelection::GameMode));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
@@ -904,10 +847,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&network_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &network_text, rect);
-				
-				if start_selection == StartSelection::NetworkMode {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(start_selection, StartSelection::NetworkMode));
 			}
 			
 		}else if let State::Lobby {..} = state {
@@ -1024,7 +964,7 @@ fn main() {
 				}
 			}
 			
-			if paused {
+			if let Some(Pause{selection}) = &mut pause {
 				darken(&mut canvas);
 				
 				let mut layout = StartLayout {y:0,width:window_rect.width()};
@@ -1041,9 +981,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&resume_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &resume_text, rect);
-				if let PauseSelection::Resume {..} = pause_selection {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(selection, PauseSelection::Resume));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
@@ -1051,9 +989,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&save_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &save_text, rect);
-				if let PauseSelection::Save {..} = pause_selection {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(selection, PauseSelection::Save));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
@@ -1061,9 +997,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&quit_to_title_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &quit_to_title_text, rect);
-				if let PauseSelection::QuitToTitle {..} = pause_selection {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToTitle));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
@@ -1071,9 +1005,7 @@ fn main() {
 				let (width, height) = get_texture_dim(&quit_to_desktop_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &quit_to_desktop_text, rect);
-				if let PauseSelection::QuitToDesktop {..} = pause_selection {
-					draw_select(&mut canvas, rect);
-				}
+				select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToDesktop));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
@@ -1092,7 +1024,6 @@ fn main() {
 		}
 		
 		canvas.present();
-		
 		
 		// TIMEKEEPING
 		let duration = start.elapsed();
