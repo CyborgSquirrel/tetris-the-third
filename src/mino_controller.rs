@@ -5,14 +5,14 @@ use sdl2::event::Event;
 use crate::unit::get_level_fall_duration;
 use serde::{Serialize,Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum RotDirection {
 	None,
 	Left,
 	Right,
 }
 
-#[derive(PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MoveState {
 	Still,
 	Instant,
@@ -20,21 +20,21 @@ pub enum MoveState {
 	Repeat,
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum MoveDirection {
 	None,
 	Left,
 	Right,
 }
 
-#[derive(PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FallState {
 	Fall,
 	Softdrop,
 	Harddrop,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct MinoController {
 	pub move_direction: MoveDirection,
 	pub move_state: MoveState,

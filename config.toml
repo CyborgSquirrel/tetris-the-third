@@ -1,6 +1,6 @@
-width = 1200
-height = 800
-borderless = false
+width = 900
+height = 900
+# borderless = false
 block_size = 30
 
 [[players]]

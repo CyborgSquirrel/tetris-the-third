@@ -1,4 +1,4 @@
-use sdl2::event::Event;
+use sdl2::{controller::Button, event::Event};
 use sdl2::keyboard::Keycode;
 use crate::config::Controlcode;
 
@@ -104,12 +104,24 @@ pub fn is_any_right_down(
 
 pub fn is_any_up_down(
 	event: &Event,
+	joystick_id: Option<u32>,
 ) -> bool {
-	is_key_down(&event, Some(Keycode::W))
+	is_key_down(&event, Some(Keycode::W)) ||
+	is_controlcode_down(&event, &mut Some(Controlcode::Button(Button::DPadUp)), joystick_id)
 }
 
 pub fn is_any_down_down(
 	event: &Event,
+	joystick_id: Option<u32>,
 ) -> bool {
-	is_key_down(&event, Some(Keycode::S))
+	is_key_down(&event, Some(Keycode::S)) ||
+	is_controlcode_down(&event, &mut Some(Controlcode::Button(Button::DPadDown)), joystick_id)
+}
+
+pub fn is_ok_down(
+	event: &Event,
+	joystick_id: Option<u32>,
+) -> bool {
+	is_key_down(&event, Some(Keycode::Return)) ||
+	is_controlcode_down(&event, &mut Some(Controlcode::Button(Button::A)), joystick_id)
 }

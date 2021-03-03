@@ -9,7 +9,7 @@ use crate::NetworkState;
 use crate::NetworkEvent;
 use crate::{vec2i,vec2f};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum State {
 	Play,
 	LineClear{countdown: Duration},
@@ -17,13 +17,13 @@ pub enum State {
 	Win,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Unit {
 	pub base: Base,
 	pub kind: Kind,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Base {
 	pub well: game::Well,
 	pub animate_line: Vec<bool>,
@@ -37,7 +37,22 @@ pub struct Base {
 	pub stored_mino: Option<Mino>,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Base {
+	pub fn new(mode: Mode) -> Self {
+		Base {
+			animate_line: vec![false; 20],
+			state: State::Play,
+			lines_cleared: 0,
+			mode,
+			can_store_mino: true,
+			stored_mino: None,
+			falling_mino: None,
+			well: game::Well::filled_with(None, 10, 20),
+		}
+	}
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Kind {
 	Local {
 		rng: LocalMinoRng,
@@ -69,35 +84,15 @@ impl Kind {
 
 impl Unit {
 	pub fn local(mode: Mode, mino_controller: MinoController) -> Unit {
-		let well = game::Well::filled_with(None, 10, 20);
 		let kind = Kind::local(mino_controller);
 		Unit {
-			base: Base {
-				animate_line: vec![false; 20],
-				state: State::Play,
-				lines_cleared: 0,
-				mode,
-				can_store_mino: true,
-				stored_mino: None,
-				falling_mino: None,
-				well,
-			},
+			base: Base::new(mode),
 			kind,
 		}
 	}
 	pub fn network(mode: Mode) -> Unit {
-		let well = game::Well::filled_with(None, 10, 20);
 		Unit {
-			base: Base {
-				animate_line: vec![false; 20],
-				state: State::Play,
-				lines_cleared: 0,
-				mode,
-				can_store_mino: true,
-				stored_mino: None,
-				falling_mino: None,
-				well,
-			},
+			base: Base::new(mode),
 			kind: Kind::Network {
 				rng_queue: VecDeque::new(),
 			}
@@ -105,7 +100,7 @@ impl Unit {
 	}
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct LocalMinoRng {
 	pub queue: VecDeque<Mino>,
 	pub rng: game::MinoRng,
@@ -131,7 +126,7 @@ impl LocalMinoRng {
 	}
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Mode {
 	Marathon{level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint{lines_cleared_target: u32},

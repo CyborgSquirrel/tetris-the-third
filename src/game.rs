@@ -10,7 +10,7 @@ use serde::{Serialize,Deserialize};
 
 pub type Well = array2d::Array2D<Option<block::Data>>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum MinoRng {
 	_Hard {#[serde(skip,default="SmallRng::from_entropy")] rng: SmallRng},
 	Fair {#[serde(skip,default="SmallRng::from_entropy")] rng: SmallRng, stack: Vec<Mino>},

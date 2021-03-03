@@ -83,6 +83,7 @@ enum NetworkEvent {
 		name: String,
 	},
 	StartGame,
+	RestartGame,
 }
 
 fn draw_select(canvas: &mut WindowCanvas, rect: sdl2::rect::Rect) {
@@ -212,16 +213,9 @@ fn main() {
 	let ttf_context = sdl2::ttf::init()
 		.expect("Failed to initialize ttf");
 	
-	let available = game_controller_subsystem
-		.num_joysticks()
-		.expect("Failed to enumerate joysticks");
-	
 	let mut controllers = Vec::new();
-	
-	for i in 0..available {
-		if let Ok(controller) = game_controller_subsystem.open(i) {
-			controllers.push(controller);
-		}
+	for i in 0..8usize {
+		controllers.push(game_controller_subsystem.open(i as u32).ok());
 	}
 	
 	let mut config = Config::from_file();
@@ -339,7 +333,7 @@ fn main() {
 	
 	let can_continue_text = text_creator.builder("Continue").build();
 	let cant_continue_text = text_creator.builder("Continue").color(Color::GRAY).build();
-	let mut saved_unit: Option<Unit> = {
+	let saved_unit: Option<Unit> = {
 		use std::fs::File;
 		use std::io::prelude::*;
 		let file = File::open("save");
@@ -391,6 +385,11 @@ fn main() {
 		for event in event_pump.poll_iter() {
 			match event {
 				Event::Quit{..} => break 'running,
+				Event::ControllerDeviceAdded{which,..} =>
+				controllers[which as usize] = game_controller_subsystem.open(which).ok(),
+				Event::ControllerDeviceRemapped{which,..} => println!("Remapped {:?}", which),
+				Event::ControllerDeviceRemoved{which,..} => println!("Removed {:?}", which),
+				// Event::ControllerAxisMotion{..} => println!("MOTION"),
 				_ => (),
 			};
 			
@@ -398,13 +397,13 @@ fn main() {
 				State::Play => {
 					
 					if let Some(Pause{selection}) = &mut pause {
-						if is_any_up_down(&event) {
+						if is_any_up_down(&event, Some(0)) {
 							*selection = selection.prev_variant();
 						}
-						if is_any_down_down(&event) {
+						if is_any_down_down(&event, Some(0)) {
 							*selection = selection.next_variant();
 						}
-						if is_key_down(&event, Some(Keycode::Return)) {
+						if is_ok_down(&event, Some(0)) {
 							match selection {
 								PauseSelection::Resume => pause = None,
 								PauseSelection::Save => {
@@ -442,6 +441,14 @@ fn main() {
 							just_saved = false;
 						}
 						
+						Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..} => {
+							for unit in &mut units {
+								unit.base = unit::Base::new(game_mode_ctors[selected_game_mode]());
+							}
+							network_state.broadcast_event(&NetworkEvent::RestartGame);
+							start_game = true;
+						}
+						
 						Event::KeyDown{keycode:Some(Keycode::Q), repeat:false, ..} => {
 							if let NetworkState::Offline = network_state {
 								if pause.is_some() {
@@ -460,23 +467,23 @@ fn main() {
 				State::Start => {
 					let keybinds = &mut config.players[0];
 					
-					if is_any_up_down(&event) {
+					if is_any_up_down(&event, Some(0)) {
 						start_selection = start_selection.prev_variant()
 					}
-					if is_any_down_down(&event) {
+					if is_any_down_down(&event, Some(0)) {
 						start_selection = start_selection.next_variant()
 					}
 					
 					use StartSelection::*;
 					match start_selection {
 						Continue => {
-							if is_key_down(&event, Some(Keycode::Return)) {
+							if is_ok_down(&event, Some(0)) {
 								if selected_network_state == NetworkStateSelection::Offline {
 									network_state = NetworkState::Offline;
 									state = State::Play;
 									
-									let new_controller = MinoController::new(configs.next().unwrap(),None);
-									let mut unit = saved_unit.take().unwrap();
+									let new_controller = MinoController::new(configs.next().unwrap(),Some(0));
+									let mut unit = saved_unit.clone().unwrap();
 									if let unit::Kind::Local{mino_controller,..} = &mut unit.kind {
 										*mino_controller = new_controller;
 									}
@@ -489,13 +496,13 @@ fn main() {
 							}
 						},
 						NewGame => {
-							if is_key_down(&event, Some(Keycode::Return)) {
+							if is_ok_down(&event, Some(0)) {
 								if quick_game {
 									state = State::Play;
 									
 									let key = players.insert(Player::local("no name".into()));
 									player_keys.push(key);
-									let player = MinoController::new(configs.next().unwrap(),None);
+									let player = MinoController::new(configs.next().unwrap(),Some(0));
 									let mut unit = Unit::local(Mode::default_marathon(), player);
 									if let unit::Kind::Local {rng,..} = &mut unit.kind {
 										unit.base.falling_mino.replace(
@@ -536,7 +543,7 @@ fn main() {
 											let mut stream = LenIO::new(stream);
 											
 											state = State::Lobby;
-											units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),None)));
+											units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),Some(0))));
 											
 											let key = players.insert(Player::local(name.clone()));
 											player_keys.push(key);
@@ -576,7 +583,7 @@ fn main() {
 				}
 				State::Lobby => {
 					if let NetworkState::Host {..} | NetworkState::Offline = network_state {
-						if is_key_down(&event, Some(Keycode::Return)) {
+						if is_ok_down(&event, Some(0)) {
 							network_state.broadcast_event(&NetworkEvent::StartGame);
 							start_game = true;
 						}
@@ -586,7 +593,7 @@ fn main() {
 							player_keys.push(key);
 							player_names_text.push(text_creator.builder(&name).build());
 							
-							units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),None)));
+							units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),Some(0))));
 							if let NetworkState::Host{streams,..} = &mut network_state {
 								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
 								for stream in streams {
@@ -626,8 +633,7 @@ fn main() {
 								player_names_text.push(text_creator.builder(&name).build());
 								units.push(Unit::network(Mode::default_versus()))
 							}
-							NetworkEvent::StartGame => {} //only host gets to start game
-							_ => {} //host already has players initted
+							_ => {}
 						}
 					}
 				}
@@ -673,6 +679,12 @@ fn main() {
 							
 							players = init_players;
 							player_keys = init_player_keys;
+						}
+						NetworkEvent::RestartGame => {
+							for unit in &mut units {
+								unit.base = unit::Base::new(game_mode_ctors[selected_game_mode]());
+							}
+							start_game = true;
 						}
 					}
 				}
