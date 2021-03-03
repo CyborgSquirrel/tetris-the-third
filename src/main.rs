@@ -134,9 +134,9 @@ struct NetworkInit {
 	units: Vec<Unit>,
 }
 
-fn darken(canvas: &mut WindowCanvas) {
+fn darken(canvas: &mut WindowCanvas, rect: Option<Rect>) {
 	canvas.set_draw_color(Color::RGBA(0,0,0,160));
-	let _ = canvas.fill_rect(None);
+	let _ = canvas.fill_rect(rect);
 }
 
 fn get_texture_dim(texture: &Texture) -> (u32,u32) {
@@ -144,8 +144,19 @@ fn get_texture_dim(texture: &Texture) -> (u32,u32) {
 	(width, height)
 }
 
-fn draw_same_scale(canvas: &mut WindowCanvas, texture: &Texture, rect: sdl2::rect::Rect) {
+fn draw_same_scale(canvas: &mut WindowCanvas, texture: &Texture, rect: Rect) {
 	let _ = canvas.copy(&texture, Rect::new(0, 0, rect.width(), rect.height()), rect);
+}
+
+fn draw_centered(canvas: &mut WindowCanvas, texture: &Texture, centering_rect: Rect) {
+	let TextureQuery {width, height,..} = texture.query();
+	let _ = canvas.copy(
+		&texture,
+		Rect::new(0, 0, width, height),
+		Rect::new(
+			centering_rect.x() + ((centering_rect.width()-width)/2) as i32,
+			centering_rect.y() + ((centering_rect.height()-height)/2) as i32,
+			width, height));
 }
 
 fn ask_for_ip(stdin: &std::io::Stdin) -> SocketAddr {
@@ -746,31 +757,6 @@ fn main() {
 								let Unit {base:unit::Base{well,state,animate_line,..},..} = unit;
 								*state = unit::State::Play;
 								game::line_clearing_system(well, animate_line);
-								
-								// match mode {
-								// 	Mode::Marathon{level,level_target,..} => {
-								// 		if *level >= *level_target {
-								// 			let _won_text =
-								// 				TextBuilder::new(
-								// 					format!("You won! Press r to restart.").to_string(),
-								// 					Color::WHITE)
-								// 				.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
-								// 				.build(&font, &texture_creator);
-								// 			*state = unit::State::Win;
-								// 		}
-								// 	}
-								// 	Mode::Sprint{lines_cleared_target} => {
-								// 		if *lines_cleared >= *lines_cleared_target {
-								// 			let _won_text =
-								// 				TextBuilder::new(
-								// 					format!("You won in {:.2} seconds! Press r to restart.", stopwatch.as_secs_f64()).to_string(),
-								// 					Color::WHITE)
-								// 				.with_wrap(15 + 4*config.block_size + 15 + 10*config.block_size + 15 + 4*config.block_size + 15)
-								// 				.build(&font, &texture_creator);
-								// 			*state = unit::State::Win;
-								// 		}
-								// 	}
-								// }
 							}
 						}
 						
@@ -896,12 +882,13 @@ fn main() {
 			
 			let mut layout = Layout {
 				x:0,y:0,
-				width:window_rect.width() as i32,expected_width:(4*config.block_size as i32+15+10*config.block_size as i32+15+4*config.block_size as i32+15) * units.len() as i32 - 15
+				width:window_rect.width() as i32,
+				expected_width:(4*config.block_size as i32+15+10*config.block_size as i32+15+4*config.block_size as i32+15) * units.len() as i32 - 15
 			};
 			
 			for (unit, lines_cleared_text, level_text)
 			in izip!(&mut units, &lines_cleared_text, &level_text) {
-				let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, ..}, ..} = unit;
+				let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, ..} = unit;
 				
 				layout.row_margin(15);
 				
@@ -912,24 +899,39 @@ fn main() {
 				layout.row_margin(config.block_size as i32 / 2);
 				
 				let TextureQuery {width, height, ..} = lines_cleared_text.query();
-				let _ = canvas.copy(
-					&lines_cleared_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(layout.x(), layout.y(), width, height));
+				let rect = Rect::new(layout.x(), layout.y(), width, height);
+				draw_same_scale(&mut canvas, &lines_cleared_text, rect);
 				
 				layout.row(32*2);
 				layout.row_margin(15);
 				
 				let TextureQuery {width, height, ..} = level_text.query();
-				let _ = canvas.copy(
-					&level_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(layout.x(), layout.y(), width, height));
+				let rect = Rect::new(layout.x(), layout.y(), width, height);
+				draw_same_scale(&mut canvas, &level_text, rect);
 				
 				layout.col(4*config.block_size as i32);
 				layout.col_margin(15);
 				
+				if let Mode::Versus {lines_received_sum,..} = mode {
+					layout.row_margin(15);
+					for y in 0..well.num_columns() {
+						let data = if well.num_columns()-y > *lines_received_sum as usize {
+							block::Data::EMPTY_LINE
+						}else {
+							block::Data::SENT_LINE
+						};
+						block_canvas.draw_block(&mut canvas, layout.as_vec2i(), &vec2i!(0,y), &data);
+					}
+					layout.col(config.block_size as i32);
+				}
+				
 				layout.row_margin(15);
+				
+				let well_rect = Rect::new(
+					layout.x(), layout.y(),
+					well.num_rows() as u32 * config.block_size,
+					well.num_columns() as u32 * config.block_size,
+				);
 				
 				block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
 				if let Some(falling_mino) = falling_mino {
@@ -955,29 +957,19 @@ fn main() {
 				
 				match state {
 					unit::State::Win => {
-						darken(&mut canvas);
-				
-						let TextureQuery {width, height, ..} = game_won_text.query();
-						let _ = canvas.copy(
-							&game_won_text,
-							Rect::new(0, 0, width, height),
-							Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+						darken(&mut canvas, Some(well_rect));
+						draw_centered(&mut canvas, &game_won_text, well_rect);
 					}
 					unit::State::Over => {
-						darken(&mut canvas);
-				
-						let TextureQuery {width, height, ..} = game_over_text.query();
-						let _ = canvas.copy(
-							&game_over_text,
-							Rect::new(0, 0, width, height),
-							Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32, width, height));
+						darken(&mut canvas, Some(well_rect));
+						draw_centered(&mut canvas, &game_over_text, well_rect);
 					}
 					_ => {}
 				}
 			}
 			
 			if let Some(Pause{selection}) = &mut pause {
-				darken(&mut canvas);
+				darken(&mut canvas, None);
 				
 				let mut layout = StartLayout {y:0,width:window_rect.width()};
 				

@@ -18,6 +18,9 @@ impl Data {
 	pub const PURPLE: Data = Data{texture_pos:vec2i{x:1,y:2}};
 	pub const YELLOW: Data = Data{texture_pos:vec2i{x:2,y:2}};
 	
+	pub const SENT_LINE: Data = Data{texture_pos:vec2i{x:3,y:1}};
+	pub const EMPTY_LINE: Data = Data{texture_pos:vec2i{x:3,y:2}};
+	
 	pub fn new(x: i32, y: i32) -> Self {
 		Self {
 			texture_pos: vec2i::new(x,y),
@@ -44,7 +47,7 @@ impl<'a> Canvas<'a> {
 			block_size_draw,
 		}
 	}
-	fn draw_block(&self, canvas: &mut WindowCanvas, origin: vec2i, block: &vec2i, data: &Data) {
+	pub fn draw_block(&self, canvas: &mut WindowCanvas, origin: vec2i, block: &vec2i, data: &Data) {
 		let block_size_tex_i32 = self.block_size_tex as i32;
 		let block_size_draw_i32 = self.block_size_draw as i32;
 		let _ = canvas.copy(

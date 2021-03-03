@@ -130,7 +130,7 @@ impl LocalMinoRng {
 pub enum Mode {
 	Marathon{level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint{lines_cleared_target: u32},
-	Versus{lines_received: VecDeque<u32>, target_unit_id: usize},
+	Versus{lines_received: VecDeque<u32>, lines_received_sum: u32, target_unit_id: usize},
 }
 
 impl Mode {
@@ -148,6 +148,7 @@ impl Mode {
 	pub fn default_versus() -> Mode {
 		Mode::Versus {
 			lines_received: VecDeque::new(),
+			lines_received_sum: 0,
 			target_unit_id: 0,
 		}
 	}
@@ -294,19 +295,20 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 				if !can_add {
 					*state = State::Over;
 				}else {
-					if let Mode::Versus {lines_received,..} = mode {
+					if let Mode::Versus {lines_received,lines_received_sum,..} = mode {
 						while !lines_received.is_empty() {
-							let lines = lines_received.pop_front().unwrap() as usize;
+							let lines = lines_received.pop_front().unwrap();
 							let gap = other_rng.next_u32() as usize % well.num_rows();
+							*lines_received_sum -= lines;
 							
 							game::try_add_bottom_line_with_gap(
-								well, lines, gap);
+								well, lines as usize, gap);
 							
 							network_state.broadcast_event(
 								&NetworkEvent::UnitEvent {
 									unit_id,
 									event: UnitEvent::AddBottomLines {
-										lines, gap
+										lines: lines as usize, gap
 									}
 								}
 							);
@@ -326,8 +328,9 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 							}
 						}else if let Mode::Versus {target_unit_id,..} = mode {
 							let target_unit_id = *target_unit_id;
-							if let Unit{base:Base{mode:Mode::Versus{lines_received,..},..},..} = &mut units[target_unit_id] {
+							if let Unit{base:Base{mode:Mode::Versus{lines_received,lines_received_sum,..},..},..} = &mut units[target_unit_id] {
 								lines_received.push_back(sendable_lines);
+								*lines_received_sum += sendable_lines;
 							}
 						}
 					}
@@ -374,13 +377,17 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 						}
 					}else if let Mode::Versus {target_unit_id,..} = mode {
 						let target_unit_id = *target_unit_id;
-						if let Unit{base:Base{mode:Mode::Versus{lines_received,..},..},..} = &mut units[target_unit_id] {
+						if let Unit{base:Base{mode:Mode::Versus{lines_received,lines_received_sum,..},..},..} = &mut units[target_unit_id] {
 							lines_received.push_back(sendable_lines);
+							*lines_received_sum += sendable_lines;
 						}
 					}
 				}
 			}
 			UnitEvent::AddBottomLines {lines, gap} => {
+				if let Mode::Versus {lines_received_sum,..} = mode {
+					*lines_received_sum -= lines as u32;
+				}
 				game::try_add_bottom_line_with_gap(
 					well, lines, gap);
 			}
