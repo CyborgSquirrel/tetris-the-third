@@ -48,7 +48,7 @@ impl<T: Read> LenIO<T> {
 }
 
 impl<T: Write> LenIO<T> {
-	pub fn write(&mut self, bytes: &Vec<u8>) -> Result<()> {
+	pub fn write(&mut self, bytes: &[u8]) -> Result<()> {
 		self.inner.write(&[bytes.len() as u8]).and_then(|_|{
 			self.inner.write(&bytes[..])
 		}).map(|_|{})

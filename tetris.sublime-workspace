@@ -4,20 +4,140 @@
 		"selected_items":
 		[
 			[
+				"le",
+				"len()\t  -> usize"
+			],
+			[
+				"players",
+				"players\t  SlotMap<DefaultKey, Player>"
+			],
+			[
+				"Game",
+				"GameModeSelection::Versus\t  ()"
+			],
+			[
+				"get_game",
+				"get_game_mode_text\t  |&GameModeSelection| -> Texture"
+			],
+			[
+				"Tex",
+				"Texture\t  Struct"
+			],
+			[
+				"sele",
+				"selected_game_mode\t  &GameModeSelection"
+			],
+			[
+				"defa",
+				"default_versus()\t  -> Mode"
+			],
+			[
+				"uni",
+				"unit\t  Module"
+			],
+			[
+				"plyers",
+				"players_lost\t  u32"
+			],
+			[
+				"stream",
+				"stream_index\t  usize"
+			],
+			[
+				"Netw",
+				"NetworkEventIterator\t  Struct"
+			],
+			[
+				"Networ",
+				"NetworkEventIterator\t  Struct"
+			],
+			[
+				"map",
+				"map_err(…)\t  -> Result<T, F>"
+			],
+			[
+				"and",
+				"and_then(…)\t  -> Option<U>"
+			],
+			[
+				"seri",
+				"serialized_event\t  &[u8]"
+			],
+			[
+				"iter",
+				"iter_mut()\t  -> IterMut<T>"
+			],
+			[
+				"split_f",
+				"split_first_mut()\t  -> Option<(&mut T, &mut [T])>"
+			],
+			[
+				"split_at",
+				"split_at_mut(…)\t  -> (&mut [T], &mut [T])"
+			],
+			[
+				"dese",
+				"deserialized_event\t  NetworkEvent"
+			],
+			[
+				"seria",
+				"serialized_event\t  &[u8]"
+			],
+			[
+				"straem",
+				"stream_index\t  &mut usize"
+			],
+			[
+				"Netwo",
+				"NetworkEvent\t  Enum"
+			],
+			[
+				"Network",
+				"NetworkState\t  Enum"
+			],
+			[
+				"well",
+				"well_rect\t  Rect"
+			],
+			[
+				"rect",
+				"rect: sdl2::rect::Rect\t  Variable"
+			],
+			[
+				"num",
+				"num_columns()\t  -> usize"
+			],
+			[
+				"x",
+				"x()\t  -> i32"
+			],
+			[
+				"E",
+				"EMPTY_LINE\t  pub const EMPTY_LINE: Data = Data{texture_pos:vec2i{x:3,y:2}};"
+			],
+			[
+				"lines",
+				"lines_received_sum\t  &mut u32"
+			],
+			[
+				"lines_",
+				"lines_received_sum\t  u32"
+			],
+			[
+				"se",
+				"sendable_lines\t  u32"
+			],
+			[
+				"clo",
+				"clone_into(…)\t  -> ()"
+			],
+			[
 				"start",
 				"start_game\t  bool"
 			],
 			[
 				"network",
 				"network_state\t  NetworkState"
-			],
-			[
-				"Networ",
-				"NetworkEvent\t  Enum"
-			],
-			[
-				"sele",
-				"selected_game_mode\t  usize"
 			],
 			[
 				"game",
@@ -64,16 +184,8 @@
 				"PauseSelection::Resume\t  ()"
 			],
 			[
-				"defa",
-				"fn default()\t  Function"
-			],
-			[
 				"StartS",
 				"StartSelection::Continue\t  ()"
-			],
-			[
-				"Tex",
-				"TextBuilder\t  Struct"
 			],
 			[
 				"text",
@@ -240,20 +352,8 @@
 				"level_changed\t  bool"
 			],
 			[
-				"seri",
-				"fn serialize(..)\t  Method"
-			],
-			[
 				"O",
 				"Offline\t  ()"
-			],
-			[
-				"Netw",
-				"NetworkState\t  Enum"
-			],
-			[
-				"lines",
-				"lines_cleared_text\t  [Texture; _]"
 			],
 			[
 				"up",
@@ -266,10 +366,6 @@
 			[
 				"Net",
 				"NetworkState\t  Enum"
-			],
-			[
-				"Network",
-				"NetworkUnit\t  Struct"
 			],
 			[
 				"Lcoa",
@@ -312,10 +408,6 @@
 				"num_rows()\t  pub fn num_rows(&self) -> usize"
 			],
 			[
-				"clo",
-				"clone_into(…)\t  fn clone_into(&self, target: &mut Self::Owned)"
-			],
-			[
 				"Texture",
 				"TextureCreator\t  Struct"
 			],
@@ -330,10 +422,6 @@
 			[
 				"col",
 				"column_len()\t  pub fn column_len(&self) -> usize"
-			],
-			[
-				"well",
-				"well: &mut Well\t  Variable"
 			],
 			[
 				"get",
@@ -426,94 +514,6 @@
 			[
 				"mino",
 				"mino_fits_in_well(…)\t  pub fn mino_fits_in_well(mino: &Mino, well: &Well) -> bool"
-			],
-			[
-				"num",
-				"num_rows()\t  pub fn num_rows(&self) -> usize"
-			],
-			[
-				"tra",
-				"translate(…)\t  pub fn translate(&mut self, v: vec2i)"
-			],
-			[
-				"unwra",
-				"unwrap_or(…)\t  pub fn unwrap_or(self, default: T) -> T"
-			],
-			[
-				"po",
-				"position_centered()\t  pub fn position_centered(&mut self) -> &mut WindowBuilder"
-			],
-			[
-				"netw",
-				"network_players\t  u32"
-			],
-			[
-				"from",
-				"from_secs\t  pub const fn from_secs(secs: u64) -> Duration"
-			],
-			[
-				"in",
-				"init()\t  pub fn init()"
-			],
-			[
-				"Unit",
-				"UnitEvent\t  Enum"
-			],
-			[
-				"Local",
-				"LocalMinoRng"
-			],
-			[
-				"next_mino",
-				"next_mino_centered"
-			],
-			[
-				"Uni",
-				"UnitKind\t  Enum"
-			],
-			[
-				"player_",
-				"player_names_text_init\t  Vec<Texture>"
-			],
-			[
-				"Vec",
-				"VecDeque\t  Struct"
-			],
-			[
-				"UnitKind",
-				"UnitKind::Network\t  { rng_queue: VecDeque<Mino> }"
-			],
-			[
-				"queue",
-				"rng_queue\t  VecDeque<Mino>"
-			],
-			[
-				"it",
-				"iter()\t  pub fn iter(&self) -> Iter<'_, T>"
-			],
-			[
-				"pop",
-				"pop_back()\t  pub fn pop_back(&mut self) -> Option<T>"
-			],
-			[
-				"br",
-				"broadcast_event(…)\t  fn broadcast_event(&mut self, event: &NetworkEvent)"
-			],
-			[
-				"gene",
-				"generate_centered\t  pub fn generate_centered(&mut self, well: &Well) -> Mino"
-			],
-			[
-				"netwo",
-				"network_state\t  NetworkState"
-			],
-			[
-				"fall",
-				"fall_countdown\t  Duration"
-			],
-			[
-				"Fn",
-				"FnMut\t  Interface"
 			]
 		]
 	},
@@ -523,33 +523,16 @@
 			"file": "src/main.rs",
 			"settings":
 			{
-				"buffer_size": 32390,
+				"buffer_size": 32526,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "Cargo.toml",
+			"file": "src/lenio.rs",
 			"settings":
 			{
-				"buffer_size": 543,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "config.toml",
-			"settings":
-			{
-				"buffer_size": 1169,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/util.rs",
-			"settings":
-			{
-				"buffer_size": 3275,
+				"buffer_size": 1081,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -558,25 +541,7 @@
 			"file": "src/ui.rs",
 			"settings":
 			{
-				"buffer_size": 1536,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/unit.rs",
-			"settings":
-			{
-				"buffer_size": 10058,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "src/text.rs",
-			"settings":
-			{
-				"buffer_size": 1648,
+				"buffer_size": 1868,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -1210,6 +1175,30 @@
 		"selected_items":
 		[
 			[
+				"temrinus:",
+				"Terminus: Open Default Shell in Tab (View)"
+			],
+			[
+				"bookm",
+				"Bookmarks: Clear All"
+			],
+			[
+				"temrinal: ",
+				"Terminal: Open in project folder"
+			],
+			[
+				"clear",
+				"Bookmarks: Clear All"
+			],
+			[
+				"b ook",
+				"Bookmarks: Clear All"
+			],
+			[
+				"temrinal:",
+				"Terminal: Open in project folder"
+			],
+			[
 				"temrinal",
 				"Terminal: Open in project folder"
 			],
@@ -1223,10 +1212,6 @@
 			],
 			[
 				"terminal: ",
-				"Terminal: Open in project folder"
-			],
-			[
-				"temrinal: ",
 				"Terminal: Open in project folder"
 			],
 			[
@@ -1314,14 +1299,6 @@
 				"HexViewer: Toggle Hex View"
 			],
 			[
-				"clear",
-				"Bookmarks: Clear All"
-			],
-			[
-				"temrinus:",
-				"Terminus: Open Default Shell in Tab (View)"
-			],
-			[
 				"close",
 				"Terminus: Close"
 			],
@@ -1360,10 +1337,6 @@
 			[
 				"remove",
 				"BracketHighlighter: Remove Brackets"
-			],
-			[
-				"bookm",
-				"Bookmarks: Clear All"
 			],
 			[
 				"boom",
@@ -1712,14 +1685,6 @@
 			[
 				"pacakge",
 				"Package Control: Remove Package"
-			],
-			[
-				"markdo",
-				"MarkdownLivePreview: Open Preview"
-			],
-			[
-				"inb",
-				"Snippet: inbone"
 			]
 		],
 		"width": 436.0
@@ -1772,10 +1737,21 @@
 	"expanded_folders":
 	[
 		"/D/Workspace/tetris",
+		"/D/Workspace/tetris/gfx",
 		"/D/Workspace/tetris/src"
 	],
 	"file_history":
 	[
+		"/D/Workspace/tetris/src/text.rs",
+		"/D/Workspace/tetris/src/unit.rs",
+		"/D/Workspace/tetris/src/mino_controller.rs",
+		"/D/Workspace/tetris/thoughts/TODO.md",
+		"/D/Workspace/tetris/config.toml",
+		"/D/Workspace/tetris/src/block.rs",
+		"/D/Workspace/tetris/src/game.rs",
+		"/D/Workspace/tetris/src/ui.rs",
+		"/D/Workspace/tetris/src/util.rs",
+		"/D/Workspace/tetris/Cargo.toml",
 		"/C/Users/Andrei/Desktop/stevenarella-master/Cargo.toml",
 		"/C/Users/Andrei/Downloads/mp4-1",
 		"/C/Users/Andrei/AppData/Local/Temp/TC4Shell/D0001/chess_server.h",
@@ -1789,29 +1765,20 @@
 		"/D/Workspace/tetris/src/src/src/text.rs",
 		"/D/Workspace/tetris/src/src/src/src/text.rs",
 		"/C/Users/Andrei/Downloads/caca",
-		"/D/Workspace/tetris/src/mino_controller.rs",
-		"/D/Workspace/tetris/src/unit.rs",
-		"/D/Workspace/tetris/Cargo.toml",
 		"/D/Workspace/tetris/enum-select-derive/src/lib.rs",
 		"/D/Workspace/tetris/src/main.rs",
-		"/D/Workspace/tetris/src/game.rs",
-		"/D/Workspace/tetris/src/ui.rs",
-		"/D/Workspace/tetris/src/util.rs",
 		"/D/Workspace/tetris/enum-select-derive/Cargo.toml",
-		"/D/Workspace/tetris/thoughts/TODO.md",
 		"/D/Workspace/tetris/src/player.rs",
 		"/D/Workspace/tetris/enum-select/Cargo.toml",
 		"/D/Workspace/tetris/enum-select/src/lib.rs",
 		"/D/Workspace/tetris/good-config.toml",
 		"/D/Workspace/tetris/enum_select/lib.rs",
 		"/D/Workspace/tetris/enum_select/Cargo.toml",
-		"/D/Workspace/tetris/config.toml",
 		"/C/Users/Andrei/Downloads/gme.cpp",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap",
 		"/C/Users/Andrei/Desktop/salam.json",
 		"/C/Users/Andrei/AppData/Roaming/Sublime Text 3/Packages/BracketHighlighter/Example.sublime-keymap",
 		"/D/Workspace/tetris/src/config.rs",
-		"/D/Workspace/tetris/src/block.rs",
 		"/D/Workspace/tetris/src/vec2.rs",
 		"/C/Program Files/TC4Shell/TC4ShellHost.64.exe",
 		"/C/Users/Andrei/AppData/Local/Temp/TC4Shell/D0000/__init__.py",
@@ -1902,8 +1869,7 @@
 		"/D/Epic Games/SidMeiersCivilizationVI/DLC/Expansion1/UI/Civilopedia/CivilopediaPage_HistoricMoment.lua",
 		"/D/Epic Games/SidMeiersCivilizationVI/DLC/Expansion1/UI/Civilopedia/CivilopediaPage_Governor.lua",
 		"/D/Workspace/Mathsinfo/test.latex",
-		"/D/Workspace/indeletniciri curente/nani.cpp",
-		"/D/Workspace/indeletniciri curente/radiatie.out"
+		"/D/Workspace/indeletniciri curente/nani.cpp"
 	],
 	"find":
 	{
@@ -1914,6 +1880,10 @@
 		"height": 622.0,
 		"where_history":
 		[
+			"<open files>",
+			"",
+			"<open folders>,D:\\Workspace\\tetris",
+			"<open folders>",
 			""
 		]
 	},
@@ -1922,6 +1892,19 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"stopwatch",
+			"players_won",
+			"serialized_event",
+			"deserialized_event",
+			"serialized_event",
+			"State::Over",
+			"clear",
+			"width",
+			"center_rect",
+			"rect.width()",
+			"window_rect",
+			"sdl2::rect::",
+			"Mode::Ver",
 			"800",
 			"ret",
 			"Restart",
@@ -2036,20 +2019,7 @@
 			"main.rs",
 			"tab",
 			"tab_size",
-			"sdl2::render::",
-			"0",
-			"draw_mino",
-			"\\",
-			"paused_text",
-			"ne",
-			"UnitKind",
-			"UnitEvent",
-			"UnitState",
-			"UnitBase",
-			"fn",
-			"struct",
-			"seed",
-			"peat"
+			"sdl2::render::"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2057,6 +2027,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			"State::Lose",
 			"units",
 			"with_default_data()",
 			"CYAN",
@@ -2080,7 +2051,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 32390,
+						"buffer_size": 32526,
 						"regions":
 						{
 							"bookmarks":
@@ -2090,12 +2061,16 @@
 								"regions":
 								[
 									[
-										11888,
-										11888
+										2911,
+										2911
 									],
 									[
-										20564,
-										20564
+										3000,
+										3000
+									],
+									[
+										21239,
+										21239
 									]
 								],
 								"scope": "bookmarks"
@@ -2104,21 +2079,12 @@
 						"selection":
 						[
 							[
-								16512,
-								16512
+								21927,
+								21927
 							]
 						],
 						"settings":
 						{
-							"WordCount":
-							{
-								"changes": 0,
-								"count": 1336,
-								"modified": false,
-								"selection": false,
-								"status": -1,
-								"syntax": "plain text"
-							},
 							"auto_complete_triggers":
 							[
 								{
@@ -2133,8 +2099,8 @@
 								{
 									"1":
 									[
-										16511,
-										16512
+										24009,
+										24010
 									]
 								},
 								"icon":
@@ -2149,8 +2115,8 @@
 								{
 									"1":
 									[
-										16430,
-										16431
+										21926,
+										21927
 									]
 								},
 								"unmatched":
@@ -2159,61 +2125,61 @@
 							},
 							"bracket_highlighter.regions":
 							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
 								"bh_curly",
 								"bh_curly_center",
 								"bh_curly_open",
 								"bh_curly_close",
 								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
 								"bh_unmatched_close",
 								"bh_unmatched_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content"
 							],
 							"lsp_active": true,
 							"lsp_language":
@@ -2221,31 +2187,30 @@
 								"rust-analyzer": "rust"
 							},
 							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax"
 						},
 						"translation.x": 0.0,
-						"translation.y": 11248.0,
+						"translation.y": 14937.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "Cargo.toml",
+					"file": "src/lenio.rs",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 543,
+						"buffer_size": 1081,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								135,
-								135
+								477,
+								477
 							]
 						],
 						"settings":
@@ -2257,24 +2222,24 @@
 								{
 									"1":
 									[
-										134,
-										135
+										530,
+										531
 									]
 								},
 								"icon":
 								{
 									"1":
 									[
-										"Packages/BracketHighlighter/icons/square_bracket.png",
-										"region.bluish"
+										"Packages/BracketHighlighter/icons/curly_bracket.png",
+										"region.purplish"
 									]
 								},
 								"open":
 								{
 									"1":
 									[
-										116,
-										117
+										446,
+										447
 									]
 								},
 								"unmatched":
@@ -2288,11 +2253,11 @@
 								"bh_regex_open",
 								"bh_regex_close",
 								"bh_regex_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
 								"bh_curly",
 								"bh_curly_center",
 								"bh_curly_open",
@@ -2303,49 +2268,56 @@
 								"bh_single_quote_open",
 								"bh_single_quote_close",
 								"bh_single_quote_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
 								"bh_round",
 								"bh_round_center",
 								"bh_round_open",
 								"bh_round_close",
 								"bh_round_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
 								"bh_unmatched_close",
 								"bh_unmatched_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
-								"bh_default_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
+								"bh_default_content"
 							],
-							"syntax": "Packages/TOML/TOML.sublime-syntax"
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"rust-analyzer": "rust"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 180.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -2356,138 +2328,32 @@
 			[
 				{
 					"buffer": 2,
-					"file": "config.toml",
+					"file": "src/ui.rs",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1169,
+						"buffer_size": 1868,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								9,
-								9
-							],
-							[
-								22,
-								22
+								1588,
+								1588
 							]
 						],
 						"settings":
 						{
 							"WordCount":
 							{
-								"changes": 10,
-								"count": 90,
+								"changes": 0,
+								"count": 154,
 								"modified": false,
 								"selection": false,
 								"status": -1,
 								"syntax": "plain text"
 							},
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-								},
-								"icon":
-								{
-								},
-								"open":
-								{
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content"
-							],
-							"syntax": "Packages/TOML/TOML.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/util.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3275,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3275,
-								3275
-							]
-						],
-						"settings":
-						{
 							"auto_complete_triggers":
 							[
 								{
@@ -2502,8 +2368,8 @@
 								{
 									"1":
 									[
-										3274,
-										3275
+										1618,
+										1619
 									]
 								},
 								"icon":
@@ -2518,401 +2384,8 @@
 								{
 									"1":
 									[
-										3140,
-										3141
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 9.0,
-						"translation.y": 2097.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/ui.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1536,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1480,
-								1480
-							]
-						],
-						"settings":
-						{
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										1481,
-										1482
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/round_bracket.png",
-										"region.yellowish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										1473,
-										1474
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 882.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "src/unit.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 10058,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								671,
-								671
-							]
-						],
-						"settings":
-						{
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										764,
-										765
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										552,
-										553
-									]
-								},
-								"unmatched":
-								{
-								}
-							},
-							"bracket_highlighter.regions":
-							[
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_default_content",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_curly_content",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_single_quote_content",
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_unmatched_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_tag_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_double_quote_content"
-							],
-							"lsp_active": true,
-							"lsp_language":
-							{
-								"rust-analyzer": "rust"
-							},
-							"show_definitions": false,
-							"syntax": "Packages/Rust Enhanced/RustEnhanced.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 360.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "src/text.rs",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1648,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								785,
-								785
-							]
-						],
-						"settings":
-						{
-							"auto_complete_triggers":
-							[
-								{
-									"characters": ".:",
-									"selector": "source.rust"
-								}
-							],
-							"bracket_highlighter.busy": false,
-							"bracket_highlighter.locations":
-							{
-								"close":
-								{
-									"1":
-									[
-										854,
-										855
-									]
-								},
-								"icon":
-								{
-									"1":
-									[
-										"Packages/BracketHighlighter/icons/curly_bracket.png",
-										"region.purplish"
-									]
-								},
-								"open":
-								{
-									"1":
-									[
-										775,
-										776
+										1587,
+										1588
 									]
 								},
 								"unmatched":
@@ -2926,26 +2399,26 @@
 								"bh_curly_open",
 								"bh_curly_close",
 								"bh_curly_content",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_regex_content",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_round_content",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_square_content",
 								"bh_default",
 								"bh_default_center",
 								"bh_default_open",
 								"bh_default_close",
 								"bh_default_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
 								"bh_unmatched",
 								"bh_unmatched_center",
 								"bh_unmatched_open",
@@ -2956,16 +2429,16 @@
 								"bh_single_quote_open",
 								"bh_single_quote_close",
 								"bh_single_quote_content",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close",
-								"bh_c_define_content",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_angle_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
 								"bh_double_quote",
 								"bh_double_quote_center",
 								"bh_double_quote_open",
@@ -2987,10 +2460,10 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 360.0,
+						"translation.y": 1449.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 0,
 					"type": "text"
 				}
 			]
@@ -3024,7 +2497,7 @@
 		"cols":
 		[
 			0.0,
-			0.540141676506,
+			0.561393152303,
 			1.0
 		],
 		"rows":
@@ -3044,7 +2517,7 @@
 	},
 	"output.exec":
 	{
-		"height": 133.0
+		"height": 127.0
 	},
 	"output.find_results":
 	{
@@ -3120,7 +2593,7 @@
 		],
 		"width": 628.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},

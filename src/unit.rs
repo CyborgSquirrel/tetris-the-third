@@ -13,7 +13,7 @@ use crate::{vec2i,vec2f};
 pub enum State {
 	Play,
 	LineClear{countdown: Duration},
-	Over,
+	Lose,
 	Win,
 }
 
@@ -198,7 +198,7 @@ pub enum UnitEvent {
 	Init,
 }
 
-pub fn update_local<F1,F2>(
+pub fn update_local<F1,F2,F3>(
 	unit_id: usize,
 	units: &mut [Unit],
 	network_state: &mut crate::NetworkState,
@@ -208,8 +208,9 @@ pub fn update_local<F1,F2>(
 	other_rng: &mut rand::rngs::SmallRng,
 	mut on_lines_cleared: F1,
 	mut on_level_changed: F2,
+	mut on_lose: F3,
 ) 
-where F1: FnMut(u32), F2: FnMut(u32) {
+where F1: FnMut(u32), F2: FnMut(u32), F3: FnMut() {
 	let Unit{base:Base{well,animate_line,lines_cleared,mode,falling_mino,can_store_mino,stored_mino,state},kind}= &mut units[unit_id];
 	if let Kind::Local {mino_controller,rng} = kind {
 		let mino_controller::MinoController {store,fall_countdown,rot_direction,move_direction,move_state,move_repeat_countdown,
@@ -293,7 +294,8 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 				);
 				
 				if !can_add {
-					*state = State::Over;
+					*state = State::Lose;
+					on_lose();
 				}else {
 					if let Mode::Versus {lines_received,lines_received_sum,..} = mode {
 						while !lines_received.is_empty() {
@@ -340,14 +342,15 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 	}
 }
 
-pub fn update_network<F1,F2>(
+pub fn update_network<F1,F2,F3>(
 	unit_id: usize,
 	units: &mut [Unit],
 	event: UnitEvent,
 	mut on_lines_cleared: F1,
 	mut on_level_changed: F2,
+	mut on_lose: F3,
 ) 
-where F1: FnMut(u32), F2: FnMut(u32) {
+where F1: FnMut(u32), F2: FnMut(u32), F3: FnMut() {
 	if let Unit{base:Base{falling_mino,well,can_store_mino,lines_cleared,animate_line,stored_mino,state,mode},kind:Kind::Network{rng_queue},..} = &mut units[unit_id] {
 		match event {
 			UnitEvent::TranslateMino {origin, blocks} => {
@@ -359,7 +362,7 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 			UnitEvent::AddMinoToWell => {
 				let falling_mino = falling_mino.as_mut().unwrap();
 				*state = State::LineClear {countdown:Duration::from_secs(0)};
-				let (_can_add, clearable_lines, sendable_lines) = game::mino_adding_system(
+				let (can_add, clearable_lines, sendable_lines) = game::mino_adding_system(
 					falling_mino, well,
 					None,
 					animate_line,
@@ -367,19 +370,24 @@ where F1: FnMut(u32), F2: FnMut(u32) {
 					&mut ||rng_queue.pop_back().unwrap()
 				);
 				
-				if clearable_lines > 0 {
-					*lines_cleared += clearable_lines;
-					on_lines_cleared(*lines_cleared);
-					if let Mode::Marathon {level,lines_before_next_level,..} = mode {
-						let level_changed = update_level(level, lines_before_next_level, clearable_lines);
-						if level_changed {
-							on_level_changed(*level);
-						}
-					}else if let Mode::Versus {target_unit_id,..} = mode {
-						let target_unit_id = *target_unit_id;
-						if let Unit{base:Base{mode:Mode::Versus{lines_received,lines_received_sum,..},..},..} = &mut units[target_unit_id] {
-							lines_received.push_back(sendable_lines);
-							*lines_received_sum += sendable_lines;
+				if !can_add {
+					*state = State::Lose;
+					on_lose();
+				}else {
+					if clearable_lines > 0 {
+						*lines_cleared += clearable_lines;
+						on_lines_cleared(*lines_cleared);
+						if let Mode::Marathon {level,lines_before_next_level,..} = mode {
+							let level_changed = update_level(level, lines_before_next_level, clearable_lines);
+							if level_changed {
+								on_level_changed(*level);
+							}
+						}else if let Mode::Versus {target_unit_id,..} = mode {
+							let target_unit_id = *target_unit_id;
+							if let Unit{base:Base{mode:Mode::Versus{lines_received,lines_received_sum,..},..},..} = &mut units[target_unit_id] {
+								lines_received.push_back(sendable_lines);
+								*lines_received_sum += sendable_lines;
+							}
 						}
 					}
 				}

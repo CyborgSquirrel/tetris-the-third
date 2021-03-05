@@ -43,12 +43,26 @@ use mino::Mino;
 
 use mino_controller::MinoController;
 
-use ui::{EnumSelect, Layout, NetworkStateSelection, Pause, PauseSelection, StartLayout, StartSelection};
+use ui::{EnumSelect, GameModeSelection, Layout, NetworkStateSelection, Pause, PauseSelection, StartLayout, StartSelection};
 
 enum State {
-	Play,
+	Play {
+		_players_won: u32,
+		players_lost: u32,
+		over: bool,
+	},
 	Start,
 	Lobby,
+}
+
+impl State {
+	fn play() -> Self {
+		State::Play {
+			_players_won: 0,
+			players_lost: 0,
+			over: false,
+		}
+	}
 }
 
 fn create_lines_cleared_text<'a>(
@@ -122,6 +136,46 @@ impl NetworkState {
 			}
 			Client {stream} => {
 				stream.write(&serialize(event).unwrap()).unwrap();
+			}
+		}
+	}
+	fn event_iter<'a>(&'a mut self) -> NetworkEventIterator<'a> {
+		NetworkEventIterator {
+			state: self,
+			stream_index: 0,
+		}
+	}
+}
+
+struct NetworkEventIterator<'a> {
+	state: &'a mut NetworkState,
+	stream_index: usize,
+}
+
+impl<'a> Iterator for NetworkEventIterator<'a> {
+	type Item = NetworkEvent;
+	fn next(&mut self) -> Option<Self::Item> {
+		let Self{state, stream_index} = self;
+		match state {
+			NetworkState::Offline => None,
+			NetworkState::Host {streams,..} => {
+				while *stream_index < streams.len() {
+					let (before, after) = streams.split_at_mut(*stream_index);
+					if let Some((stream, after)) = after.split_first_mut() {
+						if let Ok(serialized) = stream.read() {
+							if let Ok(deserialized) = deserialize::<NetworkEvent>(serialized) {
+								for stream in before.iter_mut().chain(after.iter_mut()) {
+									stream.write(serialized).unwrap();
+								}
+								return Some(deserialized);
+							}else {*stream_index += 1;}
+						}else {*stream_index += 1;}
+					}
+				}
+				None
+			}
+			NetworkState::Client {stream} => {
+				stream.read().ok().and_then(|serialized|deserialize::<NetworkEvent>(serialized).ok())
 			}
 		}
 	}
@@ -279,7 +333,7 @@ fn main() {
 	let local_player_text = text_creator.builder(" (Local)").build();
 	let network_player_text = text_creator.builder(" (Network)").build();
 	
-	let get_player_text = |unit: &Unit| -> &Texture{
+	let get_player_text = |unit: &Unit|{
 		match unit.kind {
 			unit::Kind::Local {..} => &local_player_text,
 			unit::Kind::Network {..} => &network_player_text,
@@ -289,17 +343,16 @@ fn main() {
 	let fps: u32 = 60;
 	let dpf: Duration = Duration::from_secs(1) / fps;
 	
-	let mut selected_game_mode: usize = 0;
-	let game_mode_text = [
-		text_creator.builder("Marathon").build(),
-		text_creator.builder("Sprint").build(),
-		text_creator.builder("Versus").build(),
-	];
-	let game_mode_ctors = [
-		Mode::default_marathon,
-		Mode::default_sprint,
-		Mode::default_versus,
-	];
+	let mut selected_game_mode = GameModeSelection::Marathon;
+	let marathon_text = text_creator.builder("Marathon").build();
+	let sprint_text = text_creator.builder("Sprint").build();
+	let versus_text = text_creator.builder("Versus").build();
+	let get_game_mode_text = |selected_game_mode: &GameModeSelection|
+		match *selected_game_mode {
+			GameModeSelection::Marathon => &marathon_text,
+			GameModeSelection::Sprint => &sprint_text,
+			GameModeSelection::Versus => &versus_text,
+		};
 	
 	let mut selected_network_state = NetworkStateSelection::Offline;
 	let mut network_state = NetworkState::Offline;
@@ -337,8 +390,6 @@ fn main() {
 	let mut state = State::Start;
 	
 	let line_clear_duration = Duration::from_secs_f64(0.1);
-	
-	let mut stopwatch = Duration::from_secs(0);
 	
 	let mut start_game = false;
 	
@@ -405,7 +456,7 @@ fn main() {
 			};
 			
 			match state {
-				State::Play => {
+				State::Play {..} => {
 					
 					if let Some(Pause{selection}) = &mut pause {
 						if is_any_up_down(&event, Some(0)) {
@@ -454,7 +505,7 @@ fn main() {
 						
 						Event::KeyDown{keycode: Some(Keycode::R),repeat: false,..} => {
 							for unit in &mut units {
-								unit.base = unit::Base::new(game_mode_ctors[selected_game_mode]());
+								unit.base = unit::Base::new(selected_game_mode.ctor()());
 							}
 							network_state.broadcast_event(&NetworkEvent::RestartGame);
 							start_game = true;
@@ -491,7 +542,7 @@ fn main() {
 							if is_ok_down(&event, Some(0)) {
 								if selected_network_state == NetworkStateSelection::Offline {
 									network_state = NetworkState::Offline;
-									state = State::Play;
+									state = State::play();
 									
 									let new_controller = MinoController::new(configs.next().unwrap(),Some(0));
 									let mut unit = saved_unit.clone().unwrap();
@@ -509,7 +560,7 @@ fn main() {
 						NewGame => {
 							if is_ok_down(&event, Some(0)) {
 								if quick_game {
-									state = State::Play;
+									state = State::play();
 									
 									let key = players.insert(Player::local("no name".into()));
 									player_keys.push(key);
@@ -554,7 +605,7 @@ fn main() {
 											let mut stream = LenIO::new(stream);
 											
 											state = State::Lobby;
-											units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),Some(0))));
+											units.push(Unit::local(selected_game_mode.ctor()(), MinoController::new(configs.next().unwrap(),Some(0))));
 											
 											let key = players.insert(Player::local(name.clone()));
 											player_keys.push(key);
@@ -576,10 +627,10 @@ fn main() {
 						},
 						GameMode => {
 							if is_any_left_down(&event, keybinds, None) {
-								selected_game_mode = (selected_game_mode as i32 - 1).rem_euclid(3) as usize;
+								selected_game_mode = selected_game_mode.prev_variant();
 							}
 							if is_any_right_down(&event, keybinds, None) {
-								selected_game_mode = (selected_game_mode + 1).rem_euclid(3);
+								selected_game_mode = selected_game_mode.next_variant();
 							}
 						},
 						NetworkMode => {
@@ -604,7 +655,7 @@ fn main() {
 							player_keys.push(key);
 							player_names_text.push(text_creator.builder(&name).build());
 							
-							units.push(Unit::local(game_mode_ctors[selected_game_mode](), MinoController::new(configs.next().unwrap(),Some(0))));
+							units.push(Unit::local(selected_game_mode.ctor()(), MinoController::new(configs.next().unwrap(),Some(0))));
 							if let NetworkState::Host{streams,..} = &mut network_state {
 								let event = serialize(&NetworkEvent::AddPlayer{name:name.clone()}).unwrap();
 								for stream in streams {
@@ -618,93 +669,62 @@ fn main() {
 		}
 		
 		// @network
-		match network_state {
-			NetworkState::Offline => {}
-			NetworkState::Host {ref mut streams,..} => {
-				for i in 0..streams.len() {
-					while let Ok(Ok(event)) = streams[i].read().map(deserialize::<NetworkEvent>) {
-						for j in 0..streams.len() {
-							if i == j {continue;}
-							streams[j].write(&serialize(&event).unwrap()).unwrap();
-						}
-						match event {
-							NetworkEvent::UnitEvent {unit_id, event} => {
-								unit::update_network(
-									unit_id, &mut units, event,
-									|lines_cleared|lines_cleared_text[unit_id] =
-									create_lines_cleared_text(lines_cleared, &text_creator),
-									|level|level_text[unit_id] =
-									create_level_text(level, &text_creator),
-								);
-							}
-							NetworkEvent::AddPlayer {name} => {
-								network_players += 1;
-								let key = players.insert(Player::network(name.clone()));
-								player_keys.push(key);
-								player_names_text.push(text_creator.builder(&name).build());
-								units.push(Unit::network(Mode::default_versus()))
-							}
-							_ => {}
-						}
+		for event in network_state.event_iter() {
+			match event {
+				NetworkEvent::UnitEvent {unit_id, event} => {
+					if let State::Play{players_lost,..} = &mut state {
+						unit::update_network(
+							unit_id, &mut units, event,
+							|lines_cleared|lines_cleared_text[unit_id] =
+							create_lines_cleared_text(lines_cleared, &text_creator),
+							|level|level_text[unit_id] =
+							create_level_text(level, &text_creator),
+							||*players_lost += 1
+						);
 					}
 				}
-			}
-			NetworkState::Client {ref mut stream} => {
-				while let Ok(Ok(event)) = stream.read().map(deserialize::<NetworkEvent>) {
-					match event {
-						NetworkEvent::UnitEvent {unit_id, event} => {
-							unit::update_network(
-								unit_id, &mut units, event,
-								|lines_cleared|lines_cleared_text[unit_id] =
-								create_lines_cleared_text(lines_cleared, &text_creator),
-								|level|level_text[unit_id] =
-								create_level_text(level, &text_creator),
-							);
-						}
-						NetworkEvent::AddPlayer {name} => {
-								network_players += 1;
-								let key = players.insert(Player::network(name.clone()));
-								player_keys.push(key);
-								player_names_text.push(text_creator.builder(&name).build());
-								units.push(Unit::network(Mode::default_versus()));
-							}
-						NetworkEvent::StartGame => {start_game = true}
-						NetworkEvent::Init {mut init_players, mut init_player_keys} => {
-							network_players += init_players.len() as u32;
-							
-							let mut init_units = Vec::<Unit>::new();
-							let mut init_player_names_text = Vec::<Texture>::new();
-							for (_,player) in init_players.iter() {
-								init_units.push(Unit::network(Mode::default_versus()));
-								init_player_names_text.push(text_creator.builder(&player.name).build());
-							}
-							init_units.append(&mut units);
-							init_player_names_text.append(&mut player_names_text);
-							units = init_units;
-							player_names_text = init_player_names_text;
-							
-							for (_,player) in players.drain() {
-								let key = init_players.insert(player);
-								init_player_keys.push(key);
-							}
-							
-							players = init_players;
-							player_keys = init_player_keys;
-						}
-						NetworkEvent::RestartGame => {
-							for unit in &mut units {
-								unit.base = unit::Base::new(game_mode_ctors[selected_game_mode]());
-							}
-							start_game = true;
-						}
+				NetworkEvent::AddPlayer {name} => {
+					network_players += 1;
+					let key = players.insert(Player::network(name.clone()));
+					player_keys.push(key);
+					player_names_text.push(text_creator.builder(&name).build());
+					units.push(Unit::network(Mode::default_versus()));
+				}
+				NetworkEvent::StartGame => {start_game = true}
+				NetworkEvent::Init {mut init_players, mut init_player_keys} => {
+					network_players += init_players.len() as u32;
+					
+					let mut init_units = Vec::<Unit>::new();
+					let mut init_player_names_text = Vec::<Texture>::new();
+					for (_,player) in init_players.iter() {
+						init_units.push(Unit::network(Mode::default_versus()));
+						init_player_names_text.push(text_creator.builder(&player.name).build());
 					}
+					init_units.append(&mut units);
+					init_player_names_text.append(&mut player_names_text);
+					units = init_units;
+					player_names_text = init_player_names_text;
+					
+					for (_,player) in players.drain() {
+						let key = init_players.insert(player);
+						init_player_keys.push(key);
+					}
+					
+					players = init_players;
+					player_keys = init_player_keys;
+				}
+				NetworkEvent::RestartGame => {
+					for unit in &mut units {
+						unit.base = unit::Base::new(selected_game_mode.ctor()());
+					}
+					start_game = true;
 				}
 			}
 		}
 		
 		if start_game {
 			start_game = false;
-			state = State::Play;
+			state = State::play();
 			let units_len = units.len();
 			for (unit_id, unit) in izip!(0.., &mut units) {
 				let Unit{kind, base: unit::Base{mode,falling_mino,well,..}} = unit;
@@ -729,44 +749,59 @@ fn main() {
 		}
 		
 		// @update
-		match state {
-			State::Play => {
-				for (unit_id,lines_cleared_text,level_text)
-				in izip!(0usize..units.len(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
-					let unit = &mut units[unit_id];
-					match &mut unit.base.state {
-						unit::State::Play if (!pause.is_some() || network_players > 0) => {
-							unit::update_local(
-								unit_id,
-								&mut units,
-								&mut network_state,
-								&mut config,
-								softdrop_duration,
-								dpf,
-								&mut other_rng,
-								|lines_cleared|*lines_cleared_text =
-								create_lines_cleared_text(lines_cleared, &text_creator),
-								|level|*level_text =
-								create_level_text(level, &text_creator)
-							);
-						}
-							
-						unit::State::LineClear{countdown} => {
-							*countdown += dpf;
-							if *countdown >= line_clear_duration {
-								let Unit {base:unit::Base{well,state,animate_line,..},..} = unit;
-								*state = unit::State::Play;
-								game::line_clearing_system(well, animate_line);
+		match &mut state {
+			State::Play {players_lost,over,..} => {
+				if !*over {
+					for (unit_id,lines_cleared_text,level_text)
+					in izip!(0usize..units.len(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
+						let unit = &mut units[unit_id];
+						match &mut unit.base.state {
+							unit::State::Play if (!pause.is_some() || network_players > 0) => {
+								unit::update_local(
+									unit_id,
+									&mut units,
+									&mut network_state,
+									&mut config,
+									softdrop_duration,
+									dpf,
+									&mut other_rng,
+									|lines_cleared|*lines_cleared_text =
+									create_lines_cleared_text(lines_cleared, &text_creator),
+									|level|*level_text =
+									create_level_text(level, &text_creator),
+									||*players_lost += 1
+								);
 							}
+								
+							unit::State::LineClear{countdown} => {
+								*countdown += dpf;
+								if *countdown >= line_clear_duration {
+									let Unit {base:unit::Base{well,state,animate_line,..},..} = unit;
+									*state = unit::State::Play;
+									game::line_clearing_system(well, animate_line);
+								}
+							}
+							
+							unit::State::Lose => {}
+							unit::State::Win => {}
+							_ => {}
 						}
 						
-						unit::State::Over => {}
-						unit::State::Win => {}
-						_ => {}
+						match selected_game_mode {
+							GameModeSelection::Marathon => {
+								
+							}
+							GameModeSelection::Sprint => {
+								
+							}
+							GameModeSelection::Versus => {
+								if *players_lost as usize == players.len()-1 {
+									*over = true;
+								}
+							}
+						}
 					}
 				}
-				
-				stopwatch += dpf;
 			}
 			
 			State::Lobby => {
@@ -832,7 +867,7 @@ fn main() {
 				layout.row(height as i32);
 				layout.row_margin(15);
 				
-				let game_mode_text = &game_mode_text[selected_game_mode];
+				let game_mode_text = get_game_mode_text(&selected_game_mode);
 				let (width, height) = get_texture_dim(&game_mode_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 				draw_same_scale(&mut canvas, &game_mode_text, rect);
@@ -960,7 +995,7 @@ fn main() {
 						darken(&mut canvas, Some(well_rect));
 						draw_centered(&mut canvas, &game_won_text, well_rect);
 					}
-					unit::State::Over => {
+					unit::State::Lose => {
 						darken(&mut canvas, Some(well_rect));
 						draw_centered(&mut canvas, &game_over_text, well_rect);
 					}

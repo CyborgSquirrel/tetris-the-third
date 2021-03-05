@@ -1,7 +1,7 @@
 width = 900
 height = 900
 # borderless = false
-block_size = 20
+block_size = 30
 
 [[players]]
 move_prepeat_duration = 0.15

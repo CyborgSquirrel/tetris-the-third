@@ -90,3 +90,22 @@ impl StartLayout {
 pub struct Pause {
 	pub selection: PauseSelection,
 }
+
+#[derive(EnumSelect)]
+pub enum GameModeSelection {
+	Marathon,
+	Sprint,
+	Versus,
+}
+
+use crate::unit::Mode;
+impl GameModeSelection {
+	pub fn ctor(&self) -> fn() -> Mode {
+		use GameModeSelection::*;
+		match *self {
+			Marathon => Mode::default_marathon,
+			Sprint => Mode::default_sprint,
+			Versus => Mode::default_versus,
+		}
+	}
+}
