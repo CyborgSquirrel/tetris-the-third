@@ -25,8 +25,8 @@ pub fn is_key_up(event: &Event, key: Option<Keycode>) -> bool {
 pub fn is_controlcode_down(
 	event: &Event,
 	controlcode: &mut Option<Controlcode>,
-	joystick_id: Option<u32>)
--> bool {
+	joystick_id: Option<u32>
+) -> bool {
 	if let (Some(joystick_id), Some(controlcode)) = (joystick_id, controlcode) {
 		match (controlcode, event) {
 			(Controlcode::Button(button),
@@ -55,8 +55,8 @@ pub fn is_controlcode_down(
 pub fn is_controlcode_up(
 	event: &Event,
 	controlcode: &mut Option<Controlcode>,
-	joystick_id: Option<u32>)
--> bool {
+	joystick_id: Option<u32>
+) -> bool {
 	if let (Some(joystick_id), Some(controlcode)) = (joystick_id, controlcode) {
 		match (controlcode, event) {
 			(Controlcode::Button(button),

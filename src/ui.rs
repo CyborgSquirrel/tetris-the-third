@@ -1,5 +1,6 @@
 use crate::vec2i;
 use enum_select_derive::EnumSelect;
+use serde::{Serialize,Deserialize};
 
 pub trait EnumSelect {
 	fn next_variant(self) -> Self;
@@ -91,7 +92,7 @@ pub struct Pause {
 	pub selection: PauseSelection,
 }
 
-#[derive(EnumSelect)]
+#[derive(Debug, EnumSelect, Serialize, Deserialize, Clone, Copy)]
 pub enum GameModeSelection {
 	Marathon,
 	Sprint,

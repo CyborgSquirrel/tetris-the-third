@@ -1,6 +1,5 @@
 use toml::Value;
 use sdl2::keyboard::Keycode;
-use sdl2::controller::Button;
 use sdl2::controller::Axis;
 use std::fs::File;
 use std::io::prelude::*;
@@ -8,13 +7,13 @@ use std::time::Duration;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Controlcode {
-	Button(Button),
+	Button(sdl2::controller::Button),
 	Axis(Axis,bool),
 }
 
 impl Controlcode {
 	fn from_name(name: &str) -> Option<Controlcode> {
-		if let Some(button) = Button::from_string(name) {
+		if let Some(button) = sdl2::controller::Button::from_string(name) {
 			Some(Controlcode::Button(button))
 		}else if let Some(axis) = Axis::from_string(name) {
 			Some(Controlcode::Axis(axis,false))
@@ -138,6 +137,28 @@ impl Player {
 			move_repeat_duration,
 		}
 	}
+}
+
+trait Button {
+	fn is_down(&self) -> bool;
+	fn is_up(&self) -> bool;
+}
+
+struct Idk<T> {
+	pub left: Option<T>,
+	pub left_alt: Option<T>,
+	pub right: Option<T>,
+	pub right_alt: Option<T>,
+	
+	pub rot_left: Option<T>,
+	pub rot_right: Option<T>,
+	pub rot_right_alt: Option<T>,
+	
+	pub softdrop: Option<T>,
+	pub softdrop_alt: Option<T>,
+	pub harddrop: Option<T>,
+	
+	pub store: Option<T>,
 }
 
 pub struct Config {
