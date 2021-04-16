@@ -87,7 +87,7 @@ impl StartLayout {
 	}
 }
 
-#[derive(Default)]
+#[derive(Default,Clone,Copy)]
 pub struct Pause {
 	pub selection: PauseSelection,
 }

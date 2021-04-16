@@ -1,66 +1,18 @@
 use toml::Value;
-use sdl2::keyboard::Keycode;
-use sdl2::controller::Axis;
+use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::controller::Button;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::Duration;
 
-#[derive(Debug, Clone, Copy)]
-pub enum Controlcode {
-	Button(sdl2::controller::Button),
-	Axis(Axis,bool),
-}
-
-impl Controlcode {
-	fn from_name(name: &str) -> Option<Controlcode> {
-		if let Some(button) = sdl2::controller::Button::from_string(name) {
-			Some(Controlcode::Button(button))
-		}else if let Some(axis) = Axis::from_string(name) {
-			Some(Controlcode::Axis(axis,false))
-		}else{
-			None
-		}
-	}
-}
-
 #[derive(Default)]
 pub struct Player {
-	pub left: Option<Keycode>,
-	pub left_alt: Option<Keycode>,
-	pub right: Option<Keycode>,
-	pub right_alt: Option<Keycode>,
-	
-	pub rot_left: Option<Keycode>,
-	pub rot_right: Option<Keycode>,
-	pub rot_right_alt: Option<Keycode>,
-	
-	pub softdrop: Option<Keycode>,
-	pub softdrop_alt: Option<Keycode>,
-	pub harddrop: Option<Keycode>,
-	
-	pub store: Option<Keycode>,
-	
-	pub controller_left: Option<Controlcode>,
-	pub controller_right: Option<Controlcode>,
-	
-	pub controller_rot_left: Option<Controlcode>,
-	pub controller_rot_right: Option<Controlcode>,
-	
-	pub controller_softdrop: Option<Controlcode>,
-	pub controller_harddrop: Option<Controlcode>,
-	
-	pub controller_store: Option<Controlcode>,
-	
 	pub move_prepeat_duration: Duration,
 	pub move_repeat_duration: Duration,
 }
 
 impl Player {
 	fn from_toml(toml: &Value) -> Self {
-		fn get_as_str<'a>(toml: &'a Value, key: &str) -> Option<&'a str>{
-			toml.get(key).and_then(toml::Value::as_str)
-		}
-		
 		let move_prepeat_duration = toml.get("move_prepeat_duration")
 			.and_then(Value::as_float)
 			.map(Duration::from_secs_f64)
@@ -71,94 +23,124 @@ impl Player {
 			.map(Duration::from_secs_f64)
 			.unwrap_or(Duration::from_secs_f64(0.05));
 		
-		let controls = &toml["controls"];
-		
-		let keyboard = &controls.get("keyboard");
-		let get_as_keycode = |key|keyboard.and_then(|v|get_as_str(v, key)).and_then(Keycode::from_name);
-		
-		let left = get_as_keycode("left");
-		let left_alt = get_as_keycode("left_alt");
-		let right = get_as_keycode("right");
-		let right_alt = get_as_keycode("right_alt");
-		
-		let rot_left = get_as_keycode("rot_left");
-		let rot_right = get_as_keycode("rot_right");
-		let rot_right_alt = get_as_keycode("rot_right_alt");
-		
-		let softdrop = get_as_keycode("softdrop");
-		let softdrop_alt = get_as_keycode("softdrop_alt");
-		let harddrop = get_as_keycode("harddrop");
-		
-		let store = get_as_keycode("store");
-		
-		
-		let controller = &controls.get("controller");
-		let get_as_controlcode = |key|controller.and_then(|v|get_as_str(v, key)).and_then(Controlcode::from_name);
-		
-		let controller_left = get_as_controlcode("left");
-		let controller_right = get_as_controlcode("right");
-
-		let controller_rot_left = get_as_controlcode("rot_left");
-		let controller_rot_right = get_as_controlcode("rot_right");
-
-		let controller_softdrop = get_as_controlcode("softdrop");
-		let controller_harddrop = get_as_controlcode("harddrop");
-		
-		let controller_store = get_as_controlcode("store");
-		
 		Player {
-			left,
-			left_alt,
-			right,
-			right_alt,
-			
-			rot_left,
-			rot_right,
-			rot_right_alt,
-			
-			softdrop,
-			softdrop_alt,
-			harddrop,
-			
-			store,
-	
-			controller_left,
-			controller_right,
-			
-			controller_rot_left,
-			controller_rot_right,
-			
-			controller_softdrop,
-			controller_harddrop,
-			
-			controller_store,
-			
 			move_prepeat_duration,
 			move_repeat_duration,
 		}
 	}
 }
 
-trait Button {
-	fn is_down(&self) -> bool;
-	fn is_up(&self) -> bool;
+pub struct InputMethod {
+	keyboard: Option<()>,
+	controller: Option<u32>,
+}
+impl InputMethod {
+	pub fn new(keyboard: bool, controller: Option<u32>) -> Self {
+		let keyboard = if keyboard {Some(())} else {None};
+		Self {keyboard, controller}
+	}
 }
 
-struct Idk<T> {
-	pub left: Option<T>,
-	pub left_alt: Option<T>,
-	pub right: Option<T>,
-	pub right_alt: Option<T>,
+#[derive(Debug, Default)]
+pub struct Bind {
+	key: Option<Keycode>,
+	button: Option<Button>,
+}
+impl Bind {
+	pub fn new(key: Keycode, button: Button) -> Self {
+		let key = Some(key);
+		let button = Some(button);
+		Bind {key, button}
+	}
+	fn from_name(key_name: Option<&str>, button_name: Option<&str>) -> Self {
+		Bind {
+			key: key_name.and_then(Keycode::from_name),
+			button: button_name.and_then(Button::from_string),
+		}
+	}
 	
-	pub rot_left: Option<T>,
-	pub rot_right: Option<T>,
-	pub rot_right_alt: Option<T>,
+	// Sorry...
+	pub fn is_down(&self, event: &Event, input_method: &InputMethod) -> bool {
+		(if let (Event::KeyDown{keycode:Some(key),repeat:false,..},Some(_)) =
+			(event,input_method.keyboard)
+			{self.key.map_or(false, |a|a==*key)} else {false}) ||
+		(if let(Event::ControllerButtonDown{button,which,..},Some(id)) =
+			(event,input_method.controller)
+			{self.button.map_or(false, |a|a==*button&&id==*which)} else {false})
+	}
+	pub fn is_up(&self, event: &Event, input_method: &InputMethod) -> bool {
+		(if let (Event::KeyUp{keycode:Some(key),repeat:false,..},Some(_)) =
+			(event,input_method.keyboard)
+			{self.key.map_or(false, |a|a==*key)} else {false}) ||
+		(if let(Event::ControllerButtonUp{button,which,..},Some(id)) =
+			(event,input_method.controller)
+			{self.button.map_or(false, |a|a==*button&&id==*which)} else {false})
+	}
+}
+
+pub struct MenuBinds {
+	pub up: Bind, pub down: Bind,
+	pub left: Bind, pub right: Bind,
+	pub ok: Bind, pub other: Bind,
+}
+
+#[derive(Debug, Default)]
+pub struct PlayerBinds {
+	pub left: Bind, pub left_alt: Bind,
+	pub right: Bind, pub right_alt: Bind,
 	
-	pub softdrop: Option<T>,
-	pub softdrop_alt: Option<T>,
-	pub harddrop: Option<T>,
+	pub rot_left: Bind,
+	pub rot_right: Bind, pub rot_right_alt: Bind,
 	
-	pub store: Option<T>,
+	pub softdrop: Bind, pub softdrop_alt: Bind,
+	pub harddrop: Bind,
+	
+	pub store: Bind,
+}
+impl PlayerBinds {
+	fn from_toml(toml: &Value) -> Self {
+		fn get_as_str<'a>(toml: &'a Value, key: &str) -> Option<&'a str>{
+			toml.get(key).and_then(toml::Value::as_str)
+		}
+		
+		let controls = &toml["controls"];
+		
+		let keyboard = &controls.get("keyboard");
+		let controller = &controls.get("controller");
+		
+		let bind_from_name =
+		|bind_name|Bind::from_name(
+			keyboard.and_then(|a|get_as_str(a, bind_name)),
+			controller.and_then(|a|get_as_str(a, bind_name)));
+		
+		let left = bind_from_name("left");
+		let left_alt = bind_from_name("left_alt");
+		let right = bind_from_name("right");
+		let right_alt = bind_from_name("right_alt");
+		
+		let rot_left = bind_from_name("rot_left");
+		let rot_right = bind_from_name("rot_right");
+		let rot_right_alt = bind_from_name("rot_right_alt");
+		
+		let softdrop = bind_from_name("softdrop");
+		let softdrop_alt = bind_from_name("softdrop_alt");
+		let harddrop = bind_from_name("harddrop");
+		
+		let store = bind_from_name("store");
+		
+		PlayerBinds {
+			left, left_alt,
+			right, right_alt,
+			
+			rot_left,
+			rot_right, rot_right_alt,
+			
+			softdrop, softdrop_alt,
+			harddrop,
+			
+			store,
+		}
+	}
 }
 
 pub struct Config {
@@ -167,6 +149,7 @@ pub struct Config {
 	pub borderless: bool,
 	pub block_size: u32,
 	pub players: [Player;4],
+	pub binds: [PlayerBinds;4],
 }
 
 impl Config {
@@ -183,6 +166,14 @@ impl Config {
 		
 		let players = &toml["players"].as_array().unwrap();
 		let player_from_toml = |index|players.get(index).map(|v|Player::from_toml(v)).unwrap_or_default();
+		let binds_from_toml = |index|players.get(index).map(|v|PlayerBinds::from_toml(v)).unwrap_or_default();
+		
+		let binds = [
+			binds_from_toml(0),
+			binds_from_toml(1),
+			binds_from_toml(2),
+			binds_from_toml(3),
+		];
 		
 		let players = [
 			player_from_toml(0),
@@ -203,6 +194,7 @@ impl Config {
 			borderless,
 			block_size,
 			players,
+			binds,
 		}
 	}
 }

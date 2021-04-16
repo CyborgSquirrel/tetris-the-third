@@ -1,6 +1,6 @@
 // #![windows_subsystem = "windows"]
 
-use sdl2::render::{BlendMode, TextureQuery};
+use sdl2::{controller::Button, render::{BlendMode, TextureQuery}};
 use sdl2::render::WindowCanvas;
 use sdl2::{event::Event, render::Texture};
 use sdl2::image::LoadTexture;
@@ -12,6 +12,7 @@ use sdl2::rect::Rect;
 use rand::{SeedableRng, rngs::SmallRng};
 use slotmap::{DefaultKey, SlotMap};
 use std::collections::BTreeMap;
+use config::{InputMethod,Bind,MenuBinds};
 
 use itertools::izip;
 
@@ -23,11 +24,9 @@ pub mod text;
 pub mod config;
 pub mod lenio;
 pub mod game;
-pub mod util;
 pub mod mino_controller;
 pub mod unit;
 pub mod ui;
-use util::*;
 use vec2::{vec2i,vec2f};
 use text::TextCreator;
 use config::Config;
@@ -51,6 +50,7 @@ enum State {
 		_players_won: u32,
 		players_lost: u32,
 		over: bool,
+		pause: Option<Pause>,
 	},
 	Start,
 	Lobby,
@@ -62,6 +62,7 @@ impl State {
 			_players_won: 0,
 			players_lost: 0,
 			over: false,
+			pause: None,
 		}
 	}
 }
@@ -432,16 +433,6 @@ fn main() {
 		create_level_text(1, &text_creator),
 	];
 	
-	let softdrop_duration = Duration::from_secs_f64(0.05);
-	
-	let mut units: Vec<Unit> = Vec::new();
-	
-	let block_canvas = block::Canvas::new(&texture, config.block_size);
-	
-	let mut state = State::Start;
-	
-	let line_clear_duration = Duration::from_secs_f64(0.1);
-	
 	let can_continue_text = text_creator.builder("Continue").build();
 	let cant_continue_text = text_creator.builder("Continue").color(Color::GRAY).build();
 	let saved_unit: Option<Unit> = {
@@ -487,7 +478,25 @@ fn main() {
 	let mut player_keys = Vec::<DefaultKey>::new();
 	let mut player_names_text = Vec::<Texture>::new();
 	
-	let mut pause: Option<Pause> = None;
+	// let mut pause: Option<Pause> = None;
+	
+	let softdrop_duration = Duration::from_secs_f64(0.05);
+	let line_clear_duration = Duration::from_secs_f64(0.1);
+	
+	let mut units: Vec<Unit> = Vec::new();
+	
+	let block_canvas = block::Canvas::new(&texture, config.block_size);
+	
+	let mut state = State::Start;
+	
+	let menu_binds = MenuBinds {
+		up: Bind::new(Keycode::W, Button::DPadUp),
+		down: Bind::new(Keycode::S, Button::DPadDown),
+		left: Bind::new(Keycode::A, Button::DPadLeft),
+		right: Bind::new(Keycode::D, Button::DPadRight),
+		ok: Bind::new(Keycode::Return, Button::A),
+		other: Bind::new(Keycode::Q, Button::B),
+	};
 	
 	'running: loop {
 		let start = Instant::now();
@@ -496,6 +505,17 @@ fn main() {
 		for event in event_pump.poll_iter() {
 			match event {
 				Event::Quit{..} => break 'running,
+				
+				// This here is to map the controllers in the way that I want.
+				
+				// controllers[] maps my controller indexing to sdl's controller indexing.
+				// Whenever a controller is added, its id is inserted at the first empty
+				// space in controllers[]. Whenever a controller is removed, its id is
+				// found, and removed from controllers[].
+				
+				// unordered_controllers[] contains all the controllers, indexed with their
+				// ids. Its purpose is to store the controller objects. If I don't store
+				// them somewhere, then the controller events won't be fired.
 				Event::ControllerDeviceAdded{which,..} => {
 					let controller = game_controller_subsystem.open(which);
 					if let Ok(controller) = controller {
@@ -507,7 +527,6 @@ fn main() {
 						unordered_controllers.insert(controller.instance_id(), controller);
 					}
 				},
-				Event::ControllerDeviceRemapped{which,..} => println!("Remapped {:?}", which),
 				Event::ControllerDeviceRemoved{which,..} => {
 					unordered_controllers.remove(&which);
 					let instance_id = controllers.iter_mut()
@@ -516,54 +535,22 @@ fn main() {
 						*instance_id = None;
 					}
 				},
+				
+				// I couldn't understand the purpose of this event, and I've never managed
+				// to get it to fire, so for now it's not gonna do anything.
+				Event::ControllerDeviceRemapped{which,..} => println!("Remapped {:?}", which),
+				
 				_ => (),
 			};
 			
 			match state {
-				State::Play {..} => {
+				State::Play {ref mut pause,..} => {
 					
-					if let Some(Pause{selection}) = &mut pause {
-						if is_any_up_down(&event, Some(0)) {
-							*selection = selection.prev_variant();
-						}
-						if is_any_down_down(&event, Some(0)) {
-							*selection = selection.next_variant();
-						}
-						if is_ok_down(&event, Some(0)) {
-							match selection {
-								PauseSelection::Resume => pause = None,
-								PauseSelection::Save => {
-									if let NetworkState::Offline = network_state {
-										use std::fs::File;
-										use std::io::prelude::*;
-										let mut file = File::create("save").unwrap();
-										file.write_all(&serialize(&units[0]).unwrap()).unwrap();
-										just_saved = true;
-									}
-								}
-								PauseSelection::QuitToTitle => {
-									state = State::Start;
-									units.clear();
-									configs = (0..4usize).cycle();
-								}
-								PauseSelection::QuitToDesktop => {
-									break 'running;
-								}
-							}
-						}
-					}else {
-						for unit in units.iter_mut() {
-							if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
-								mino_controller.update(&mut config.players, &event)
-							}
-						}
-					}
-					
-					match event{
+					match event {
 						// Deliberately not adding custom pause keybind
 						Event::KeyDown{keycode: Some(Keycode::Escape),repeat: false,..} |
 						Event::ControllerButtonDown{button: sdl2::controller::Button::Start,..} => {
-							pause = if pause.is_some() {None} else {Some(Pause::default())};
+							*pause = if pause.is_some() {None} else {Some(Pause::default())};
 							just_saved = false;
 						}
 						
@@ -589,21 +576,29 @@ fn main() {
 						
 						_ => ()
 					};
+					
+					for unit in &mut units {
+						if let unit::Kind::Local{mino_controller,..} = &mut unit.kind {
+							mino_controller.update(&config.binds, &event);
+						}
+					}
+					
 				}
 				State::Start => {
-					let keybinds = &mut config.players[0];
-					
-					if is_any_up_down(&event, Some(0)) {
+					// Some aliases to make things simpler
+					let mb = &menu_binds;
+					let im = InputMethod::new(true, Some(0));
+					if mb.up.is_down(&event, &im) {
 						start_selection = start_selection.prev_variant()
 					}
-					if is_any_down_down(&event, Some(0)) {
+					if mb.down.is_down(&event, &im) {
 						start_selection = start_selection.next_variant()
 					}
 					
 					use StartSelection::*;
 					match start_selection {
 						Continue => {
-							if is_ok_down(&event, Some(0)) {
+							if mb.ok.is_down(&event, &im) {
 								if selected_network_state == NetworkStateSelection::Offline {
 									network_state = NetworkState::Offline;
 									state = State::play();
@@ -621,7 +616,7 @@ fn main() {
 							}
 						},
 						NewGame => {
-							if is_ok_down(&event, Some(0)) {
+							if mb.ok.is_down(&event, &im) {
 								if quick_game {
 									state = State::play();
 									let key = players.insert(Player::local("no name".into()));
@@ -675,37 +670,39 @@ fn main() {
 									}
 								}
 							}
-							if is_any_left_down(&event, keybinds, None) ||
-							is_any_right_down(&event, keybinds, None) {
+							if mb.left.is_down(&event, &im) ||
+							mb.right.is_down(&event, &im) {
 								quick_game = !quick_game;
 							}
 						},
 						GameMode => {
-							if is_any_left_down(&event, keybinds, None) {
+							if mb.left.is_down(&event, &im) {
 								selected_game_mode = selected_game_mode.prev_variant();
 							}
-							if is_any_right_down(&event, keybinds, None) {
+							if mb.right.is_down(&event, &im) {
 								selected_game_mode = selected_game_mode.next_variant();
 							}
 						},
 						NetworkMode => {
-							if is_any_left_down(&event, keybinds, None) {
+							if mb.left.is_down(&event, &im) {
 								selected_network_state = selected_network_state.next_variant();
 							}
-							if is_any_right_down(&event, keybinds, None) {
+							if mb.right.is_down(&event, &im) {
 								selected_network_state = selected_network_state.prev_variant();
 							}
 						},
 					}
 				}
 				State::Lobby => {
+					let mb = &menu_binds;
+					let im = InputMethod::new(true, Some(0));
 					if let NetworkState::Host {..} | NetworkState::Offline = network_state {
-						if is_ok_down(&event, Some(0)) {
+						if mb.ok.is_down(&event, &im) {
 							network_state.broadcast_event(&NetworkEvent::StartGame);
 							start_game(&mut state, selected_game_mode, &players, &mut network_state, &mut units);
 						}
-						if is_key_down(&event, Some(Keycode::Q)) {
-							let name = ask_for_name(&stdin); //TODO: put name back
+						if mb.other.is_down(&event, &im) {
+							let name = ask_for_name(&stdin);
 							let key = players.insert(Player::local(name.clone()));
 							player_keys.push(key);
 							player_names_text.push(text_creator.builder(&name).build());
@@ -715,11 +712,6 @@ fn main() {
 								for stream in streams {
 									stream.write(&event).unwrap();
 								}
-							}
-						}
-						if let Event::ControllerButtonDown{button,which,..} = event {
-							if button == sdl2::controller::Button::Start {
-								
 							}
 						}
 					}
@@ -781,7 +773,7 @@ fn main() {
 		
 		// @update
 		match &mut state {
-			State::Play {players_lost,over,..} => {
+			State::Play {players_lost,over,pause,..} => {
 				if !*over {
 					for (unit_id,lines_cleared_text,level_text)
 					in izip!(0usize..units.len(),lines_cleared_text.iter_mut(),level_text.iter_mut()) {
@@ -867,231 +859,231 @@ fn main() {
 		
 		canvas.set_draw_color(Color::BLACK);
 		canvas.clear();
-		if let State::Start = state {
-			
-			let mut layout = StartLayout {y:0,width:window_rect.width()};
-			
-			layout.row_margin(15);
-			
-			let (width, height) = get_texture_dim(&title);
-			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_same_scale(&mut canvas, &title, rect);
-			
-			layout.row(height as i32);
-			layout.row_margin(30);
-			
-			let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == NetworkStateSelection::Offline);
-			let (width, height) = get_texture_dim(&continue_text);
-			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_same_scale(&mut canvas, &continue_text, rect);
-			select(&mut canvas, rect, matches!(start_selection, StartSelection::Continue));
-			
-			layout.row(height as i32);
-			layout.row_margin(15);
-			
-			let game_text = get_game_text(quick_game);
-			let (width, height) = get_texture_dim(&game_text);
-			let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-			draw_same_scale(&mut canvas, &game_text, rect);
-			select(&mut canvas, rect, matches!(start_selection, StartSelection::NewGame));
-			
-			if !quick_game {
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				let game_mode_text = get_game_mode_text(&selected_game_mode);
-				let (width, height) = get_texture_dim(&game_mode_text);
-				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &game_mode_text, rect);
-				select(&mut canvas, rect, matches!(start_selection, StartSelection::GameMode));
-				
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				let network_text = get_network_text(&selected_network_state);
-				let (width, height) = get_texture_dim(&network_text);
-				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &network_text, rect);
-				select(&mut canvas, rect, matches!(start_selection, StartSelection::NetworkMode));
-			}
-			
-		}else if let State::Lobby {..} = state {
-			
-			if let NetworkState::Host {..} | NetworkState::Offline = network_state {
-				let TextureQuery {width, height, ..} = host_start_text.query();
-				let _ = canvas.copy(
-					&host_start_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(0, 0, width, height));
-			}
-			
-			for (i, (_,player), name_text) in izip!(0..,&players,&player_names_text) {
-				let player_text = get_player_text(player);
-				
-				let mut x = 0;
-				
-				let TextureQuery {width, height, ..} = name_text.query();
-				let _ = canvas.copy(
-					&name_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(x, config.block_size as i32+i*(32+8), width, height));
-				
-				x += width as i32;
-				
-				let TextureQuery {width, height, ..} = player_text.query();
-				let _ = canvas.copy(
-					&player_text,
-					Rect::new(0, 0, width, height),
-					Rect::new(x, config.block_size as i32+i*(32+8), width, height));
-			}
-			
-		}else{
-			
-			let mut layout = Layout {
-				x:0,y:0,
-				width:window_rect.width() as i32,
-				expected_width:(4*config.block_size as i32+15+10*config.block_size as i32+15+4*config.block_size as i32+15) * units.len() as i32 - 15
-			};
-			
-			for (unit, lines_cleared_text, level_text)
-			in izip!(&mut units, &lines_cleared_text, &level_text) {
-				let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, ..} = unit;
-				
-				layout.row_margin(15);
-				
-				if let Some(ref stored_mino) = stored_mino {
-					block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), stored_mino, vec2i!(4,3));
-				}
-				layout.row(3*config.block_size as i32);
-				layout.row_margin(config.block_size as i32 / 2);
-				
-				let TextureQuery {width, height, ..} = lines_cleared_text.query();
-				let rect = Rect::new(layout.x(), layout.y(), width, height);
-				draw_same_scale(&mut canvas, &lines_cleared_text, rect);
-				
-				layout.row(32*2);
-				layout.row_margin(15);
-				
-				let TextureQuery {width, height, ..} = level_text.query();
-				let rect = Rect::new(layout.x(), layout.y(), width, height);
-				draw_same_scale(&mut canvas, &level_text, rect);
-				
-				layout.col(4*config.block_size as i32);
-				layout.col_margin(15);
-				
-				if let Mode::Versus {lines_received_sum,..} = mode {
-					layout.row_margin(15);
-					for y in 0..well.num_columns() {
-						let data = if well.num_columns()-y > *lines_received_sum as usize {
-							block::Data::EMPTY_LINE
-						}else {
-							block::Data::SENT_LINE
-						};
-						block_canvas.draw_block(&mut canvas, layout.as_vec2i(), &vec2i!(0,y), &data);
-					}
-					layout.col(config.block_size as i32);
-				}
-				
-				layout.row_margin(15);
-				
-				let well_rect = Rect::new(
-					layout.x(), layout.y(),
-					well.num_rows() as u32 * config.block_size,
-					well.num_columns() as u32 * config.block_size,
-				);
-				
-				block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
-				if let Some(falling_mino) = falling_mino {
-					let shadow_mino = game::create_shadow_mino(falling_mino, &well);
-					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
-					block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
-				}
-				
-				layout.col(10*config.block_size as i32);
-				layout.col_margin(15);
-				
-				layout.row_margin(15);
-				if let unit::Kind::Local {rng: unit::LocalMinoRng {queue,..},..} = &unit.kind {
-					for mino in queue.iter() {
-						block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), mino, vec2i!(4,3));
-						layout.row(3*config.block_size as i32);
-						layout.row_margin(config.block_size as i32 / 2);
-					}
-					
-					layout.col(4*config.block_size as i32);
-					layout.col_margin(15);
-				}
-				
-				match state {
-					unit::State::Win => {
-						darken(&mut canvas, Some(well_rect));
-						draw_centered(&mut canvas, &game_won_text, well_rect);
-					}
-					unit::State::Lose => {
-						darken(&mut canvas, Some(well_rect));
-						draw_centered(&mut canvas, &game_over_text, well_rect);
-					}
-					_ => {}
-				}
-			}
-			
-			if let Some(Pause{selection}) = &mut pause {
-				darken(&mut canvas, None);
-				
+		match state {
+			State::Start => {
 				let mut layout = StartLayout {y:0,width:window_rect.width()};
 				
 				layout.row_margin(15);
 				
-				let (width, height) = get_texture_dim(&paused_text);
+				let (width, height) = get_texture_dim(&title);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &paused_text, rect);
+				draw_same_scale(&mut canvas, &title, rect);
+				
+				layout.row(height as i32);
+				layout.row_margin(30);
+				
+				let continue_text = get_continue_text(saved_unit.is_some() && selected_network_state == NetworkStateSelection::Offline);
+				let (width, height) = get_texture_dim(&continue_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_same_scale(&mut canvas, &continue_text, rect);
+				select(&mut canvas, rect, matches!(start_selection, StartSelection::Continue));
 				
 				layout.row(height as i32);
 				layout.row_margin(15);
 				
-				let (width, height) = get_texture_dim(&resume_text);
+				let game_text = get_game_text(quick_game);
+				let (width, height) = get_texture_dim(&game_text);
 				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &resume_text, rect);
-				select(&mut canvas, rect, matches!(selection, PauseSelection::Resume));
+				draw_same_scale(&mut canvas, &game_text, rect);
+				select(&mut canvas, rect, matches!(start_selection, StartSelection::NewGame));
 				
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				let (width, height) = get_texture_dim(&save_text);
-				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &save_text, rect);
-				select(&mut canvas, rect, matches!(selection, PauseSelection::Save));
-				
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				let (width, height) = get_texture_dim(&quit_to_title_text);
-				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &quit_to_title_text, rect);
-				select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToTitle));
-				
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				let (width, height) = get_texture_dim(&quit_to_desktop_text);
-				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-				draw_same_scale(&mut canvas, &quit_to_desktop_text, rect);
-				select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToDesktop));
-				
-				layout.row(height as i32);
-				layout.row_margin(15);
-				
-				if let NetworkState::Offline = network_state {
-					if just_saved {
-						let TextureQuery {width, height, ..} = just_saved_text.query();
-						let _ = canvas.copy(
-							&just_saved_text,
-							Rect::new(0, 0, width, height),
-							Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32 + 100, width, height));
-					}
+				if !quick_game {
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let game_mode_text = get_game_mode_text(&selected_game_mode);
+					let (width, height) = get_texture_dim(&game_mode_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &game_mode_text, rect);
+					select(&mut canvas, rect, matches!(start_selection, StartSelection::GameMode));
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let network_text = get_network_text(&selected_network_state);
+					let (width, height) = get_texture_dim(&network_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &network_text, rect);
+					select(&mut canvas, rect, matches!(start_selection, StartSelection::NetworkMode));
 				}
 			}
+			State::Lobby {..} => {
+				if let NetworkState::Host {..} | NetworkState::Offline = network_state {
+					let TextureQuery {width, height, ..} = host_start_text.query();
+					let _ = canvas.copy(
+						&host_start_text,
+						Rect::new(0, 0, width, height),
+						Rect::new(0, 0, width, height));
+				}
+				
+				for (i, (_,player), name_text) in izip!(0..,&players,&player_names_text) {
+					let player_text = get_player_text(player);
+					
+					let mut x = 0;
+					
+					let TextureQuery {width, height, ..} = name_text.query();
+					let _ = canvas.copy(
+						&name_text,
+						Rect::new(0, 0, width, height),
+						Rect::new(x, config.block_size as i32+i*(32+8), width, height));
+					
+					x += width as i32;
+					
+					let TextureQuery {width, height, ..} = player_text.query();
+					let _ = canvas.copy(
+						&player_text,
+						Rect::new(0, 0, width, height),
+						Rect::new(x, config.block_size as i32+i*(32+8), width, height));
+				}
+			}
+			State::Play {pause,..} => {
 			
+				let mut layout = Layout {
+					x:0,y:0,
+					width:window_rect.width() as i32,
+					expected_width:(4*config.block_size as i32+15+10*config.block_size as i32+15+4*config.block_size as i32+15) * units.len() as i32 - 15
+				};
+				
+				for (unit, lines_cleared_text, level_text)
+				in izip!(&mut units, &lines_cleared_text, &level_text) {
+					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, ..} = unit;
+					
+					layout.row_margin(15);
+					
+					if let Some(ref stored_mino) = stored_mino {
+						block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), stored_mino, vec2i!(4,3));
+					}
+					layout.row(3*config.block_size as i32);
+					layout.row_margin(config.block_size as i32 / 2);
+					
+					let TextureQuery {width, height, ..} = lines_cleared_text.query();
+					let rect = Rect::new(layout.x(), layout.y(), width, height);
+					draw_same_scale(&mut canvas, &lines_cleared_text, rect);
+					
+					layout.row(32*2);
+					layout.row_margin(15);
+					
+					let TextureQuery {width, height, ..} = level_text.query();
+					let rect = Rect::new(layout.x(), layout.y(), width, height);
+					draw_same_scale(&mut canvas, &level_text, rect);
+					
+					layout.col(4*config.block_size as i32);
+					layout.col_margin(15);
+					
+					if let Mode::Versus {lines_received_sum,..} = mode {
+						layout.row_margin(15);
+						for y in 0..well.num_columns() {
+							let data = if well.num_columns()-y > *lines_received_sum as usize {
+								block::Data::EMPTY_LINE
+							}else {
+								block::Data::SENT_LINE
+							};
+							block_canvas.draw_block(&mut canvas, layout.as_vec2i(), &vec2i!(0,y), &data);
+						}
+						layout.col(config.block_size as i32);
+					}
+					
+					layout.row_margin(15);
+					
+					let well_rect = Rect::new(
+						layout.x(), layout.y(),
+						well.num_rows() as u32 * config.block_size,
+						well.num_columns() as u32 * config.block_size,
+					);
+					
+					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
+					if let Some(falling_mino) = falling_mino {
+						let shadow_mino = game::create_shadow_mino(falling_mino, &well);
+						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
+						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
+					}
+					
+					layout.col(10*config.block_size as i32);
+					layout.col_margin(15);
+					
+					layout.row_margin(15);
+					if let unit::Kind::Local {rng: unit::LocalMinoRng {queue,..},..} = &unit.kind {
+						for mino in queue.iter() {
+							block_canvas.draw_mino_centered(&mut canvas, layout.as_vec2i(), mino, vec2i!(4,3));
+							layout.row(3*config.block_size as i32);
+							layout.row_margin(config.block_size as i32 / 2);
+						}
+						
+						layout.col(4*config.block_size as i32);
+						layout.col_margin(15);
+					}
+					
+					match state {
+						unit::State::Win => {
+							darken(&mut canvas, Some(well_rect));
+							draw_centered(&mut canvas, &game_won_text, well_rect);
+						}
+						unit::State::Lose => {
+							darken(&mut canvas, Some(well_rect));
+							draw_centered(&mut canvas, &game_over_text, well_rect);
+						}
+						_ => {}
+					}
+				}
+				
+				if let Some(Pause{selection}) = pause {
+					darken(&mut canvas, None);
+					
+					let mut layout = StartLayout {y:0,width:window_rect.width()};
+					
+					layout.row_margin(15);
+					
+					let (width, height) = get_texture_dim(&paused_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &paused_text, rect);
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let (width, height) = get_texture_dim(&resume_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &resume_text, rect);
+					select(&mut canvas, rect, matches!(selection, PauseSelection::Resume));
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let (width, height) = get_texture_dim(&save_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &save_text, rect);
+					select(&mut canvas, rect, matches!(selection, PauseSelection::Save));
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let (width, height) = get_texture_dim(&quit_to_title_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &quit_to_title_text, rect);
+					select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToTitle));
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					let (width, height) = get_texture_dim(&quit_to_desktop_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &quit_to_desktop_text, rect);
+					select(&mut canvas, rect, matches!(selection, PauseSelection::QuitToDesktop));
+					
+					layout.row(height as i32);
+					layout.row_margin(15);
+					
+					if let NetworkState::Offline = network_state {
+						if just_saved {
+							let TextureQuery {width, height, ..} = just_saved_text.query();
+							let _ = canvas.copy(
+								&just_saved_text,
+								Rect::new(0, 0, width, height),
+								Rect::new(((window_rect.width()-width)/2) as i32, ((window_rect.height()-height)/2) as i32 + 100, width, height));
+						}
+					}
+				}
+				
+			}
 		}
 		
 		canvas.present();

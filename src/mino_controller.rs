@@ -1,6 +1,5 @@
 use crate::config;
 use std::time::Duration;
-use crate::util::*;
 use sdl2::event::Event;
 use crate::unit::get_level_fall_duration;
 use serde::{Serialize,Deserialize};
@@ -54,7 +53,7 @@ pub struct MinoController {
 
 impl MinoController {
 	pub fn new(config_id: usize, joystick_id: Option<u32>) -> Self {
-	    MinoController {
+	   MinoController {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
 			rot_direction: RotDirection::None,
@@ -69,9 +68,9 @@ impl MinoController {
 			
 			joystick_id,
 			config_id,
-	    }
+	   }
 	}
-	pub fn update(&mut self, keybinds: &mut [config::Player;4], event: &Event) {
+	pub fn update(&mut self, binds: &[config::PlayerBinds;4], event: &Event) {
 		let MinoController {
 			move_direction,
 			move_state,
@@ -83,70 +82,61 @@ impl MinoController {
 			..
 		} = self;
 		
-		let keybinds = &mut keybinds[*config_id];
+		let b = &binds[*config_id];
+		let im = config::InputMethod::new(true, *joystick_id);
 		
-		if is_key_down(event, keybinds.left) ||
-		is_key_down(event, keybinds.left_alt) ||
-		is_controlcode_down(event, &mut keybinds.controller_left, *joystick_id) {
+		if b.left.is_down(event, &im) ||
+		b.left_alt.is_down(event, &im) {
 			*move_direction = MoveDirection::Left;
 			*move_state = MoveState::Instant;
 		}
 		
-		if is_key_down(event, keybinds.right) ||
-		is_key_down(event, keybinds.right_alt) ||
-		is_controlcode_down(event, &mut keybinds.controller_right, *joystick_id) {
+		if b.right.is_down(event, &im) ||
+		b.right_alt.is_down(event, &im) {
 			*move_direction = MoveDirection::Right;
 			*move_state = MoveState::Instant;
 		}
 		
-		if is_key_up(event, keybinds.left) ||
-		is_key_up(event, keybinds.left_alt) ||
-		is_controlcode_up(event, &mut keybinds.controller_left, *joystick_id) {
+		if b.left.is_up(event, &im) ||
+		b.left_alt.is_up(event, &im) {
 			if *move_direction == MoveDirection::Left {
 				*move_direction = MoveDirection::None;
 				*move_state = MoveState::Still;
 			}
 		}
 		
-		if is_key_up(event, keybinds.right) ||
-		is_key_up(event, keybinds.right_alt) ||
-		is_controlcode_up(event, &mut keybinds.controller_right, *joystick_id) {
+		if b.right.is_up(event, &im) ||
+		b.right_alt.is_up(event, &im) {
 			if *move_direction == MoveDirection::Right {
 				*move_direction = MoveDirection::None;
 				*move_state = MoveState::Still;
 			}
 		}
 		
-		if is_key_down(event, keybinds.rot_left) ||
-		is_controlcode_down(event, &mut keybinds.controller_rot_left, *joystick_id) {
+		if b.rot_left.is_down(event, &im) {
 			*rot_direction = RotDirection::Left
 		}
 		
-		if is_key_down(event, keybinds.rot_right) ||
-		is_key_down(event, keybinds.rot_right_alt) ||
-		is_controlcode_down(event, &mut keybinds.controller_rot_right, *joystick_id) {
+		if b.rot_right.is_down(event, &im) ||
+		b.rot_right_alt.is_down(event, &im) {
 			*rot_direction = RotDirection::Right
 		}
 		
-		if is_key_down(event, keybinds.softdrop) ||
-		is_key_down(event, keybinds.softdrop_alt) ||
-		is_controlcode_down(event, &mut keybinds.controller_softdrop, *joystick_id) {
+		if b.softdrop.is_down(event, &im) ||
+		b.softdrop_alt.is_down(event, &im) {
 			*fall_state = FallState::Softdrop;
 		}
 		
-		if is_key_up(event, keybinds.softdrop) ||
-		is_key_up(event, keybinds.softdrop_alt) ||
-		is_controlcode_up(event, &mut keybinds.controller_softdrop, *joystick_id) {
+		if b.softdrop.is_up(event, &im) ||
+		b.softdrop_alt.is_up(event, &im) {
 			*fall_state = FallState::Fall
 		}
 		
-		if is_key_down(event, keybinds.harddrop) ||
-		is_controlcode_down(event, &mut keybinds.controller_harddrop, *joystick_id) {
+		if b.harddrop.is_down(event, &im) {
 			*fall_state = FallState::Harddrop;
 		}
 		
-		if is_key_down(event, keybinds.store) ||
-		is_controlcode_down(event, &mut keybinds.controller_store, *joystick_id) {
+		if b.store.is_down(event, &im) {
 			*store = true;
 		}
 	}
