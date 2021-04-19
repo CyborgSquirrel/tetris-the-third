@@ -225,6 +225,7 @@ dependencies = [
  "bincode",
  "enum-select-derive",
  "itertools",
+ "lazy_static",
  "rand",
  "sdl2",
  "serde",

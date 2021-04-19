@@ -50,6 +50,10 @@ impl<'a, 'b, 'c> TextBuilder<'a, 'b, 'c> {
 		let TextBuilder{text_creator: TextCreator{texture_creator, font},
 		text, color, wrap_max_width} = self;
 		
+		// I do this because sdl2 outputs an error if you try to render text from an
+		// empty string.
+		let text = if text.is_empty() {" "} else {text};
+		
 		let surface = font.render(text);
 		
 		let surface = if let Some(wrap_max_width) = wrap_max_width {

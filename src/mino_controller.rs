@@ -1,8 +1,9 @@
 use crate::config;
-use std::time::Duration;
+use std::{collections::VecDeque, time::Duration};
 use sdl2::event::Event;
-use crate::unit::get_level_fall_duration;
+use crate::unit::{get_level_fall_duration,Command};
 use serde::{Serialize,Deserialize};
+use crate::SOFTDROP_DURATION;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum RotDirection {
@@ -138,6 +139,105 @@ impl MinoController {
 		
 		if b.store.is_down(event, &im) {
 			*store = true;
+		}
+	}
+	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<(usize, Command)>, config: &[config::Player;4], dpf: Duration) {
+		let MinoController {
+			move_direction,
+			move_state,
+			rot_direction,
+			fall_state,
+			store,
+			config_id,
+			move_repeat_countdown,
+			fall_countdown,
+			fall_duration,
+			..
+		} = self;
+		
+		let mut append = |command|queue.push_back((unit_id,command));
+		let move_repeat_duration = &config[*config_id].move_repeat_duration;
+		let move_prepeat_duration = &config[*config_id].move_prepeat_duration;
+		
+		// MOVEMENT
+		
+		if MoveState::Instant == *move_state {
+			match move_direction{
+				MoveDirection::Left => append(Command::MoveLeft),
+				MoveDirection::Right => append(Command::MoveRight),
+				_ => panic!(),
+			};
+			*move_repeat_countdown = Duration::from_secs(0);
+			*move_state = MoveState::Prepeat;
+		}
+		if MoveState::Prepeat == *move_state {
+			if *move_repeat_countdown >= *move_prepeat_duration {
+				*move_repeat_countdown -= *move_prepeat_duration;
+				match move_direction{
+					MoveDirection::Left => append(Command::MoveLeft),
+					MoveDirection::Right => append(Command::MoveRight),
+					_ => panic!(),
+				};
+				*move_state = MoveState::Repeat;
+			}
+		}
+		if MoveState::Repeat == *move_state {
+			while *move_repeat_countdown >= *move_repeat_duration {
+				*move_repeat_countdown -= *move_repeat_duration;
+				match move_direction{
+					MoveDirection::Left => append(Command::MoveLeft),
+					MoveDirection::Right => append(Command::MoveRight),
+					_ => panic!(),
+				};
+			}
+		}
+		if MoveState::Still != *move_state {
+			*move_repeat_countdown += dpf;
+		}
+		
+		// ROTATION
+		
+		match rot_direction {
+			RotDirection::Left => append(Command::RotateLeft),
+			RotDirection::Right => append(Command::RotateRight),
+			_ => (),
+		};
+		*rot_direction = RotDirection::None;
+		
+		// GRAVITY
+		
+		let fall_duration = match fall_state {
+			FallState::Fall => *fall_duration,
+			FallState::Softdrop => *SOFTDROP_DURATION,
+			FallState::Harddrop => Duration::from_secs(0),
+		};
+		
+		if FallState::Softdrop == *fall_state {
+			*fall_countdown = std::cmp::min(*fall_countdown, *SOFTDROP_DURATION);
+		}
+		
+		if FallState::Harddrop == *fall_state {
+			*fall_state = FallState::Fall;
+			*fall_countdown = Duration::from_secs(0);
+		}
+		
+		let mut g = 0;
+		if fall_duration.as_micros() == 0 {
+			g = i32::MAX;
+		}else {
+			while *fall_countdown >= fall_duration {
+				g += 1;
+				*fall_countdown -= fall_duration;
+			}
+		}
+		
+		*fall_countdown += dpf;
+		
+		append(Command::ApplyGravity(g));
+		
+		if *store {
+			append(Command::Store);
+			*store = false;
 		}
 	}
 }

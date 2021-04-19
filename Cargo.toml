@@ -18,3 +18,4 @@ array2d = { version = "0.2.1", features = ["serde"] }
 serde = { version = "1.0.123", features = ["derive"] }
 rand = { version = "0.8.1", features = ["small_rng"] }
 enum-select-derive = {path = "enum-select-derive"}
+lazy_static = "1.4.0"

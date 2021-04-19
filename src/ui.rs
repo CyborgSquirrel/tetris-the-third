@@ -8,7 +8,7 @@ pub trait EnumSelect {
 }
 
 #[derive(PartialEq,EnumSelect,Clone,Copy)]
-pub enum StartSelection {
+pub enum TitleSelection {
 	Continue,
 	NewGame,
 	GameMode,	
