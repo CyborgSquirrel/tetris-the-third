@@ -110,3 +110,7 @@ impl GameModeSelection {
 		}
 	}
 }
+
+impl Default for GameModeSelection {
+	fn default() -> Self {GameModeSelection::Marathon}
+}
