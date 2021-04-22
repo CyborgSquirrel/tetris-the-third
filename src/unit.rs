@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use itertools::izip;
 use serde::{Serialize,Deserialize};
-use crate::{game, mino_controller::MinoController};
+use crate::{command::{Command, CommandWrapper}, game, mino_controller::MinoController};
 use crate::mino::Mino;
 use std::time::Duration;
 use crate::NetworkState;
@@ -230,159 +230,14 @@ pub enum UnitEvent {
 	Init,
 }
 
-struct Salami<T> {
-	pub inner: T,
-	pub original: bool,
-}
-impl Salami<Command> {
-	pub fn execute(
-		self, unit: &mut Unit, unit_id: usize,
-		queue: &mut VecDeque<(usize, Command)>,
-		network_state: &mut NetworkState,
-	) {
-		let command = self.inner;
-		let base = &mut unit.base;
-		let command_serialized = crate::NetworkCommand::Unit(unit_id,command.clone());
-		network_state.broadcast_command(&command_serialized);
-		match command {
-			Command::MoveLeft =>
-				if let Some(falling_mino) = &mut base.falling_mino {
-					game::try_left_mino(falling_mino, &base.well);
-				}
-			Command::MoveRight =>
-				if let Some(falling_mino) = &mut base.falling_mino {
-					game::try_right_mino(falling_mino, &base.well);
-				}
-			Command::RotateLeft =>
-				if let Some(falling_mino) = &mut base.falling_mino {
-					game::try_rotl_mino(falling_mino, &base.well);
-				}
-			Command::RotateRight =>
-				if let Some(falling_mino) = &mut base.falling_mino {
-					game::try_rotr_mino(falling_mino, &base.well);
-				}
-			Command::ApplyGravity(mut g) => {
-				if let Some(falling_mino) = &mut base.falling_mino {
-					while g > 0 && game::try_down_mino(falling_mino, &base.well) {
-						g -= 1;
-					}
-					
-					let add_mino = g > 0;
-					if add_mino {
-						let can_add = game::mino_fits_in_well(&falling_mino, &base.well);
-						let mut clearable_lines = 0;
-						let mut sendable_lines = 0;
-						if !can_add {
-							base.just_lost = true;
-						}else {
-							base.can_store_mino = true;
-							game::add_mino_to_well(&falling_mino, &mut base.well);
-							
-							for (row,clearable) in izip!(base.well.columns_iter(),base.animate_line.iter_mut()) {
-								let mut count = 0;
-								let mut sendable = true;
-								for block in row {
-									count += block.is_some() as u32;
-									sendable &= block.map_or(true, |block|block!=crate::block::Data::GRAY);
-								}
-								if count as usize == base.well.column_len() {
-									clearable_lines += 1;
-									sendable_lines += sendable as usize;
-									*clearable = true;
-								}
-							}
-							
-							if let Mode::Versus {lines_received,lines_received_sum,..} = &mut base.mode {
-								if let Kind::Local {..} = unit.kind {
-									while let Some(lines) = lines_received.pop_front() {
-										queue.push_back((unit_id, Command::AddLines(lines,
-											rand::random::<usize>() % base.well.num_rows())));
-										*lines_received_sum -= lines;
-									}
-								}
-							}
-							
-							if clearable_lines > 0 {
-								base.just_cleared_lines = true;
-								base.state = State::LineClear{countdown: Duration::from_secs(0)};
-								base.lines_cleared += clearable_lines;
-								if let Mode::Marathon {level,lines_before_next_level,..} = &mut base.mode {
-									let level_changed = update_level(level, lines_before_next_level, clearable_lines);
-									if level_changed {
-										base.just_changed_level = true;
-									}
-								}else if let Mode::Versus {target_unit_id,..} = &mut base.mode {
-									if let Kind::Local {..} = unit.kind {
-										queue.push_back((*target_unit_id, Command::SendLines(sendable_lines)));
-									}
-								}
-							}
-							
-							// Is this ok I wonder?
-							if let Kind::Local {rng, ..} = &mut unit.kind {
-								Command::NextMino(rng.next_mino_centered_bro(&unit.base.well))
-									.execute(unit, unit_id, queue, network_state);
-							}
-						}
-					}
-				}
-			}
-			Command::Store => {
-				if base.can_store_mino {
-					base.can_store_mino = false;
-					if let Some(mut falling_mino) = base.falling_mino.take() {
-						game::reset_mino(&mut falling_mino);
-						if let Some(mut stored_mino) = base.stored_mino.take() {
-							base.just_changed_mino = true;
-							game::center_mino(&mut stored_mino, &base.well);
-							base.falling_mino = Some(stored_mino);
-						}else {
-							if let Kind::Local {rng, ..} = &mut unit.kind {
-								Command::NextMino(rng.next_mino_centered_bro(&base.well))
-									.execute(unit, unit_id, queue, network_state);
-							}
-						}
-						unit.base.stored_mino = Some(falling_mino);
-					}
-				}
-			}
-			Command::ClearLines => {
-				for line in &mut base.animate_line {
-					*line = false;
-				}
-				game::try_clear_lines(&mut base.well);
-				base.state = State::Play;
-			}
-			Command::NextMino(mino) => {
-				base.just_changed_mino = true;
-				base.falling_mino.replace(mino);
-			}
-			Command::SendLines(lines) => {
-				if let Mode::Versus {lines_received, lines_received_sum, ..} = &mut base.mode {
-					lines_received.push_back(lines);
-					*lines_received_sum += lines;
-				}
-			}
-			Command::AddLines(lines, gap) => {
-				if lines == 0 {return}
-				for y in 0..base.well.row_len() {
-					for x in 0..base.well.column_len() {
-						if base.well[(x,y)].is_some() {
-							if y >= lines {
-								base.well[(x,y-lines)] = base.well[(x,y)];
-							}
-						}
-						base.well[(x,y)] = if y >= base.well.row_len()-lines && x != gap
-						{Some(crate::block::Data::GRAY)} else {None}
-					}
-				}
-			}
-		}
-	}
-}
+
+
+pub type UnitCommand = CommandWrapper<UnitCommandInner>;
+
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum Command {
+pub enum UnitCommandKind {
 	MoveLeft, MoveRight,
 	RotateLeft, RotateRight,
 	ApplyGravity(i32),
@@ -392,33 +247,36 @@ pub enum Command {
 	SendLines(usize), AddLines(usize,usize),
 }
 
-impl Command {
-	pub fn execute(
-		self, unit: &mut Unit, unit_id: usize,
-		queue: &mut VecDeque<(usize, Command)>,
-		network_state: &mut NetworkState,
-	) {
+pub type UnitCommandInner = (usize, UnitCommandKind);
+
+impl<'a> Command<'a> for UnitCommandInner {
+	type Params = &'a mut Unit;
+	fn execute<F>(
+		self, mut append: F,
+		unit: Self::Params,
+	) where F: FnMut(Self) {
+		use UnitCommandKind::*;
+		let (unit_id, kind) = self;
 		let base = &mut unit.base;
-		let command = crate::NetworkCommand::Unit(unit_id,self.clone());
-		network_state.broadcast_command(&command);
-		match self {
-			Command::MoveLeft =>
+		let mut append = |unit_id, command|append((unit_id, command));
+		match kind {
+			MoveLeft =>
 				if let Some(falling_mino) = &mut base.falling_mino {
 					game::try_left_mino(falling_mino, &base.well);
 				}
-			Command::MoveRight =>
+			MoveRight =>
 				if let Some(falling_mino) = &mut base.falling_mino {
 					game::try_right_mino(falling_mino, &base.well);
 				}
-			Command::RotateLeft =>
+			RotateLeft =>
 				if let Some(falling_mino) = &mut base.falling_mino {
 					game::try_rotl_mino(falling_mino, &base.well);
 				}
-			Command::RotateRight =>
+			RotateRight =>
 				if let Some(falling_mino) = &mut base.falling_mino {
 					game::try_rotr_mino(falling_mino, &base.well);
 				}
-			Command::ApplyGravity(mut g) => {
+			ApplyGravity(mut g) => {
 				if let Some(falling_mino) = &mut base.falling_mino {
 					while g > 0 && game::try_down_mino(falling_mino, &base.well) {
 						g -= 1;
@@ -452,8 +310,8 @@ impl Command {
 							if let Mode::Versus {lines_received,lines_received_sum,..} = &mut base.mode {
 								if let Kind::Local {..} = unit.kind {
 									while let Some(lines) = lines_received.pop_front() {
-										queue.push_back((unit_id, Command::AddLines(lines,
-											rand::random::<usize>() % base.well.num_rows())));
+										let row = rand::random::<usize>() % base.well.num_rows();
+										append(unit_id, AddLines(lines,row));
 										*lines_received_sum -= lines;
 									}
 								}
@@ -470,21 +328,20 @@ impl Command {
 									}
 								}else if let Mode::Versus {target_unit_id,..} = &mut base.mode {
 									if let Kind::Local {..} = unit.kind {
-										queue.push_back((*target_unit_id, Command::SendLines(sendable_lines)));
+										append(*target_unit_id, SendLines(sendable_lines));
 									}
 								}
 							}
 							
 							// Is this ok I wonder?
 							if let Kind::Local {rng, ..} = &mut unit.kind {
-								Command::NextMino(rng.next_mino_centered_bro(&unit.base.well))
-									.execute(unit, unit_id, queue, network_state);
+								append(unit_id, NextMino(rng.next_mino_centered_bro(&unit.base.well)));
 							}
 						}
 					}
 				}
 			}
-			Command::Store => {
+			Store => {
 				if base.can_store_mino {
 					base.can_store_mino = false;
 					if let Some(mut falling_mino) = base.falling_mino.take() {
@@ -495,32 +352,31 @@ impl Command {
 							base.falling_mino = Some(stored_mino);
 						}else {
 							if let Kind::Local {rng, ..} = &mut unit.kind {
-								Command::NextMino(rng.next_mino_centered_bro(&base.well))
-									.execute(unit, unit_id, queue, network_state);
+								append(unit_id, NextMino(rng.next_mino_centered_bro(&unit.base.well)));
 							}
 						}
 						unit.base.stored_mino = Some(falling_mino);
 					}
 				}
 			}
-			Command::ClearLines => {
+			ClearLines => {
 				for line in &mut base.animate_line {
 					*line = false;
 				}
 				game::try_clear_lines(&mut base.well);
 				base.state = State::Play;
 			}
-			Command::NextMino(mino) => {
+			NextMino(mino) => {
 				base.just_changed_mino = true;
 				base.falling_mino.replace(mino);
 			}
-			Command::SendLines(lines) => {
+			SendLines(lines) => {
 				if let Mode::Versus {lines_received, lines_received_sum, ..} = &mut base.mode {
 					lines_received.push_back(lines);
 					*lines_received_sum += lines;
 				}
 			}
-			Command::AddLines(lines, gap) => {
+			AddLines(lines, gap) => {
 				if lines == 0 {return}
 				for y in 0..base.well.row_len() {
 					for x in 0..base.well.column_len() {

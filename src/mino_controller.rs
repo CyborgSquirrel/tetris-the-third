@@ -1,7 +1,7 @@
-use crate::config;
+use crate::{command::Command, config};
 use std::{collections::VecDeque, time::Duration};
 use sdl2::event::Event;
-use crate::unit::{get_level_fall_duration,Command};
+use crate::unit::{get_level_fall_duration,UnitCommandKind};
 use serde::{Serialize,Deserialize};
 use crate::SOFTDROP_DURATION;
 
@@ -141,7 +141,7 @@ impl MinoController {
 			*store = true;
 		}
 	}
-	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<(usize, Command)>, config: &[config::Player;4], dpf: Duration) {
+	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::unit::UnitCommand>, config: &[config::Player;4], dpf: Duration) {
 		let MinoController {
 			move_direction,
 			move_state,
@@ -155,7 +155,7 @@ impl MinoController {
 			..
 		} = self;
 		
-		let mut append = |command|queue.push_back((unit_id,command));
+		let mut append = |command|queue.push_back((unit_id,command).wrap());
 		let move_repeat_duration = &config[*config_id].move_repeat_duration;
 		let move_prepeat_duration = &config[*config_id].move_prepeat_duration;
 		
@@ -163,8 +163,8 @@ impl MinoController {
 		
 		if MoveState::Instant == *move_state {
 			match move_direction{
-				MoveDirection::Left => append(Command::MoveLeft),
-				MoveDirection::Right => append(Command::MoveRight),
+				MoveDirection::Left => append(UnitCommandKind::MoveLeft),
+				MoveDirection::Right => append(UnitCommandKind::MoveRight),
 				_ => panic!(),
 			};
 			*move_repeat_countdown = Duration::from_secs(0);
@@ -174,8 +174,8 @@ impl MinoController {
 			if *move_repeat_countdown >= *move_prepeat_duration {
 				*move_repeat_countdown -= *move_prepeat_duration;
 				match move_direction{
-					MoveDirection::Left => append(Command::MoveLeft),
-					MoveDirection::Right => append(Command::MoveRight),
+					MoveDirection::Left => append(UnitCommandKind::MoveLeft),
+					MoveDirection::Right => append(UnitCommandKind::MoveRight),
 					_ => panic!(),
 				};
 				*move_state = MoveState::Repeat;
@@ -185,8 +185,8 @@ impl MinoController {
 			while *move_repeat_countdown >= *move_repeat_duration {
 				*move_repeat_countdown -= *move_repeat_duration;
 				match move_direction{
-					MoveDirection::Left => append(Command::MoveLeft),
-					MoveDirection::Right => append(Command::MoveRight),
+					MoveDirection::Left => append(UnitCommandKind::MoveLeft),
+					MoveDirection::Right => append(UnitCommandKind::MoveRight),
 					_ => panic!(),
 				};
 			}
@@ -198,8 +198,8 @@ impl MinoController {
 		// ROTATION
 		
 		match rot_direction {
-			RotDirection::Left => append(Command::RotateLeft),
-			RotDirection::Right => append(Command::RotateRight),
+			RotDirection::Left => append(UnitCommandKind::RotateLeft),
+			RotDirection::Right => append(UnitCommandKind::RotateRight),
 			_ => (),
 		};
 		*rot_direction = RotDirection::None;
@@ -233,10 +233,10 @@ impl MinoController {
 		
 		*fall_countdown += dpf;
 		
-		append(Command::ApplyGravity(g));
+		append(UnitCommandKind::ApplyGravity(g));
 		
 		if *store {
-			append(Command::Store);
+			append(UnitCommandKind::Store);
 			*store = false;
 		}
 	}
