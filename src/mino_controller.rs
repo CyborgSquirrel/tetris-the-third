@@ -1,4 +1,4 @@
-use crate::{command::Command, config};
+use crate::{command::Command, config::{self, InputMethod}};
 use std::{collections::VecDeque, time::Duration};
 use sdl2::event::Event;
 use crate::unit::{get_level_fall_duration,UnitCommandKind};
@@ -6,33 +6,16 @@ use serde::{Serialize,Deserialize};
 use crate::SOFTDROP_DURATION;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum RotDirection {
-	None,
-	Left,
-	Right,
-}
+pub enum RotDirection {None, Left, Right}
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum MoveState {
-	Still,
-	Instant,
-	Prepeat,
-	Repeat,
-}
+pub enum MoveState {Still, Instant, Prepeat, Repeat}
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum MoveDirection {
-	None,
-	Left,
-	Right,
-}
+pub enum MoveDirection {None, Left, Right}
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum FallState {
-	Fall,
-	Softdrop,
-	Harddrop,
-}
+pub enum FallState {Fall, Softdrop, Harddrop}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MinoController {
@@ -48,12 +31,11 @@ pub struct MinoController {
 	 
 	pub fall_duration: Duration,
 	 
-	pub joystick_id: Option<u32>,
 	pub config_id: usize,
 }
 
 impl MinoController {
-	pub fn new(config_id: usize, joystick_id: Option<u32>) -> Self {
+	pub fn new(config_id: usize) -> Self {
 	   MinoController {
 			move_direction: MoveDirection::None,
 			move_state: MoveState::Still,
@@ -67,24 +49,22 @@ impl MinoController {
 			
 			fall_duration: get_level_fall_duration(1),
 			
-			joystick_id,
 			config_id,
 	   }
 	}
-	pub fn update(&mut self, binds: &[config::PlayerBinds;4], event: &Event) {
+	pub fn update(&mut self, binds: &[config::PlayerBinds;4], input_method: &InputMethod, event: &Event) {
 		let MinoController {
 			move_direction,
 			move_state,
 			rot_direction,
 			fall_state,
 			store,
-			joystick_id,
 			config_id,
 			..
 		} = self;
 		
 		let b = &binds[*config_id];
-		let im = config::InputMethod::new(true, *joystick_id);
+		let im = input_method;
 		
 		if b.left.is_down(event, &im) ||
 		b.left_alt.is_down(event, &im) {

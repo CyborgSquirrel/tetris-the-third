@@ -19,12 +19,16 @@ pub struct Room {
 	
 	pub just_added_player: bool,
 	pub just_initted: bool,
+	pub just_started: bool,
+	pub just_removed_player: Option<usize>,
 }
 
 impl Room {
 	pub fn reset_flags(&mut self) {
 		self.just_added_player = false;
 		self.just_initted = false;
+		self.just_started = false;
+		self.just_removed_player = None;
 	}
 }
 
@@ -34,6 +38,7 @@ pub enum RoomCommand {
 	StartGame,
 	StartGameFromSave(Unit),
 	AddPlayer(Player),
+	RemovePlayer(usize),
 }
 impl<'a> Command<'a> for RoomCommand {
 	type Params = (&'a mut Room, &'a mut State);
@@ -43,17 +48,18 @@ impl<'a> Command<'a> for RoomCommand {
 	) {
 		match self {
 			RoomCommand::Init(init_room) => {
-				*room = init_room;
 				room.just_initted = true;
+				*room = init_room;
 			}
 			RoomCommand::StartGame => {
+				room.just_started = true;
 				room.units.clear();
 				let mut configs = (0..4usize).cycle();
 				*state = State::play();
 				let players_len = room.players.len();
 				for (unit_id, player) in izip!(0.., &room.players) {
-					let mut unit = match player.kind {
-						PlayerKind::Local => Unit::local(room.selected_game_mode.ctor()(), MinoController::new(configs.next().unwrap(), None)),
+					let mut unit = match &player.kind {
+						PlayerKind::Local(_) => Unit::local(room.selected_game_mode.ctor()(), MinoController::new(configs.next().unwrap())),
 						PlayerKind::Network => Unit::network(room.selected_game_mode.ctor()()),
 					};
 					let Unit{kind, base} = &mut unit;
@@ -63,7 +69,7 @@ impl<'a> Command<'a> for RoomCommand {
 					}
 					
 					if let Kind::Local{rng,..} = kind {
-						room.commands.push_back((unit_id, UnitCommandKind::NextMino(rng.next_mino_centered_bro(&base.well))).wrap());
+						room.commands.push_back((unit_id, UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))).wrap());
 					}
 					
 					room.units.push(unit);
@@ -74,9 +80,12 @@ impl<'a> Command<'a> for RoomCommand {
 				room.units.push(unit);
 			}
 			RoomCommand::AddPlayer(player) => {
-				println!("YO");
-				room.players.push(player);
 				room.just_added_player = true;
+				room.players.push(player);
+			}
+			RoomCommand::RemovePlayer(index) => {
+				room.just_removed_player = Some(index);
+				room.players.remove(index);
 			}
 		}
 	}

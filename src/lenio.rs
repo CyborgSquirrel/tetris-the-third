@@ -4,6 +4,7 @@ use std::io::{Result,Read,Write,Error,ErrorKind};
 #[derive(Debug)]
 pub struct LenIO<T> {
 	inner: T,
+	// 256 storage bytes + 1 EOF byte (for deserializing)
 	buf: [u8; 257],
 	len: usize,
 	pos: usize,
@@ -38,9 +39,9 @@ impl<T: Read> LenIO<T> {
 		}
 		
 		if self.pos == self.len {
+			// This is so that deserializing doesn't return an UnexpectedEOF error
 			self.buf[self.len] = 0;
 			let buf = &self.buf[0..=self.len];
-			// println!("{:?}", buf);
 			self.pos = 0;
 			self.len = 0;
 			Ok(buf)
@@ -53,7 +54,6 @@ impl<T: Read> LenIO<T> {
 impl<T: Write> LenIO<T> {
 	pub fn write(&mut self, bytes: &[u8]) -> Result<()> {
 		assert!(bytes.len() <= u8::MAX as usize);
-		// println!("{:?}", bytes);
 		self.inner.write(&[bytes.len() as u8]).and_then(|_|{
 			self.inner.write(&bytes[..])
 		}).map(|_|{})

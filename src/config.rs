@@ -4,6 +4,9 @@ use sdl2::controller::Button;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::Duration;
+use serde::{Serialize,Deserialize};
+
+use crate::myevents;
 
 #[derive(Default)]
 pub struct Player {
@@ -30,12 +33,29 @@ impl Player {
 	}
 }
 
+#[derive(Debug,Clone,Copy)]
+pub enum Conbind {Button(sdl2::controller::Button), Axis(sdl2::controller::Axis)}
+impl Conbind {
+	fn from_name(name: &str) -> Option<Self> {
+		if let Some(button) = sdl2::controller::Button::from_string(name) {Some(Conbind::Button(button))}
+		else if let Some(axis) = sdl2::controller::Axis::from_string(name) {Some(Conbind::Axis(axis))}
+		else {None}
+	}
+}
+impl From<sdl2::controller::Button> for Conbind {
+	fn from(button: sdl2::controller::Button) -> Self {Conbind::Button(button)}
+}
+impl From<sdl2::controller::Axis> for Conbind {
+	fn from(axis: sdl2::controller::Axis) -> Self {Conbind::Axis(axis)}
+}
+
+#[derive(Debug,Clone,Serialize,Deserialize)]
 pub struct InputMethod {
-	keyboard: Option<()>,
-	controller: Option<u32>,
+	pub keyboard: Option<()>,
+	pub controller: Option<usize>,
 }
 impl InputMethod {
-	pub fn new(keyboard: bool, controller: Option<u32>) -> Self {
+	pub fn new(keyboard: bool, controller: Option<usize>) -> Self {
 		let keyboard = if keyboard {Some(())} else {None};
 		Self {keyboard, controller}
 	}
@@ -44,18 +64,18 @@ impl InputMethod {
 #[derive(Debug, Default)]
 pub struct Bind {
 	key: Option<Keycode>,
-	button: Option<Button>,
+	con: Option<Conbind>,
 }
 impl Bind {
-	pub fn new(key: Keycode, button: Button) -> Self {
+	pub fn new(key: Keycode, con: Conbind) -> Self {
 		let key = Some(key);
-		let button = Some(button);
-		Bind {key, button}
+		let con = Some(con);
+		Bind {key, con}
 	}
 	fn from_name(key_name: Option<&str>, button_name: Option<&str>) -> Self {
 		Bind {
 			key: key_name.and_then(Keycode::from_name),
-			button: button_name.and_then(Button::from_string),
+			con: button_name.and_then(Conbind::from_name),
 		}
 	}
 	
@@ -64,24 +84,31 @@ impl Bind {
 		(if let (Event::KeyDown{keycode:Some(key),repeat:false,..},Some(_)) =
 			(event,input_method.keyboard)
 			{self.key.map_or(false, |a|a==*key)} else {false}) ||
-		(if let(Event::ControllerButtonDown{button,which,..},Some(id)) =
-			(event,input_method.controller)
-			{self.button.map_or(false, |a|a==*button&&id==*which)} else {false})
+		(if let(Some(myevents::MyControllerButtonDown{button,which,..}),Some(id),Some(Conbind::Button(my_button))) =
+			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			{my_button==button&&id==which} else {false}) ||
+		(if let(Some(myevents::MyControllerAxisDown{axis,which,..}),Some(id),Some(Conbind::Axis(my_axis))) =
+			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			{my_axis==axis&&id==which} else {false})
 	}
 	pub fn is_up(&self, event: &Event, input_method: &InputMethod) -> bool {
 		(if let (Event::KeyUp{keycode:Some(key),repeat:false,..},Some(_)) =
 			(event,input_method.keyboard)
 			{self.key.map_or(false, |a|a==*key)} else {false}) ||
-		(if let(Event::ControllerButtonUp{button,which,..},Some(id)) =
-			(event,input_method.controller)
-			{self.button.map_or(false, |a|a==*button&&id==*which)} else {false})
+		(if let(Some(myevents::MyControllerButtonUp{button,which,..}),Some(id),Some(Conbind::Button(my_button))) =
+			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			{my_button==button&&id==which} else {false}) ||
+		(if let(Some(myevents::MyControllerAxisUp{axis,which,..}),Some(id),Some(Conbind::Axis(my_axis))) =
+			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			{my_axis==axis&&id==which} else {false})
 	}
 }
 
 pub struct MenuBinds {
 	pub up: Bind, pub down: Bind,
 	pub left: Bind, pub right: Bind,
-	pub ok: Bind, pub other: Bind,
+	pub ok: Bind, pub add_player: Bind,
+	pub pause: Bind, pub restart: Bind,
 }
 
 #[derive(Debug, Default)]
