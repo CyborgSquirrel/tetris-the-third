@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 
 use crate::room::Room;
 use crate::room::RoomCommand;
@@ -45,7 +45,7 @@ use serde::{Serialize,Deserialize};
 use bincode::{serialize,deserialize};
 use mino::Mino;
 use mino_controller::MinoController;
-use ui::{EnumSelect, GameModeSelection, Layout, NetworkStateSelection, Pause, PauseSelection, StartLayout, TitleSelection};
+use ui::{EnumSelect, GameModeSelection, GameLayout, NetworkStateSelection, Pause, PauseSelection, CenteredLayout, TitleSelection};
 
 pub enum State {
 	Play {
@@ -224,6 +224,18 @@ fn axis_to_usize(axis: Axis) -> usize {
 	}
 }
 
+fn load_saved_unit() -> Option<Unit> {
+	use std::fs::File;
+	use std::io::prelude::*;
+	let file = File::open("save");
+	file.ok().and_then(|mut file|{
+		let mut buf = Vec::<u8>::new();
+		file.read_to_end(&mut buf).ok().and_then(|_|{
+			deserialize(&buf).ok()
+		})
+	})
+}
+
 lazy_static! {
 	static ref SOFTDROP_DURATION: Duration = Duration::from_secs_f64(0.05);
 	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.1);
@@ -245,13 +257,13 @@ fn main() {
 		.expect("Failed to initialize ttf");
 	let sdl_event = sdl_context.event().unwrap();
 	
-	sdl_event.register_custom_event::<myevents::MyControllerButtonDown>().unwrap();
-	sdl_event.register_custom_event::<myevents::MyControllerButtonUp>().unwrap();
-	sdl_event.register_custom_event::<myevents::MyControllerAxisDown>().unwrap();
-	sdl_event.register_custom_event::<myevents::MyControllerAxisUp>().unwrap();
+	myevents::register_custom_event::<myevents::MyControllerButtonDown>(&sdl_event).unwrap();
+	myevents::register_custom_event::<myevents::MyControllerButtonUp>(&sdl_event).unwrap();
+	myevents::register_custom_event::<myevents::MyControllerAxisDown>(&sdl_event).unwrap();
+	myevents::register_custom_event::<myevents::MyControllerAxisUp>(&sdl_event).unwrap();
 	
-	let mut unordered_controllers = BTreeMap::<_, (sdl2::controller::GameController,usize,[bool;6])>::new();
-	let mut controllers: BTreeSet<usize> = (0..MAX_PLAYERS).collect();
+	let mut controllers = BTreeMap::<_, (sdl2::controller::GameController,usize,[bool;6])>::new();
+	let mut unused_controller_ids: BTreeSet<usize> = (0..MAX_PLAYERS).collect();
 	
 	let config = Config::from_file();
 	
@@ -261,14 +273,12 @@ fn main() {
 		video_subsystem.display_bounds(0).unwrap()
 	};
 	
-	let mut window = video_subsystem.window(
-		"Tetris part 3",window_rect.width(),window_rect.height());
+	let mut window = video_subsystem.window("Tetris part 3", window_rect.width(), window_rect.height());
 	window.position_centered();
 	if config.borderless {
 		window.borderless();
 	}
-	let window = window
-		.build()
+	let window = window.build()
 		.expect("Failed to create window");
 	
 	let mut canvas = window.into_canvas().build()
@@ -291,14 +301,16 @@ fn main() {
 	
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
-	let paused_text = text_creator.builder("Paused").build();
-	
 	let game_over_text = text_creator.builder("Game over")
 		.with_wrap(10*config.block_size).build();
 	let game_won_text = text_creator.builder("You won")
 		.with_wrap(10*config.block_size).build();
 	
 	let host_start_text = text_creator.builder("Press enter to start game")
+		.with_wrap(window_rect.width() as u32).build();
+	let add_player_text = text_creator.builder("Press q to add a player")
+		.with_wrap(window_rect.width() as u32).build();
+	let waiting_for_host_text = text_creator.builder("Waiting for host to start game...")
 		.with_wrap(window_rect.width() as u32).build();
 	
 	let local_player_text = text_creator.builder(" (Local)").build();
@@ -324,6 +336,7 @@ fn main() {
 			GameModeSelection::Versus => &versus_text,
 		};
 	
+	// NETWORK STATE
 	let mut selected_network_state = NetworkStateSelection::Offline;
 	let mut network_state = NetworkState::Offline;
 	
@@ -342,17 +355,7 @@ fn main() {
 	
 	let can_continue_text = text_creator.builder("Continue").build();
 	let cant_continue_text = text_creator.builder("Continue").color(Color::GRAY).build();
-	let saved_unit: Option<Unit> = {
-		use std::fs::File;
-		use std::io::prelude::*;
-		let file = File::open("save");
-		file.ok().and_then(|mut file|{
-			let mut buf = Vec::<u8>::new();
-			file.read_to_end(&mut buf).ok().and_then(|_|{
-				deserialize(&buf).ok()
-			})
-		})
-	};
+	let mut saved_unit = load_saved_unit();
 	
 	let get_continue_text = |can_continue|{
 		if can_continue {&can_continue_text}
@@ -367,9 +370,13 @@ fn main() {
 	
 	let mut title_selection = TitleSelection::Continue;
 	
+	// PAUSE
+	let paused_text = text_creator.builder("Paused").big().build();
+	
 	let resume_text = text_creator.builder("Resume").build();
 	let save_text = text_creator.builder("Save").build();
 	let saved_text = text_creator.builder("Saved ✓").build();
+	let restart_text = text_creator.builder("Restart").build();
 	let quit_to_title_text = text_creator.builder("Quit to title").build();
 	let quit_to_desktop_text = text_creator.builder("Quit to desktop").build();
 	
@@ -416,19 +423,34 @@ fn main() {
 			match event {
 				// This here is to map the controllers in the way that I want.
 				
-				//TODO: document this here
+				// unused_controller_ids[] is a set which contains all the unused
+				// controller ids (here ids refers to my ids, and not sdl's ids).
+				
+				// controllers[] is a map, from the sdl controller id, into the data that
+				// I store for each controller.
 				Event::ControllerDeviceAdded {which,..} => {
 					let controller = game_controller_subsystem.open(which);
 					if let Ok(controller) = controller {
-						let index = *controllers.iter().next().unwrap();
-						controllers.remove(&index);
-						unordered_controllers.insert(controller.instance_id(), (controller, index, [false;6]));
+						let index = *unused_controller_ids.iter().next().unwrap();
+						unused_controller_ids.remove(&index);
+						controllers.insert(controller.instance_id(), (controller, index, [false;6]));
 					}
 				},
 				Event::ControllerDeviceRemoved {which,..} => {
-					let controller = unordered_controllers.remove(&which);
+					let controller = controllers.remove(&which);
 					if let Some((_,index,_)) = controller {
-						controllers.insert(index);
+						unused_controller_ids.insert(index);
+						
+						let mut in_use = None;
+						let which = index;
+						for (player, p) in izip!(&room.players, 0..) {
+							if let Player{kind:PlayerKind::Local(InputMethod{controller:Some(index),..}),..} = player {
+								if *index == which {in_use = Some(p)}
+							}
+						}
+						if let Some(p) = in_use {
+							commands.push_back(RoomCommand::RemovePlayer(p).wrap());
+						}
 					}
 				},
 				
@@ -438,24 +460,24 @@ fn main() {
 				
 				// Converting sdl events to my events
 				Event::ControllerButtonDown {timestamp, which, button} =>
-				sdl_event.push_custom_event(myevents::MyControllerButtonDown {timestamp,
-				which: unordered_controllers[&which].1, button}).unwrap(),
+				myevents::push_custom_event(&sdl_event, myevents::MyControllerButtonDown {timestamp,
+				which: controllers[&which].1, button}).unwrap(),
 				
 				Event::ControllerButtonUp {timestamp, which, button} =>
-				sdl_event.push_custom_event(myevents::MyControllerButtonUp {timestamp,
-				which: unordered_controllers[&which].1, button}).unwrap(),
+				myevents::push_custom_event(&sdl_event, myevents::MyControllerButtonUp {timestamp,
+				which: controllers[&which].1, button}).unwrap(),
 				
 				Event::ControllerAxisMotion {timestamp, which, axis, value} => {
-					let (_,which,down) = unordered_controllers.get_mut(&which).unwrap();
+					let (_,which,down) = controllers.get_mut(&which).unwrap();
 					let which = *which;
 					let down = &mut down[axis_to_usize(axis)];
 					let should_be_down = value >= 4096;
 					if *down != should_be_down {
 						*down = should_be_down;
 						if *down {
-							sdl_event.push_custom_event(myevents::MyControllerAxisDown{timestamp, which, axis})
+							myevents::push_custom_event(&sdl_event, myevents::MyControllerAxisDown{timestamp, which, axis})
 						}else {
-							sdl_event.push_custom_event(myevents::MyControllerAxisUp{timestamp, which, axis})
+							myevents::push_custom_event(&sdl_event, myevents::MyControllerAxisUp{timestamp, which, axis})
 						}.unwrap()
 					}
 				}
@@ -492,8 +514,14 @@ fn main() {
 										just_saved = true;
 									}
 								}
+								PauseSelection::Restart => {
+									commands.push_back(RoomCommand::StartGame.wrap());
+								}
 								PauseSelection::QuitToTitle => {
 									state = State::Title;
+									room.players.clear();
+									player_names_text.clear();
+									saved_unit = load_saved_unit();
 								}
 								PauseSelection::QuitToDesktop => {
 									break 'running;
@@ -521,15 +549,8 @@ fn main() {
 								if selected_network_state == NetworkStateSelection::Offline {
 									network_state = NetworkState::Offline;
 									
-									let new_controller = MinoController::new(0);
-									let mut unit = saved_unit.clone().unwrap();
-									if let unit::Kind::Local{mino_controller,..} = &mut unit.kind {
-										*mino_controller = new_controller;
-									}
-									lines_cleared_text[0].update(unit.base.lines_cleared);
-									if let Unit {base:unit::Base{mode:Mode::Marathon{level,..},..},..} = unit {
-										level_text[0].update(level);
-									}
+									let unit = saved_unit.clone().unwrap();
+									commands.push_back(RoomCommand::AddPlayer(Player::new(String::from(""), InputMethod::new(true, Some(0)))).wrap());
 									commands.push_back(RoomCommand::StartGameFromSave(unit).wrap());
 								}
 							}
@@ -618,7 +639,7 @@ fn main() {
 								commands.push_back(RoomCommand::StartGame.wrap());
 							}
 						}
-						if let Some(myevents::MyControllerButtonDown {which, ..}) = event.as_user_event_type::<_>() {
+						if let Some(myevents::MyControllerButtonDown {which, ..}) = myevents::as_user_event_type::<_>(&event) {
 							let mut not_in_use = true;
 							for player in &room.players {
 								if let Player{kind:PlayerKind::Local(InputMethod{controller:Some(index),..}),..} = player {
@@ -630,7 +651,6 @@ fn main() {
 								video_subsystem.text_input().start();
 								player.kind = PlayerKind::Local(InputMethod::new(false, Some(which)));
 							}
-							// if not, set adding player and text input to true
 						}else if mb.add_player.is_down(&event, &im) {
 							adding_player = true;
 							video_subsystem.text_input().start();
@@ -639,6 +659,14 @@ fn main() {
 					}
 				}
 			}
+			
+			// IMPORTANT! These functions must always stay at the bottom of the event
+			// loop. Their purpose is to clean up the memory used up by the event, in
+			// case it is a user event. More details in myevents.rs.
+			myevents::drop_if_user_event::<myevents::MyControllerAxisDown>(&event);
+			myevents::drop_if_user_event::<myevents::MyControllerAxisUp>(&event);
+			myevents::drop_if_user_event::<myevents::MyControllerButtonDown>(&event);
+			myevents::drop_if_user_event::<myevents::MyControllerButtonUp>(&event);
 		}
 		
 		// @network
@@ -778,7 +806,7 @@ fn main() {
 		canvas.clear();
 		match state {
 			State::Title => {
-				let mut layout = StartLayout {y:0,width:window_rect.width()};
+				let mut layout = CenteredLayout {y:0,width:window_rect.width()};
 				
 				layout.row_margin(15);
 				
@@ -833,13 +861,28 @@ fn main() {
 				}else {
 					let mut y = 0;
 					
-					if let NetworkState::Host {..} | NetworkState::Offline = network_state {
-						let (width, height) = get_texture_dim(&host_start_text);
-						let rect = Rect::new(0, y, width, height);
-						draw_same_scale(&mut canvas, &host_start_text, rect);
-						
-						y += height as i32;
+					match &network_state {
+						NetworkState::Host {..} | NetworkState::Offline {..} => {
+							let (width, height) = get_texture_dim(&host_start_text);
+							let rect = Rect::new(0, y, width, height);
+							draw_same_scale(&mut canvas, &host_start_text, rect);
+							
+							y += height as i32;
+						}
+						NetworkState::Client {..} => {
+							let (width, height) = get_texture_dim(&waiting_for_host_text);
+							let rect = Rect::new(0, y, width, height);
+							draw_same_scale(&mut canvas, &waiting_for_host_text, rect);
+							
+							y += height as i32;
+						}
 					}
+					
+					let (width, height) = get_texture_dim(&add_player_text);
+					let rect = Rect::new(0, y, width, height);
+					draw_same_scale(&mut canvas, &add_player_text, rect);
+					
+					y += height as i32;
 					
 					for (player, name_text) in izip!(&room.players, &player_names_text) {
 						let mut x = 0;
@@ -863,7 +906,7 @@ fn main() {
 				let bs = config.block_size as i32;
 				let hbs = bs/2;
 				
-				let mut layout = Layout {
+				let mut layout = GameLayout {
 					x:0, y:0,
 					width: window_rect.width() as i32,
 					expected_width: (4*bs+hbs+10*bs+hbs+4*bs+hbs) * room.units.len() as i32 - hbs
@@ -871,7 +914,7 @@ fn main() {
 				
 				for (unit, lines_cleared_text, level_text)
 				in izip!(&mut room.units, &lines_cleared_text, &level_text) {
-					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, ..} = unit;
+					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, kind} = unit;
 					
 					layout.row_margin(hbs);
 					
@@ -888,9 +931,11 @@ fn main() {
 					layout.row(height as i32);
 					layout.row_margin(hbs);
 					
-					let (width, height) = get_texture_dim(&level_text.0);
-					let rect = Rect::new(layout.x(), layout.y(), width, height);
-					draw_same_scale(&mut canvas, &level_text.0, rect);
+					if let Mode::Marathon {..} = mode {
+						let (width, height) = get_texture_dim(&level_text.0);
+						let rect = Rect::new(layout.x(), layout.y(), width, height);
+						draw_same_scale(&mut canvas, &level_text.0, rect);
+					}
 					
 					layout.col(4*bs);
 					layout.col_margin(hbs);
@@ -920,7 +965,18 @@ fn main() {
 					if let Some(falling_mino) = falling_mino {
 						let shadow_mino = game::create_shadow_mino(falling_mino, &well);
 						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);
-						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), falling_mino);
+						
+						let do_ease = game::may_down_mino(&falling_mino, &well);
+						let mut f = 0f32;
+						if do_ease {
+							if let unit::Kind::Local {mino_controller,..} = kind {
+								f = mino_controller.fall_countdown.as_secs_f32() / mino_controller.fall_duration.as_secs_f32();
+								f = f.clamp(0f32, 1f32);
+								f = f*f*f*f*f*f;
+							}
+						};
+						
+						block_canvas.draw_mino(&mut canvas, layout.as_vec2i() + vec2i!(0, (f*bs as f32) as i32), falling_mino);
 					}
 					
 					layout.col(10*bs);
@@ -954,9 +1010,7 @@ fn main() {
 				if let Some(Pause{selection}) = pause {
 					darken(&mut canvas, None);
 					
-					let mut layout = StartLayout {y:0,width:window_rect.width()};
-					
-					layout.row_margin(hbs);
+					let mut layout = CenteredLayout {y:0,width:window_rect.width()};
 					
 					let (width, height) = get_texture_dim(&paused_text);
 					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
@@ -978,6 +1032,14 @@ fn main() {
 					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
 					draw_same_scale(&mut canvas, &save_text, rect);
 					select(&mut canvas, rect, matches!(selection, PauseSelection::Save));
+					
+					layout.row(height as i32);
+					layout.row_margin(hbs);
+					
+					let (width, height) = get_texture_dim(&restart_text);
+					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+					draw_same_scale(&mut canvas, &restart_text, rect);
+					select(&mut canvas, rect, matches!(selection, PauseSelection::Restart));
 					
 					layout.row(height as i32);
 					layout.row_margin(hbs);

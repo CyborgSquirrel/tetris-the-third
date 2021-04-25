@@ -1,5 +1,6 @@
-width = 1200
-height = 700
+# width = 1200
+# width = 700
+# height = 700
 # borderless = false
 block_size = 30
 

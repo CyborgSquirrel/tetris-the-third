@@ -165,7 +165,7 @@ impl Mode {
 	}
 	pub fn default_sprint() -> Mode {
 		Mode::Sprint {
-			lines_cleared_target: 3 //TODO: change this back
+			lines_cleared_target: 40
 		}
 	}
 	pub fn default_versus() -> Mode {

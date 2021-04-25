@@ -48,8 +48,8 @@ impl<'a> Command<'a> for RoomCommand {
 	) {
 		match self {
 			RoomCommand::Init(init_room) => {
-				room.just_initted = true;
 				*room = init_room;
+				room.just_initted = true;
 			}
 			RoomCommand::StartGame => {
 				room.just_started = true;
@@ -75,8 +75,13 @@ impl<'a> Command<'a> for RoomCommand {
 					room.units.push(unit);
 				}
 			}
-			RoomCommand::StartGameFromSave(unit) => {
+			RoomCommand::StartGameFromSave(mut unit) => {
+				room.just_started = true;
+				room.units.clear();
 				*state = State::play();
+				if let crate::unit::Kind::Local {mino_controller, ..} = &mut unit.kind {
+					mino_controller.config_id = 0;
+				}
 				room.units.push(unit);
 			}
 			RoomCommand::AddPlayer(player) => {

@@ -19,6 +19,7 @@ pub enum TitleSelection {
 pub enum PauseSelection {
 	Resume,
 	Save,
+	Restart,
 	QuitToTitle,
 	QuitToDesktop,
 }
@@ -34,14 +35,14 @@ pub enum NetworkStateSelection {
 }
 
 #[derive(Default)]
-pub struct Layout {
+pub struct GameLayout {
 	pub x: i32,
 	pub y: i32,
 	pub width: i32,
 	pub expected_width: i32,
 }
 
-impl Layout {
+impl GameLayout {
 	pub fn centered_x(&self) -> i32 {
 		((self.width-self.expected_width) / 2) as i32
 	}
@@ -70,12 +71,12 @@ impl Layout {
 	}
 }
 
-pub struct StartLayout {
+pub struct CenteredLayout {
 	pub y: i32,
 	pub width: u32
 }
 
-impl StartLayout {
+impl CenteredLayout {
 	pub fn centered_x(&self, obj_width: u32) -> i32 {
 		((self.width-obj_width) / 2) as i32
 	}

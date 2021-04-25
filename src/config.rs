@@ -1,6 +1,5 @@
 use toml::Value;
 use sdl2::{event::Event, keyboard::Keycode};
-use sdl2::controller::Button;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::Duration;
@@ -67,6 +66,8 @@ pub struct Bind {
 	con: Option<Conbind>,
 }
 impl Bind {
+	// TODO: improve this by making it templated and turning Button/Axis straight
+	// into Conbind
 	pub fn new(key: Keycode, con: Conbind) -> Self {
 		let key = Some(key);
 		let con = Some(con);
@@ -85,10 +86,10 @@ impl Bind {
 			(event,input_method.keyboard)
 			{self.key.map_or(false, |a|a==*key)} else {false}) ||
 		(if let(Some(myevents::MyControllerButtonDown{button,which,..}),Some(id),Some(Conbind::Button(my_button))) =
-			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			(myevents::as_user_event_type(event),input_method.controller,self.con)
 			{my_button==button&&id==which} else {false}) ||
 		(if let(Some(myevents::MyControllerAxisDown{axis,which,..}),Some(id),Some(Conbind::Axis(my_axis))) =
-			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			(myevents::as_user_event_type(event),input_method.controller,self.con)
 			{my_axis==axis&&id==which} else {false})
 	}
 	pub fn is_up(&self, event: &Event, input_method: &InputMethod) -> bool {
@@ -96,10 +97,10 @@ impl Bind {
 			(event,input_method.keyboard)
 			{self.key.map_or(false, |a|a==*key)} else {false}) ||
 		(if let(Some(myevents::MyControllerButtonUp{button,which,..}),Some(id),Some(Conbind::Button(my_button))) =
-			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			(myevents::as_user_event_type(event),input_method.controller,self.con)
 			{my_button==button&&id==which} else {false}) ||
 		(if let(Some(myevents::MyControllerAxisUp{axis,which,..}),Some(id),Some(Conbind::Axis(my_axis))) =
-			(event.as_user_event_type::<_>(),input_method.controller,self.con)
+			(myevents::as_user_event_type(event),input_method.controller,self.con)
 			{my_axis==axis&&id==which} else {false})
 	}
 }
@@ -175,8 +176,8 @@ pub struct Config {
 	pub height: Option<u32>,
 	pub borderless: bool,
 	pub block_size: u32,
-	pub players: [Player;4],
-	pub binds: [PlayerBinds;4],
+	pub players: Vec<Player>,
+	pub binds: Vec<PlayerBinds>,
 }
 
 impl Config {
@@ -192,22 +193,11 @@ impl Config {
 		let toml = string.parse::<Value>().unwrap();
 		
 		let players = &toml["players"].as_array().unwrap();
-		let player_from_toml = |index|players.get(index).map(|v|Player::from_toml(v)).unwrap_or_default();
 		let binds_from_toml = |index|players.get(index).map(|v|PlayerBinds::from_toml(v)).unwrap_or_default();
+		let player_from_toml = |index|players.get(index).map(|v|Player::from_toml(v)).unwrap_or_default();
 		
-		let binds = [
-			binds_from_toml(0),
-			binds_from_toml(1),
-			binds_from_toml(2),
-			binds_from_toml(3),
-		];
-		
-		let players = [
-			player_from_toml(0),
-			player_from_toml(1),
-			player_from_toml(2),
-			player_from_toml(3),
-		];
+		let binds: Vec<_> = (0..).map(|i|binds_from_toml(i)).take(crate::MAX_PLAYERS).collect();
+		let players: Vec<_> = (0..).map(|i|player_from_toml(i)).take(crate::MAX_PLAYERS).collect();
 		
 		let width = toml.get("width").and_then(Value::as_integer).map(|a|a as u32);
 		let height = toml.get("height").and_then(Value::as_integer).map(|a|a as u32);

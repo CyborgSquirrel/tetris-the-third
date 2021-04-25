@@ -3,7 +3,6 @@ use std::{collections::VecDeque, time::Duration};
 use sdl2::event::Event;
 use crate::unit::{get_level_fall_duration,UnitCommandKind};
 use serde::{Serialize,Deserialize};
-use crate::SOFTDROP_DURATION;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum RotDirection {None, Left, Right}
@@ -52,7 +51,7 @@ impl MinoController {
 			config_id,
 	   }
 	}
-	pub fn update(&mut self, binds: &[config::PlayerBinds;4], input_method: &InputMethod, event: &Event) {
+	pub fn update(&mut self, binds: &Vec<config::PlayerBinds>, input_method: &InputMethod, event: &Event) {
 		let MinoController {
 			move_direction,
 			move_state,
@@ -121,7 +120,7 @@ impl MinoController {
 			*store = true;
 		}
 	}
-	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::unit::UnitCommand>, config: &[config::Player;4], dpf: Duration) {
+	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::unit::UnitCommand>, config: &Vec<config::Player>, dpf: Duration) {
 		let MinoController {
 			move_direction,
 			move_state,
@@ -186,32 +185,23 @@ impl MinoController {
 		
 		// GRAVITY
 		
-		let fall_duration = match fall_state {
-			FallState::Fall => *fall_duration,
-			FallState::Softdrop => *SOFTDROP_DURATION,
-			FallState::Harddrop => Duration::from_secs(0),
-		};
-		
-		if FallState::Softdrop == *fall_state {
-			*fall_countdown = std::cmp::min(*fall_countdown, *SOFTDROP_DURATION);
-		}
-		
-		if FallState::Harddrop == *fall_state {
-			*fall_state = FallState::Fall;
-			*fall_countdown = Duration::from_secs(0);
+		match fall_state {
+			FallState::Fall => *fall_countdown += dpf,
+			FallState::Softdrop => *fall_countdown += 3*dpf,
+			FallState::Harddrop => (),
 		}
 		
 		let mut g = 0;
-		if fall_duration.as_micros() == 0 {
+		if FallState::Harddrop == *fall_state {
 			g = i32::MAX;
+			*fall_state = FallState::Fall;
+			*fall_countdown = Duration::from_secs(0);
 		}else {
-			while *fall_countdown >= fall_duration {
+			while *fall_countdown >= *fall_duration {
 				g += 1;
-				*fall_countdown -= fall_duration;
+				*fall_countdown -= *fall_duration;
 			}
 		}
-		
-		*fall_countdown += dpf;
 		
 		append(UnitCommandKind::ApplyGravity(g));
 		

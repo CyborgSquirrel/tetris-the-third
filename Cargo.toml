@@ -5,16 +5,16 @@ authors = ["Andrei Jardan <jardan.andrei@gmail.com>"]
 edition = "2018"
 
 [dependencies.sdl2]
-version = "0.34.3"
+version = "0.34.4"
 default-features = false
 features = ["image","ttf"]
 
 [dependencies]
-toml = "0.5"
-bincode = "1.3.1"
+toml = "0.5.8"
+bincode = "1.3.3"
 itertools = "0.10.0"
 array2d = { version = "0.2.1", features = ["serde"] }
-serde = { version = "1.0.123", features = ["derive"] }
-rand = { version = "0.8.1", features = ["small_rng"] }
+serde = { version = "1.0.125", features = ["derive"] }
+rand = { version = "0.8.3", features = ["small_rng"] }
 enum-select-derive = {path = "enum-select-derive"}
 lazy_static = "1.4.0"

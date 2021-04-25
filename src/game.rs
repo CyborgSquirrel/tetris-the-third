@@ -64,6 +64,16 @@ pub fn check_mino_well_collision(mino: &Mino, well: &Well) -> bool {
 	false
 }
 
+pub fn may_mutate_mino<F>(mino: &Mino, well: &Well, f: F) -> bool
+where F: Fn(&mut Mino) {
+	let mut mutated_mino = mino.clone();
+	f(&mut mutated_mino);
+	!check_mino_well_collision(&mutated_mino, &well)
+}
+pub fn may_down_mino(mino: &Mino, well: &Well) -> bool {
+	may_mutate_mino(mino, well, |mino|mino.down())
+}
+
 pub fn try_mutate_mino<F>(mino: &mut Mino, well: &Well, f: F) -> bool
 where F: Fn(&mut Mino, &Well) {
 	let mut mutated_mino = mino.clone();
@@ -104,25 +114,6 @@ pub fn try_clear_lines(well: &mut Well) {
 		}
 		if count == well.column_len() {
 			dy += 1;
-		}
-	}
-}
-
-pub fn try_add_bottom_line_with_gap(
-	well: &mut Well,
-	lines: usize,
-	gap: usize,
-) {
-	if lines == 0 {return}
-	for y in 0..well.row_len() {
-		for x in 0..well.column_len() {
-			if well[(x,y)].is_some() {
-				if y >= lines {
-					well[(x,y-lines)] = well[(x,y)];
-				}
-			}
-			well[(x,y)] = if y >= well.row_len()-lines && x != gap
-			{Some(block::Data::GRAY)} else {None}
 		}
 	}
 }
