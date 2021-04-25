@@ -74,6 +74,8 @@ impl State {
 	}
 }
 
+// TODO: change with_wrap parameter to depend on block size, someday
+
 struct LinesClearedText<'a>(Texture<'a>, &'a TextCreator<'a,'a>);
 impl<'a> LinesClearedText<'a> {
 	fn new(text_creator: &'a TextCreator) -> Self {
@@ -289,7 +291,7 @@ fn main() {
 		.expect("Failed to create event pump");
 	
 	let texture_creator = canvas.texture_creator();
-	let texture = texture_creator.load_texture("gfx/other_block.png")
+	let texture = texture_creator.load_texture("gfx/block.png")
 		.expect("Failed to load block texture");
 	
 	let font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", FONT_SIZE)
@@ -301,10 +303,8 @@ fn main() {
 	
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
-	let game_over_text = text_creator.builder("Game over")
-		.with_wrap(10*config.block_size).build();
-	let game_won_text = text_creator.builder("You won")
-		.with_wrap(10*config.block_size).build();
+	let game_over_text = text_creator.builder("Game over").build();
+	let game_won_text = text_creator.builder("You won").build();
 	
 	let host_start_text = text_creator.builder("Press enter to start game")
 		.with_wrap(window_rect.width() as u32).build();
