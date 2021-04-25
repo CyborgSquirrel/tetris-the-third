@@ -1,4 +1,4 @@
-// #![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 use crate::room::Room;
 use crate::room::RoomCommand;
