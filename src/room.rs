@@ -14,7 +14,7 @@ use crate::MinoController;
 pub struct Room {
 	pub selected_game_mode: GameModeSelection,
 	pub players: Vec<Player>,
-	pub units: Vec<Unit>,
+	#[serde(skip)] pub units: Vec<Unit>,
 	pub commands: VecDeque<crate::unit::UnitCommand>,
 	
 	pub just_added_player: bool,
@@ -54,13 +54,13 @@ impl<'a> Command<'a> for RoomCommand {
 			RoomCommand::StartGame => {
 				room.just_started = true;
 				room.units.clear();
-				let mut configs = (0..4usize).cycle();
+				let mut configs = (0..crate::MAX_PLAYERS).cycle();
 				*state = State::play();
 				let players_len = room.players.len();
 				for (unit_id, player) in izip!(0.., &room.players) {
 					let mut unit = match &player.kind {
-						PlayerKind::Local(_) => Unit::local(room.selected_game_mode.ctor()(), MinoController::new(configs.next().unwrap())),
-						PlayerKind::Network => Unit::network(room.selected_game_mode.ctor()()),
+						PlayerKind::Local(_) => Unit::local(room.selected_game_mode.mode(), MinoController::new(configs.next().unwrap())),
+						PlayerKind::Network => Unit::network(room.selected_game_mode.mode()),
 					};
 					let Unit{kind, base} = &mut unit;
 					

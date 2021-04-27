@@ -4,6 +4,7 @@ use serde::{Serialize,Deserialize};
 use crate::{command::{Command, CommandWrapper}, game, mino_controller::MinoController};
 use crate::mino::Mino;
 use std::time::Duration;
+use std::convert::TryFrom;
 
 use crate::{vec2i,vec2f};
 
@@ -11,6 +12,7 @@ use crate::{vec2i,vec2f};
 pub enum State {
 	Play,
 	LineClear {countdown: Duration},
+	GameOfLife {countdown: Duration},
 	Lose,
 	Win,
 }
@@ -87,9 +89,7 @@ pub enum Kind {
 		rng: LocalMinoRng,
 		mino_controller: MinoController,
 	},
-	Network {
-		rng_queue: VecDeque<Mino>,
-	}
+	Network
 }
 
 impl Kind {
@@ -101,7 +101,8 @@ impl Kind {
 				queue: {
 					let mut queue = VecDeque::with_capacity(5);
 					for _ in 0..5 {
-						queue.push_back(rng.generate());
+						// queue.push_back(rng.generate());
+						queue.push_back(Mino::i());
 					}
 					queue
 				},
@@ -113,18 +114,15 @@ impl Kind {
 
 impl Unit {
 	pub fn local(mode: Mode, mino_controller: MinoController) -> Unit {
-		let kind = Kind::local(mino_controller);
 		Unit {
 			base: Base::new(mode),
-			kind,
+			kind: Kind::local(mino_controller),
 		}
 	}
 	pub fn network(mode: Mode) -> Unit {
 		Unit {
 			base: Base::new(mode),
-			kind: Kind::Network {
-				rng_queue: VecDeque::new(),
-			}
+			kind: Kind::Network,
 		}
 	}
 }
@@ -154,6 +152,7 @@ pub enum Mode {
 	Marathon {level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint {lines_cleared_target: u32},
 	Versus {lines_received: VecDeque<usize>, lines_received_sum: usize, target_unit_id: usize},
+	GameOfLife {count: u32},
 }
 
 impl Mode {
@@ -173,6 +172,11 @@ impl Mode {
 			lines_received: VecDeque::new(),
 			lines_received_sum: 0,
 			target_unit_id: 0,
+		}
+	}
+	pub fn default_game_of_life() -> Mode {
+		Mode::GameOfLife {
+			count: 0,
 		}
 	}
 }
@@ -229,7 +233,8 @@ pub enum UnitCommandKind {
 	RotateLeft, RotateRight,
 	ApplyGravity(i32),
 	Store,
-	ClearLines,
+	PreClearLines, ClearLines,
+	PreGameOfLife, GameOfLife,
 	NextMino(Mino),
 	SendLines(usize), AddLines(usize,usize),
 }
@@ -272,60 +277,113 @@ impl<'a> Command<'a> for UnitCommandInner {
 					let add_mino = g > 0;
 					if add_mino {
 						let can_add = game::mino_fits_in_well(&falling_mino, &base.well);
-						let mut clearable_lines = 0;
-						let mut sendable_lines = 0;
 						if !can_add {
 							base.lose();
 						}else {
 							base.can_store_mino = true;
 							game::add_mino_to_well(&falling_mino, &mut base.well);
 							
-							for (row,clearable) in izip!(base.well.columns_iter(),base.animate_line.iter_mut()) {
-								let mut count = 0;
-								let mut sendable = true;
-								for block in row {
-									count += block.is_some() as u32;
-									sendable &= block.map_or(true, |block|block!=crate::block::Data::GRAY);
-								}
-								if count as usize == base.well.column_len() {
-									clearable_lines += 1;
-									sendable_lines += sendable as usize;
-									*clearable = true;
-								}
-							}
-							
-							if let Mode::Versus {lines_received,..} = &mut base.mode {
-								if let Kind::Local {..} = unit.kind {
-									while let Some(lines) = lines_received.pop_front() {
-										let row = rand::random::<usize>() % base.well.num_rows();
-										append(unit_id, AddLines(lines,row));
-									}
-								}
-							}
-							
-							if clearable_lines > 0 {
-								base.just_cleared_lines = true;
-								base.state = State::LineClear {countdown: Duration::from_secs(0)};
-								base.lines_cleared += clearable_lines;
-								match &mut base.mode {
-									Mode::Marathon {level,lines_before_next_level,..} => {
-										let level_changed = update_level(level, lines_before_next_level, clearable_lines);
-										if level_changed {base.just_changed_level = true}
-									}
-									Mode::Versus {target_unit_id,..} => {
-										if let Kind::Local {..} = unit.kind {
-											append(*target_unit_id, SendLines(sendable_lines));
-										}
-									}
-									_ => {}
-								}
-							}
-							
-							// Is this ok I wonder?
 							if let Kind::Local {rng, ..} = &mut unit.kind {
 								append(unit_id, NextMino(rng.next_mino_centered(&unit.base.well)));
+								append(unit_id, PreClearLines);
+								append(unit_id, PreGameOfLife);
+								println!("hi");
 							}
 						}
+					}
+				}
+			}
+			PreClearLines => {
+				let mut clearable_lines = 0;
+				let mut sendable_lines = 0;
+				for (row,clearable) in izip!(base.well.columns_iter(),base.animate_line.iter_mut()) {
+					let mut count = 0;
+					let mut sendable = true;
+					for block in row {
+						count += block.is_some() as u32;
+						sendable &= block.map_or(true, |block|block!=crate::block::Data::GRAY);
+					}
+					if count as usize == base.well.column_len() {
+						clearable_lines += 1;
+						sendable_lines += sendable as usize;
+						*clearable = true;
+					}
+				}
+				
+				if let Mode::Versus {lines_received,..} = &mut base.mode {
+					if let Kind::Local {..} = unit.kind {
+						while let Some(lines) = lines_received.pop_front() {
+							let row = rand::random::<usize>() % base.well.num_rows();
+							append(unit_id, AddLines(lines,row));
+						}
+					}
+				}
+				
+				if clearable_lines > 0 {
+					base.just_cleared_lines = true;
+					base.state = State::LineClear {countdown: Duration::from_secs(0)};
+					base.lines_cleared += clearable_lines;
+					match &mut base.mode {
+						Mode::Marathon {level,lines_before_next_level,..} => {
+							let level_changed = update_level(level, lines_before_next_level, clearable_lines);
+							if level_changed {base.just_changed_level = true}
+						}
+						Mode::Versus {target_unit_id,..} => {
+							if let Kind::Local {..} = unit.kind {
+								append(*target_unit_id, SendLines(sendable_lines));
+							}
+						}
+						_ => {}
+					}
+				}
+			}
+			ClearLines => {
+				for line in &mut base.animate_line {*line = false}
+				game::try_clear_lines(&mut base.well);
+				match &base.mode {
+					Mode::Marathon {level,level_target,..} =>
+					if *level >= *level_target {base.win()}
+					Mode::Sprint {lines_cleared_target} =>
+					if base.lines_cleared >= *lines_cleared_target {base.win()}
+					_ => {}
+				}
+			}
+			PreGameOfLife => {
+				base.state = State::GameOfLife {countdown: Duration::from_secs(0)};
+				println!("hello");
+			}
+			GameOfLife => {
+				if let Mode::GameOfLife {count} = &mut base.mode {
+					*count += 1;
+					
+					// println!("{:?}", count);
+					
+					if *count % 4 == 0 { //TODO: change me
+						let mut new_well = game::Well::filled_with(None, base.well.num_rows(), base.well.num_columns());
+						let yo = |x: Option<usize>, y: Option<usize>| -> bool {
+							if let (Some(x), Some(y)) = (x, y) {
+								if let Some(block) = base.well.get(x, y) {
+									block.is_some()
+								}else {false}
+							}else {false}
+						};
+						let dx = vec![0, 1, 0, -1];
+						let dy = vec![1, 0, -1, 0];
+						for x in 0..new_well.column_len() as i32 {
+							for y in 0..new_well.row_len() as i32 {
+								let mut count = 0;
+								for (dx, dy) in izip!(&dx, &dy) {
+									let (nx, ny) = (x - *dx, y - *dy);
+									let (nx, ny) = (usize::try_from(nx).ok(), usize::try_from(ny).ok());
+									count += yo(nx, ny) as i32;
+								}
+								let block = &base.well[(x as usize, y as usize)];
+								new_well[(x as usize, y as usize)] =
+									if block.is_some() {if count == 3 {*block} else {None}}
+									else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}}
+							}
+						}
+						base.well = new_well;
 					}
 				}
 			}
@@ -345,18 +403,6 @@ impl<'a> Command<'a> for UnitCommandInner {
 						}
 						unit.base.stored_mino = Some(falling_mino);
 					}
-				}
-			}
-			ClearLines => {
-				for line in &mut base.animate_line {*line = false}
-				game::try_clear_lines(&mut base.well);
-				base.state = State::Play;
-				match &base.mode {
-					Mode::Marathon {level,level_target,..} =>
-					if *level >= *level_target {base.win()}
-					Mode::Sprint {lines_cleared_target} =>
-					if base.lines_cleared >= *lines_cleared_target {base.win()}
-					_ => {}
 				}
 			}
 			NextMino(mino) => {

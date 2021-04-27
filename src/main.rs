@@ -2,16 +2,15 @@
 
 use crate::room::Room;
 use crate::room::RoomCommand;
-use sdl2::{controller::{Axis, Button}, render::{BlendMode, TextureQuery}};
+use sdl2::{controller::{Axis, Button}, image::LoadSurface, render::{BlendMode, TextureQuery}, surface::Surface};
 use sdl2::render::WindowCanvas;
 use sdl2::{event::Event, render::Texture};
 use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
-use std::{collections::{BTreeSet, VecDeque}, iter, net::SocketAddr, time::{Duration, Instant}};
+use std::{collections::{BTreeSet, VecDeque, BTreeMap}, iter, net::SocketAddr, time::{Duration, Instant}};
 use std::thread::sleep;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use std::collections::BTreeMap;
 use config::{InputMethod,Bind,MenuBinds};
 use lazy_static::lazy_static;
 use network::{NetworkState,NetworkCommand};
@@ -41,8 +40,8 @@ use config::Config;
 use unit::{Unit, Mode};
 use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use lenio::LenIO;
-use serde::{Serialize,Deserialize};
-use bincode::{serialize,deserialize};
+use serde::{Serialize, Deserialize};
+use bincode::{serialize, deserialize};
 use mino::Mino;
 use mino_controller::MinoController;
 use ui::{EnumSelect, GameModeSelection, GameLayout, NetworkStateSelection, Pause, PauseSelection, CenteredLayout, TitleSelection};
@@ -279,9 +278,16 @@ fn main() {
 	window.position_centered();
 	if config.borderless {
 		window.borderless();
-	}
-	let window = window.build()
+	};
+	
+	let mut window = window.build()
 		.expect("Failed to create window");
+	
+	let icon = Surface::from_file("gfx/icon.png")
+		.expect("Could not load icon");
+	window.set_icon(icon);
+	
+	let window = window;
 	
 	let mut canvas = window.into_canvas().build()
 		.expect("Failed to create canvas");
@@ -291,7 +297,7 @@ fn main() {
 		.expect("Failed to create event pump");
 	
 	let texture_creator = canvas.texture_creator();
-	let texture = texture_creator.load_texture("gfx/block.png")
+	let texture = texture_creator.load_texture(config.block_path)
 		.expect("Failed to load block texture");
 	
 	let font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", FONT_SIZE)
@@ -329,11 +335,13 @@ fn main() {
 	let marathon_text = text_creator.builder("Marathon").build();
 	let sprint_text = text_creator.builder("Sprint").build();
 	let versus_text = text_creator.builder("Versus").build();
+	let game_of_life_text = text_creator.builder("Game of life").build();
 	let get_game_mode_text = |selected_game_mode: &GameModeSelection|
 		match *selected_game_mode {
 			GameModeSelection::Marathon => &marathon_text,
 			GameModeSelection::Sprint => &sprint_text,
 			GameModeSelection::Versus => &versus_text,
+			GameModeSelection::GameOfLife => &game_of_life_text,
 		};
 	
 	// NETWORK STATE
@@ -386,7 +394,7 @@ fn main() {
 	let mut network_players = 0u32;
 	let mut player_names_text = Vec::<Texture>::new();
 	
-	let block_canvas = block::Canvas::new(&texture, config.block_size);
+	let block_canvas = block::Canvas::new(&texture, config.block_size_tex, config.block_size_draw);
 	
 	let mut state = State::Title;
 	
@@ -731,7 +739,15 @@ fn main() {
 					unit::State::LineClear {countdown} => {
 						*countdown += dpf;
 						if *countdown >= *LINE_CLEAR_DURATION {
+							unit.base.state = unit::State::Play;
 							room.commands.push_back((unit_id, UnitCommandKind::ClearLines).wrap());
+						}
+					}
+					unit::State::GameOfLife {countdown} => {
+						*countdown += dpf;
+						if *countdown >= *LINE_CLEAR_DURATION {
+							unit.base.state = unit::State::Play;
+							room.commands.push_back((unit_id, UnitCommandKind::GameOfLife).wrap());
 						}
 					}
 					unit::State::Lose => {}
@@ -740,7 +756,7 @@ fn main() {
 				
 				let players = room.players.len() as u32;
 				match room.selected_game_mode {
-					GameModeSelection::Marathon | GameModeSelection::Sprint =>
+					GameModeSelection::Marathon | GameModeSelection::Sprint | GameModeSelection::GameOfLife =>
 					if *players_won == players {*over = true}
 					GameModeSelection::Versus =>
 					if *players_lost == players-1 {
@@ -766,7 +782,10 @@ fn main() {
 				
 				while let Some(command) = room.commands.pop_front() {
 					let unit = &mut room.units[command.inner.0];
-					command.execute(&mut network_state, &mut room.commands, unit);
+					if let unit::State::Play = unit.base.state {
+						println!("{:?}", command);
+						command.execute(&mut network_state, &mut room.commands, unit);
+					}
 				}
 				
 				for (unit, lines_cleared_text, level_text, player) in
@@ -903,7 +922,7 @@ fn main() {
 				}
 			}
 			State::Play {pause,..} => {
-				let bs = config.block_size as i32;
+				let bs = config.block_size_draw as i32;
 				let hbs = bs/2;
 				
 				let mut layout = GameLayout {
@@ -1060,7 +1079,6 @@ fn main() {
 					layout.row(height as i32);
 					layout.row_margin(hbs);
 				}
-				
 			}
 		}
 		

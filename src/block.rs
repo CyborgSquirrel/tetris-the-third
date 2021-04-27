@@ -40,10 +40,10 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
-	pub fn new(texture: &'a Texture<'a>, block_size_draw: u32) -> Canvas<'a> {
+	pub fn new(texture: &'a Texture<'a>, block_size_tex: u32, block_size_draw: u32) -> Canvas<'a> {
 		Self {
 			texture,
-			block_size_tex: 24,
+			block_size_tex,
 			block_size_draw,
 		}
 	}

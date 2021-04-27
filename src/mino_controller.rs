@@ -203,7 +203,9 @@ impl MinoController {
 			}
 		}
 		
-		append(UnitCommandKind::ApplyGravity(g));
+		if g != 0 {
+			append(UnitCommandKind::ApplyGravity(g));
+		}
 		
 		if *store {
 			append(UnitCommandKind::Store);

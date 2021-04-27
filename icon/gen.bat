@@ -1,0 +1,1 @@
+magick small.png normal.png ( -clone 1 -filter point -resize 32x32 ) ( -clone 1 -filter point -resize 64x64 ) ( -clone 1 -filter point -resize 128x128 ) ( -clone 1 -filter point -resize 256x256 ) -delete 1 ../gfx/icon.ico && magick normal.png -filter point -resize 96x96 ../gfx/icon.png

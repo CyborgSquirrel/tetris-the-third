@@ -98,16 +98,18 @@ pub enum GameModeSelection {
 	Marathon,
 	Sprint,
 	Versus,
+	GameOfLife,
 }
 
 use crate::unit::Mode;
 impl GameModeSelection {
-	pub fn ctor(&self) -> fn() -> Mode {
+	pub fn mode(&self) -> Mode {
 		use GameModeSelection::*;
 		match *self {
-			Marathon => Mode::default_marathon,
-			Sprint => Mode::default_sprint,
-			Versus => Mode::default_versus,
+			Marathon => Mode::default_marathon(),
+			Sprint => Mode::default_sprint(),
+			Versus => Mode::default_versus(),
+			GameOfLife => Mode::default_game_of_life(),
 		}
 	}
 }
