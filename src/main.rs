@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::room::Room;
 use crate::room::RoomCommand;
@@ -239,7 +239,7 @@ fn load_saved_unit() -> Option<Unit> {
 
 lazy_static! {
 	static ref SOFTDROP_DURATION: Duration = Duration::from_secs_f64(0.05);
-	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.1);
+	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(2.1);
 }
 
 const FONT_SIZE: u16 = 32;
@@ -394,7 +394,7 @@ fn main() {
 	let mut network_players = 0u32;
 	let mut player_names_text = Vec::<Texture>::new();
 	
-	let block_canvas = block::Canvas::new(&texture, config.block_size_tex, config.block_size_draw);
+	let mut block_canvas = block::Canvas::new(texture, config.block_size_tex, config.block_size_draw);
 	
 	let mut state = State::Title;
 	
@@ -414,7 +414,7 @@ fn main() {
 	
 	let mut adding_player = false;
 	
-	let mut room = Room::default();
+	let mut room = Room::new();
 	let mut commands = VecDeque::new();
 	
 	let mut player = Player::default();
@@ -740,14 +740,18 @@ fn main() {
 						*countdown += dpf;
 						if *countdown >= *LINE_CLEAR_DURATION {
 							unit.base.state = unit::State::Play;
-							room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::ClearLines));
+							if let unit::Kind::Local {..} = unit.kind {
+								room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::ClearLines));
+							}
 						}
 					}
 					unit::State::GameOfLife {countdown} => {
 						*countdown += dpf;
 						if *countdown >= *LINE_CLEAR_DURATION {
 							unit.base.state = unit::State::Play;
-							room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::GameOfLife));
+							if let unit::Kind::Local {..} = unit.kind {
+								room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::GameOfLife));
+							}
 						}
 					}
 					unit::State::Lose => {}
@@ -775,7 +779,7 @@ fn main() {
 				for (unit_id, unit) in izip!(0.., &mut room.units) {
 					if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
 						if let unit::State::Play = unit.base.state {
-							mino_controller.append_commands(unit_id, &mut room.commands[unit_id], &config.players, dpf);
+							mino_controller.append_commands(&mut room.commands[unit_id], &config.players, dpf);
 						}
 					}
 				}
@@ -794,6 +798,7 @@ fn main() {
 							if let unit::State::Play = unit.base.state {
 								keep_looping = true;
 								let command = command.map(|c|(unit_id, c));
+								// println!("{:?}", command);
 								let append = |c: command::CommandWrapper<unit::UnitCommandInner>|commands[c.inner.0].push_back(c.map(|c|c.1));
 								command.execute(&mut network_state, append, unit);
 							}
@@ -864,16 +869,16 @@ fn main() {
 				draw_same_scale(&mut canvas, &game_text, rect);
 				select(&mut canvas, rect, matches!(title_selection, TitleSelection::NewGame));
 				
+				layout.row(height as i32);
+				layout.row_margin(15);
+				
+				let game_mode_text = get_game_mode_text(&room.selected_game_mode);
+				let (width, height) = get_texture_dim(&game_mode_text);
+				let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
+				draw_same_scale(&mut canvas, &game_mode_text, rect);
+				select(&mut canvas, rect, matches!(title_selection, TitleSelection::GameMode));
+				
 				if !quick_game {
-					layout.row(height as i32);
-					layout.row_margin(15);
-					
-					let game_mode_text = get_game_mode_text(&room.selected_game_mode);
-					let (width, height) = get_texture_dim(&game_mode_text);
-					let rect = Rect::new(layout.centered_x(width), layout.y, width, height);
-					draw_same_scale(&mut canvas, &game_mode_text, rect);
-					select(&mut canvas, rect, matches!(title_selection, TitleSelection::GameMode));
-					
 					layout.row(height as i32);
 					layout.row_margin(15);
 					
@@ -946,7 +951,7 @@ fn main() {
 				
 				for (unit, lines_cleared_text, level_text)
 				in izip!(&mut room.units, &lines_cleared_text, &level_text) {
-					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, ..}, kind} = unit;
+					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, animate_block, ..}, kind} = unit;
 					
 					layout.row_margin(hbs);
 					
@@ -993,7 +998,7 @@ fn main() {
 						well.num_columns() as u32 * bs as u32,
 					);
 					
-					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line);
+					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line, animate_block);
 					if let Some(falling_mino) = falling_mino {
 						let shadow_mino = game::create_shadow_mino(falling_mino, &well);
 						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);

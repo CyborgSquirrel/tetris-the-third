@@ -2,9 +2,9 @@
 width = 700
 height = 700
 # borderless = false
-block_size_draw = 30
-block_size_tex = 24
-block_path = "gfx/block.png"
+block_size_draw = 32
+block_size_tex = 16
+block_path = "gfx/minecraft_drip.png"
 
 [[players]]
 move_prepeat_duration = 0.15

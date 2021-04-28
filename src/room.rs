@@ -24,6 +24,12 @@ pub struct Room {
 }
 
 impl Room {
+	pub fn new() -> Self {
+		Self {
+			commands: std::iter::from_fn(||Some(VecDeque::new())).take(crate::MAX_PLAYERS).collect(),
+			..Room::default()
+		}
+	}
 	pub fn reset_flags(&mut self) {
 		self.just_added_player = false;
 		self.just_initted = false;
@@ -54,7 +60,6 @@ impl<'a> Command<'a> for RoomCommand {
 			RoomCommand::StartGame => {
 				room.just_started = true;
 				room.units.clear();
-				room.commands.clear();
 				let mut configs = (0..crate::MAX_PLAYERS).cycle();
 				*state = State::play();
 				let players_len = room.players.len();
@@ -69,10 +74,7 @@ impl<'a> Command<'a> for RoomCommand {
 						*target_unit_id = (unit_id+1usize).rem_euclid(players_len);
 					}
 					
-					room.commands.push(VecDeque::new());
-					
-					if let Kind::Local{rng,..} = kind {
-						// room.commands.push_back((unit_id, UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))).wrap());
+					if let Kind::Local {rng, ..} = kind {
 						room.commands[unit_id].push_back(CommandWrapper::new(UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))));
 					}
 					

@@ -1,4 +1,4 @@
-use crate::{command::Command, config::{self, InputMethod}};
+use crate::config::{self, InputMethod};
 use std::{collections::VecDeque, time::Duration};
 use sdl2::event::Event;
 use crate::unit::{get_level_fall_duration,UnitCommandKind};
@@ -120,7 +120,7 @@ impl MinoController {
 			*store = true;
 		}
 	}
-	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::command::CommandWrapper<crate::unit::UnitCommandKind>>, config: &Vec<config::Player>, dpf: Duration) {
+	pub fn append_commands(&mut self, queue: &mut VecDeque<crate::command::CommandWrapper<crate::unit::UnitCommandKind>>, config: &Vec<config::Player>, dpf: Duration) {
 		let MinoController {
 			move_direction,
 			move_state,

@@ -17,6 +17,11 @@ pub enum State {
 	Win,
 }
 
+pub struct GameOfLifeAnimation {
+	pub animate_block: array2d::Array2D<Option<crate::block::Data>>,
+	pub countdown: Duration,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Unit {
 	pub base: Base,
@@ -26,8 +31,10 @@ pub struct Unit {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Base {
 	pub well: game::Well,
-	pub animate_line: Vec<bool>,
 	pub state: State,
+	
+	pub animate_line: Vec<bool>,
+	pub animate_block: array2d::Array2D<Option<crate::block::Data>>,
 	
 	pub lines_cleared: u32,
 	pub mode: Mode,
@@ -46,7 +53,6 @@ pub struct Base {
 impl Base {
 	pub fn new(mode: Mode) -> Self {
 		Base {
-			animate_line: vec![false; 20],
 			state: State::Play,
 			lines_cleared: 0,
 			mode,
@@ -54,6 +60,9 @@ impl Base {
 			stored_mino: None,
 			falling_mino: None,
 			well: game::Well::filled_with(None, 10, 20),
+			
+			animate_line: vec![false; 20],
+			animate_block: array2d::Array2D::filled_with(None, 10, 20),
 			
 			just_changed_mino: false,
 			just_cleared_lines: false,
@@ -285,7 +294,9 @@ impl<'a> Command<'a> for UnitCommandInner {
 							if let Kind::Local {rng, ..} = &mut unit.kind {
 								append(unit_id, NextMino(rng.next_mino_centered(&unit.base.well)));
 								append(unit_id, PreClearLines);
-								append(unit_id, PreGameOfLife);
+								if let Mode::GameOfLife {..} = &unit.base.mode {
+									append(unit_id, PreGameOfLife);
+								}
 							}
 						}
 					}
@@ -294,7 +305,7 @@ impl<'a> Command<'a> for UnitCommandInner {
 			PreClearLines => {
 				let mut clearable_lines = 0;
 				let mut sendable_lines = 0;
-				for (row,clearable) in izip!(base.well.columns_iter(),base.animate_line.iter_mut()) {
+				for (row, clearable) in izip!(base.well.columns_iter(), base.animate_line.iter_mut()) {
 					let mut count = 0;
 					let mut sendable = true;
 					for block in row {
@@ -347,38 +358,39 @@ impl<'a> Command<'a> for UnitCommandInner {
 				}
 			}
 			PreGameOfLife => {
-				base.state = State::GameOfLife {countdown: Duration::from_secs(0)};
-			}
-			GameOfLife => {
 				if let Mode::GameOfLife {count} = &mut base.mode {
 					*count += 1;
-					
-					if *count % 4 == 0 { //TODO: change me
-						let mut new_well = game::Well::filled_with(None, base.well.num_rows(), base.well.num_columns());
-						let yo = |x: Option<usize>, y: Option<usize>| -> bool {
-							if let (Some(x), Some(y)) = (x, y) {
-								if let Some(block) = base.well.get(x, y) {
-									block.is_some()
-								}else {false}
-							}else {false}
-						};
+					if *count % 5 == 0 { //TODO: change me
+						base.state = State::GameOfLife {countdown: Duration::from_secs(0)};
 						let dx = vec![0, 1, 0, -1];
 						let dy = vec![1, 0, -1, 0];
-						for x in 0..new_well.column_len() as i32 {
-							for y in 0..new_well.row_len() as i32 {
+						for x in 0..base.well.column_len() as i32 {
+							for y in 0..base.well.row_len() as i32 {
 								let mut count = 0;
 								for (dx, dy) in izip!(&dx, &dy) {
-									let (nx, ny) = (x - *dx, y - *dy);
-									let (nx, ny) = (usize::try_from(nx).ok(), usize::try_from(ny).ok());
-									count += yo(nx, ny) as i32;
+									let (x, y) = (x - *dx, y - *dy);
+									let (x, y) = (usize::try_from(x).ok(), usize::try_from(y).ok());
+									if let (Some(x), Some(y)) = (x, y) {
+										if let Some(Some(_)) = base.well.get(x, y) {
+											count += 1;
+										}
+									}
 								}
-								let block = &base.well[(x as usize, y as usize)];
-								new_well[(x as usize, y as usize)] =
-									if block.is_some() {if count == 3 {*block} else {None}}
-									else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}}
+								
+								let (ux, uy) = (x as usize, y as usize);
+								base.animate_block[(ux, uy)] = if let Some(_) = base.well[(ux, uy)] {if count != 3 {Some(crate::block::Data::BACKGROUND)} else {None}} else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}};
 							}
 						}
-						base.well = new_well;
+					}
+				}
+			}
+			GameOfLife => {
+				for x in 0..base.well.column_len() {
+					for y in 0..base.well.row_len() {
+						let p = (x,y);
+						if let Some(block) = base.animate_block[p].take() {
+							base.well[p] = if block != crate::block::Data::BACKGROUND {Some(block)} else {None};
+						}
 					}
 				}
 			}

@@ -34,13 +34,13 @@ use sdl2::rect::Rect;
 use sdl2::render::{Texture, WindowCanvas};
 
 pub struct Canvas<'a> {
-	texture: &'a Texture<'a>,
+	texture: Texture<'a>,
 	block_size_tex: u32,
 	block_size_draw: u32,
 }
 
 impl<'a> Canvas<'a> {
-	pub fn new(texture: &'a Texture<'a>, block_size_tex: u32, block_size_draw: u32) -> Canvas<'a> {
+	pub fn new(texture: Texture<'a>, block_size_tex: u32, block_size_draw: u32) -> Canvas<'a> {
 		Self {
 			texture,
 			block_size_tex,
@@ -87,17 +87,26 @@ impl<'a> Canvas<'a> {
 			self.draw_block(canvas, origin, block, data);
 		}
 	}
-	pub fn draw_well(&self, canvas: &mut WindowCanvas, origin: vec2i, well: &Well, animate_line: &Vec<bool>) {
+	pub fn draw_well(
+		&mut self, canvas: &mut WindowCanvas, origin: vec2i, well: &Well,
+		animate_line: &Vec<bool>, animate_block: &array2d::Array2D<Option<Data>>
+	) {
 		for (y, animate_line) in (0..well.row_len()).zip(animate_line.iter()) {
 			for x in 0..well.column_len() {
 				if let Some(data) = well[(x,y)] {
-					if !animate_line {
-						self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &data);
-					}else{
+					if *animate_line {
 						self.draw_flash(canvas, origin, &vec2i::new(x as i32, y as i32));
+					}else {
+						self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &data);
 					}
 				}else {
 					self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &Data::BACKGROUND);
+				}
+				
+				if let Some(data) = animate_block[(x,y)] {
+					self.texture.set_alpha_mod(127);
+					self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &data);
+					self.texture.set_alpha_mod(255);
 				}
 			}
 		}
