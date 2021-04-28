@@ -685,7 +685,7 @@ fn main() {
 				NetworkCommand::RoomCommand(command) =>
 				commands.push_back(command),
 				NetworkCommand::UnitCommand(command) =>
-				room.commands.push_back(command),
+				room.commands[command.inner.0].push_back(command.map(|c|c.1)),
 			}
 		}
 		
@@ -709,7 +709,7 @@ fn main() {
 		
 		// @update
 		while let Some(command) = commands.pop_front() {
-			command.execute(&mut network_state, &mut commands, (&mut room, &mut state));
+			command.execute(&mut network_state, |c|commands.push_back(c), (&mut room, &mut state));
 			if room.just_added_player {
 				player_names_text.push(text_creator.builder(&room.players.last().unwrap().name).build());
 			}
@@ -740,14 +740,14 @@ fn main() {
 						*countdown += dpf;
 						if *countdown >= *LINE_CLEAR_DURATION {
 							unit.base.state = unit::State::Play;
-							room.commands.push_back((unit_id, UnitCommandKind::ClearLines).wrap());
+							room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::ClearLines));
 						}
 					}
 					unit::State::GameOfLife {countdown} => {
 						*countdown += dpf;
 						if *countdown >= *LINE_CLEAR_DURATION {
 							unit.base.state = unit::State::Play;
-							room.commands.push_back((unit_id, UnitCommandKind::GameOfLife).wrap());
+							room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::GameOfLife));
 						}
 					}
 					unit::State::Lose => {}
@@ -775,16 +775,29 @@ fn main() {
 				for (unit_id, unit) in izip!(0.., &mut room.units) {
 					if let unit::Kind::Local {mino_controller,..} = &mut unit.kind {
 						if let unit::State::Play = unit.base.state {
-							mino_controller.append_commands(unit_id, &mut room.commands, &config.players, dpf);
+							mino_controller.append_commands(unit_id, &mut room.commands[unit_id], &config.players, dpf);
 						}
 					}
 				}
 				
-				while let Some(command) = room.commands.pop_front() {
-					let unit = &mut room.units[command.inner.0];
-					if let unit::State::Play = unit.base.state {
-						println!("{:?}", command);
-						command.execute(&mut network_state, &mut room.commands, unit);
+				// We loop as long as there are new commands
+				let mut keep_looping = true;
+				while keep_looping {
+					keep_looping = false;
+					for (unit_id, unit) in izip!(0usize.., &mut room.units) {
+						let commands = &mut room.commands;
+						
+						// This while loop is ugly. Refactor it when this
+						// https://github.com/rust-lang/rust/issues/53667 gets added
+						while !commands[unit_id].is_empty() && matches!(unit.base.state, unit::State::Play) {
+							let command = commands[unit_id].pop_front().unwrap();
+							if let unit::State::Play = unit.base.state {
+								keep_looping = true;
+								let command = command.map(|c|(unit_id, c));
+								let append = |c: command::CommandWrapper<unit::UnitCommandInner>|commands[c.inner.0].push_back(c.map(|c|c.1));
+								command.execute(&mut network_state, append, unit);
+							}
+						}
 					}
 				}
 				

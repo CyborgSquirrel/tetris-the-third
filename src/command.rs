@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -18,12 +16,19 @@ impl<'a, T> CommandWrapper<T> {
 impl<'a, T> CommandWrapper<T> where
 T: Command<'a>,
 CommandWrapper<T>: Into<crate::network::NetworkCommand>+Clone {
-	pub fn execute(self, network_state: &mut crate::network::NetworkState, queue: &mut VecDeque<Self>, params: T::Params) {
+	pub fn execute<F>(self, network_state: &mut crate::network::NetworkState, mut append: F, params: T::Params)
+	where F: FnMut(Self) {
 		let original = self.original;
 		if original {
 			network_state.broadcast(&self);
 		}
-		self.inner.execute(|inner|queue.push_back(Self{original,inner}), params);
+		self.inner.execute(|inner|append(Self {original, inner}), params);
+	}
+}
+
+impl<T> CommandWrapper<T> {
+	pub fn map<F,U>(self, f: F) -> CommandWrapper<U> where F: FnOnce(T) -> U {
+		CommandWrapper {inner: f(self.inner), original: self.original}
 	}
 }
 

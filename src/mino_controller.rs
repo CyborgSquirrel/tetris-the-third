@@ -120,7 +120,7 @@ impl MinoController {
 			*store = true;
 		}
 	}
-	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::unit::UnitCommand>, config: &Vec<config::Player>, dpf: Duration) {
+	pub fn append_commands(&mut self, unit_id: usize, queue: &mut VecDeque<crate::command::CommandWrapper<crate::unit::UnitCommandKind>>, config: &Vec<config::Player>, dpf: Duration) {
 		let MinoController {
 			move_direction,
 			move_state,
@@ -134,7 +134,7 @@ impl MinoController {
 			..
 		} = self;
 		
-		let mut append = |command|queue.push_back((unit_id,command).wrap());
+		let mut append = |command|queue.push_back(crate::command::CommandWrapper::new(command));
 		let move_repeat_duration = &config[*config_id].move_repeat_duration;
 		let move_prepeat_duration = &config[*config_id].move_prepeat_duration;
 		

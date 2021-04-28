@@ -101,8 +101,7 @@ impl Kind {
 				queue: {
 					let mut queue = VecDeque::with_capacity(5);
 					for _ in 0..5 {
-						// queue.push_back(rng.generate());
-						queue.push_back(Mino::i());
+						queue.push_back(rng.generate());
 					}
 					queue
 				},
@@ -287,7 +286,6 @@ impl<'a> Command<'a> for UnitCommandInner {
 								append(unit_id, NextMino(rng.next_mino_centered(&unit.base.well)));
 								append(unit_id, PreClearLines);
 								append(unit_id, PreGameOfLife);
-								println!("hi");
 							}
 						}
 					}
@@ -350,13 +348,10 @@ impl<'a> Command<'a> for UnitCommandInner {
 			}
 			PreGameOfLife => {
 				base.state = State::GameOfLife {countdown: Duration::from_secs(0)};
-				println!("hello");
 			}
 			GameOfLife => {
 				if let Mode::GameOfLife {count} = &mut base.mode {
 					*count += 1;
-					
-					// println!("{:?}", count);
 					
 					if *count % 4 == 0 { //TODO: change me
 						let mut new_well = game::Well::filled_with(None, base.well.num_rows(), base.well.num_columns());

@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::{Player, State, command::Command, ui::GameModeSelection, unit::Unit};
+use crate::{Player, State, command::{Command, CommandWrapper}, ui::GameModeSelection, unit::Unit};
 use itertools::izip;
 use serde::{Serialize, Deserialize};
 
@@ -15,7 +15,7 @@ pub struct Room {
 	pub selected_game_mode: GameModeSelection,
 	pub players: Vec<Player>,
 	#[serde(skip)] pub units: Vec<Unit>,
-	pub commands: VecDeque<crate::unit::UnitCommand>,
+	pub commands: Vec<VecDeque<CommandWrapper<crate::unit::UnitCommandKind>>>,
 	
 	pub just_added_player: bool,
 	pub just_initted: bool,
@@ -54,6 +54,7 @@ impl<'a> Command<'a> for RoomCommand {
 			RoomCommand::StartGame => {
 				room.just_started = true;
 				room.units.clear();
+				room.commands.clear();
 				let mut configs = (0..crate::MAX_PLAYERS).cycle();
 				*state = State::play();
 				let players_len = room.players.len();
@@ -62,14 +63,17 @@ impl<'a> Command<'a> for RoomCommand {
 						PlayerKind::Local(_) => Unit::local(room.selected_game_mode.mode(), MinoController::new(configs.next().unwrap())),
 						PlayerKind::Network => Unit::network(room.selected_game_mode.mode()),
 					};
-					let Unit{kind, base} = &mut unit;
+					let Unit {kind, base} = &mut unit;
 					
 					if let Mode::Versus {target_unit_id,..} = &mut base.mode {
 						*target_unit_id = (unit_id+1usize).rem_euclid(players_len);
 					}
 					
+					room.commands.push(VecDeque::new());
+					
 					if let Kind::Local{rng,..} = kind {
-						room.commands.push_back((unit_id, UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))).wrap());
+						// room.commands.push_back((unit_id, UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))).wrap());
+						room.commands[unit_id].push_back(CommandWrapper::new(UnitCommandKind::NextMino(rng.next_mino_centered(&base.well))));
 					}
 					
 					room.units.push(unit);
