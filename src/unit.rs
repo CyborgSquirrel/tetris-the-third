@@ -11,15 +11,33 @@ use crate::{vec2i,vec2f};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum State {
 	Play,
-	LineClear {countdown: Duration},
-	GameOfLife {countdown: Duration},
+	Animation {countdown: Duration},
 	Lose,
 	Win,
 }
 
-pub struct GameOfLifeAnimation {
-	pub animate_block: array2d::Array2D<Option<crate::block::Data>>,
-	pub countdown: Duration,
+// Game of life animation
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GOLAnimation {
+	pub animate_block: array2d::Array2D<Option<crate::block::Data>>
+}
+impl GOLAnimation {
+	fn new(num_rows: usize, num_columns: usize) -> Self {
+		GOLAnimation {
+			animate_block: array2d::Array2D::filled_with(None, num_rows, num_columns)
+		}
+	}
+}
+
+// Line clear animation
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct LCAnimation {
+	pub animate_line: Vec<bool>,
+}
+impl LCAnimation {
+	fn new(num: usize) -> Self {
+		LCAnimation {animate_line: vec![false; num]}
+	}
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -33,8 +51,8 @@ pub struct Base {
 	pub well: game::Well,
 	pub state: State,
 	
-	pub animate_line: Vec<bool>,
-	pub animate_block: array2d::Array2D<Option<crate::block::Data>>,
+	pub gol_animation: Option<GOLAnimation>,
+	pub lc_animation: Option<LCAnimation>,
 	
 	pub lines_cleared: u32,
 	pub mode: Mode,
@@ -61,8 +79,8 @@ impl Base {
 			falling_mino: None,
 			well: game::Well::filled_with(None, 10, 20),
 			
-			animate_line: vec![false; 20],
-			animate_block: array2d::Array2D::filled_with(None, 10, 20),
+			gol_animation: None,
+			lc_animation: None,
 			
 			just_changed_mino: false,
 			just_cleared_lines: false,
@@ -241,8 +259,8 @@ pub enum UnitCommandKind {
 	RotateLeft, RotateRight,
 	ApplyGravity(i32),
 	Store,
-	PreClearLines, ClearLines,
-	PreGameOfLife, GameOfLife,
+	AnimClearLines, ClearLines,
+	AnimGameOfLife, GameOfLife,
 	NextMino(Mino),
 	SendLines(usize), AddLines(usize,usize),
 }
@@ -292,20 +310,23 @@ impl<'a> Command<'a> for UnitCommandInner {
 							game::add_mino_to_well(&falling_mino, &mut base.well);
 							
 							if let Kind::Local {rng, ..} = &mut unit.kind {
-								append(unit_id, NextMino(rng.next_mino_centered(&unit.base.well)));
-								append(unit_id, PreClearLines);
-								if let Mode::GameOfLife {..} = &unit.base.mode {
-									append(unit_id, PreGameOfLife);
+								append(unit_id, NextMino(rng.next_mino_centered(&base.well)));
+								append(unit_id, AnimClearLines);
+								append(unit_id, ClearLines);
+								if let Mode::GameOfLife {..} = base.mode {
+									append(unit_id, AnimGameOfLife);
+									append(unit_id, GameOfLife);
 								}
 							}
 						}
 					}
 				}
 			}
-			PreClearLines => {
+			AnimClearLines => {
 				let mut clearable_lines = 0;
 				let mut sendable_lines = 0;
-				for (row, clearable) in izip!(base.well.columns_iter(), base.animate_line.iter_mut()) {
+				let mut lc_animation = LCAnimation::new(20);
+				for (row, clearable) in izip!(base.well.columns_iter(), lc_animation.animate_line.iter_mut()) {
 					let mut count = 0;
 					let mut sendable = true;
 					for block in row {
@@ -330,7 +351,8 @@ impl<'a> Command<'a> for UnitCommandInner {
 				
 				if clearable_lines > 0 {
 					base.just_cleared_lines = true;
-					base.state = State::LineClear {countdown: Duration::from_secs(0)};
+					base.state = State::Animation {countdown: Duration::from_secs(0)};
+					base.lc_animation = Some(lc_animation);
 					base.lines_cleared += clearable_lines;
 					match &mut base.mode {
 						Mode::Marathon {level,lines_before_next_level,..} => {
@@ -347,7 +369,7 @@ impl<'a> Command<'a> for UnitCommandInner {
 				}
 			}
 			ClearLines => {
-				for line in &mut base.animate_line {*line = false}
+				base.lc_animation = None;
 				game::try_clear_lines(&mut base.well);
 				match &base.mode {
 					Mode::Marathon {level,level_target,..} =>
@@ -357,11 +379,12 @@ impl<'a> Command<'a> for UnitCommandInner {
 					_ => {}
 				}
 			}
-			PreGameOfLife => {
+			AnimGameOfLife => {
 				if let Mode::GameOfLife {count} = &mut base.mode {
 					*count += 1;
 					if *count % 5 == 0 { //TODO: change me
-						base.state = State::GameOfLife {countdown: Duration::from_secs(0)};
+						base.state = State::Animation {countdown: Duration::from_secs(0)};
+						let mut gol_animation = GOLAnimation::new(10, 20);
 						let dx = vec![0, 1, 0, -1];
 						let dy = vec![1, 0, -1, 0];
 						for x in 0..base.well.column_len() as i32 {
@@ -378,18 +401,21 @@ impl<'a> Command<'a> for UnitCommandInner {
 								}
 								
 								let (ux, uy) = (x as usize, y as usize);
-								base.animate_block[(ux, uy)] = if let Some(_) = base.well[(ux, uy)] {if count != 3 {Some(crate::block::Data::BACKGROUND)} else {None}} else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}};
+								gol_animation.animate_block[(ux, uy)] = if let Some(_) = base.well[(ux, uy)] {if count != 3 {Some(crate::block::Data::BACKGROUND)} else {None}} else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}};
 							}
 						}
+						base.gol_animation = Some(gol_animation);
 					}
 				}
 			}
 			GameOfLife => {
-				for x in 0..base.well.column_len() {
-					for y in 0..base.well.row_len() {
-						let p = (x,y);
-						if let Some(block) = base.animate_block[p].take() {
-							base.well[p] = if block != crate::block::Data::BACKGROUND {Some(block)} else {None};
+				if let Some(mut gol_animation) = base.gol_animation.take() {
+					for x in 0..base.well.column_len() {
+						for y in 0..base.well.row_len() {
+							let p = (x,y);
+							if let Some(block) = gol_animation.animate_block[p].take() {
+								base.well[p] = if block != crate::block::Data::BACKGROUND {Some(block)} else {None};
+							}
 						}
 					}
 				}

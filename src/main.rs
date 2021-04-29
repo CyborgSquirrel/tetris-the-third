@@ -15,7 +15,6 @@ use config::{InputMethod,Bind,MenuBinds};
 use lazy_static::lazy_static;
 use network::{NetworkState,NetworkCommand};
 use command::Command;
-use unit::UnitCommandKind;
 
 use itertools::izip;
 
@@ -239,7 +238,8 @@ fn load_saved_unit() -> Option<Unit> {
 
 lazy_static! {
 	static ref SOFTDROP_DURATION: Duration = Duration::from_secs_f64(0.05);
-	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(2.1);
+	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.1);
+	static ref GAME_OF_LIFE_DURATION: Duration = Duration::from_secs_f64(0.25);
 }
 
 const FONT_SIZE: u16 = 32;
@@ -708,6 +708,8 @@ fn main() {
 		}
 		
 		// @update
+		
+		// ROOM
 		while let Some(command) = commands.pop_front() {
 			command.execute(&mut network_state, |c|commands.push_back(c), (&mut room, &mut state));
 			if room.just_added_player {
@@ -731,31 +733,21 @@ fn main() {
 			room.reset_flags();
 		}
 		
+		// UNITS
 		if let State::Play {over,pause,players_lost,players_won,winner,..} = &mut state {
 			for unit_id in 0..room.units.len() {
 				let unit = &mut room.units[unit_id];
-				match &mut unit.base.state {
-					unit::State::Play => {}
-					unit::State::LineClear {countdown} => {
-						*countdown += dpf;
+				if let unit::State::Animation {countdown} = &mut unit.base.state {
+					*countdown += dpf;
+					if unit.base.lc_animation.is_some() {
 						if *countdown >= *LINE_CLEAR_DURATION {
 							unit.base.state = unit::State::Play;
-							if let unit::Kind::Local {..} = unit.kind {
-								room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::ClearLines));
-							}
 						}
-					}
-					unit::State::GameOfLife {countdown} => {
-						*countdown += dpf;
-						if *countdown >= *LINE_CLEAR_DURATION {
+					}else if unit.base.gol_animation.is_some() {
+						if *countdown >= *GAME_OF_LIFE_DURATION {
 							unit.base.state = unit::State::Play;
-							if let unit::Kind::Local {..} = unit.kind {
-								room.commands[unit_id].push_back(command::CommandWrapper::new(UnitCommandKind::GameOfLife));
-							}
 						}
 					}
-					unit::State::Lose => {}
-					unit::State::Win => {}
 				}
 				
 				let players = room.players.len() as u32;
@@ -794,14 +786,12 @@ fn main() {
 						// This while loop is ugly. Refactor it when this
 						// https://github.com/rust-lang/rust/issues/53667 gets added
 						while !commands[unit_id].is_empty() && matches!(unit.base.state, unit::State::Play) {
+							keep_looping = true;
 							let command = commands[unit_id].pop_front().unwrap();
-							if let unit::State::Play = unit.base.state {
-								keep_looping = true;
-								let command = command.map(|c|(unit_id, c));
-								// println!("{:?}", command);
-								let append = |c: command::CommandWrapper<unit::UnitCommandInner>|commands[c.inner.0].push_back(c.map(|c|c.1));
-								command.execute(&mut network_state, append, unit);
-							}
+							let command = command.map(|c|(unit_id, c));
+							// println!("{:?}", command);
+							let append = |c: command::CommandWrapper<unit::UnitCommandInner>|commands[c.inner.0].push_back(c.map(|c|c.1));
+							command.execute(&mut network_state, append, unit);
 						}
 					}
 				}
@@ -951,7 +941,7 @@ fn main() {
 				
 				for (unit, lines_cleared_text, level_text)
 				in izip!(&mut room.units, &lines_cleared_text, &level_text) {
-					let Unit {base: unit::Base {stored_mino, falling_mino, well, animate_line, state, mode, animate_block, ..}, kind} = unit;
+					let Unit {base: unit::Base {stored_mino, falling_mino, well, state, mode, gol_animation, lc_animation, ..}, kind} = unit;
 					
 					layout.row_margin(hbs);
 					
@@ -998,7 +988,9 @@ fn main() {
 						well.num_columns() as u32 * bs as u32,
 					);
 					
-					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, animate_line, animate_block);
+					let countdown = if let unit::State::Animation {countdown} = state {*countdown} else {Duration::from_secs(0)};
+					
+					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, &lc_animation, &gol_animation, countdown);
 					if let Some(falling_mino) = falling_mino {
 						let shadow_mino = game::create_shadow_mino(falling_mino, &well);
 						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);

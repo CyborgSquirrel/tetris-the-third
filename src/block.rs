@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{vec2i,vec2f};
 use serde::{Serialize,Deserialize};
 
@@ -89,24 +91,29 @@ impl<'a> Canvas<'a> {
 	}
 	pub fn draw_well(
 		&mut self, canvas: &mut WindowCanvas, origin: vec2i, well: &Well,
-		animate_line: &Vec<bool>, animate_block: &array2d::Array2D<Option<Data>>
+		lc_animation: &Option<crate::unit::LCAnimation>, gol_animation: &Option<crate::unit::GOLAnimation>,
+		countdown: Duration,
 	) {
-		for (y, animate_line) in (0..well.row_len()).zip(animate_line.iter()) {
+		let f = countdown.as_secs_f64() / (if lc_animation.is_some() {*crate::LINE_CLEAR_DURATION} else {*crate::GAME_OF_LIFE_DURATION}).as_secs_f64();
+		for y in 0..well.row_len() {
 			for x in 0..well.column_len() {
-				if let Some(data) = well[(x,y)] {
-					if *animate_line {
-						self.draw_flash(canvas, origin, &vec2i::new(x as i32, y as i32));
-					}else {
-						self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &data);
+				let p = vec2i!(x as i32, y as i32);
+				if let Some(lc_animation) = lc_animation {
+					if let Some(data) = well[(x,y)] {
+						if lc_animation.animate_line[y] {self.draw_flash(canvas, origin, &p)}
+						else {self.draw_block(canvas, origin, &p, &data)}
+					}else {self.draw_block(canvas, origin, &p, &Data::BACKGROUND)}
+				}else if let Some(gol_animation) = gol_animation {
+					if let Some(data) = well[(x,y)] {self.draw_block(canvas, origin, &p, &data)}
+					else {self.draw_block(canvas, origin, &p, &Data::BACKGROUND)}
+					if let Some(data) = gol_animation.animate_block[(x,y)] {
+						self.texture.set_alpha_mod((255f64*f) as u8);
+						self.draw_block(canvas, origin, &p, &data);
+						self.texture.set_alpha_mod(255);
 					}
 				}else {
-					self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &Data::BACKGROUND);
-				}
-				
-				if let Some(data) = animate_block[(x,y)] {
-					self.texture.set_alpha_mod(127);
-					self.draw_block(canvas, origin, &vec2i::new(x as i32, y as i32), &data);
-					self.texture.set_alpha_mod(255);
+					if let Some(data) = well[(x,y)] {self.draw_block(canvas, origin, &p, &data)}
+					else {self.draw_block(canvas, origin, &p, &Data::BACKGROUND)}
 				}
 			}
 		}
