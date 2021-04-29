@@ -1,6 +1,6 @@
 use toml::Value;
 use sdl2::{event::Event, keyboard::Keycode};
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, path::{Path, PathBuf}};
 use std::io::prelude::*;
 use std::time::Duration;
 use serde::{Serialize,Deserialize};
@@ -177,9 +177,11 @@ pub struct Config {
 	pub borderless: bool,
 	pub block_size_tex: u32,
 	pub block_size_draw: u32,
+	pub line_clear_frames: u32,
 	pub players: Vec<Player>,
 	pub binds: Vec<PlayerBinds>,
 	pub block_path: PathBuf,
+	pub line_clear_path: PathBuf,
 }
 
 impl Config {
@@ -208,6 +210,8 @@ impl Config {
 		let block_size_tex = toml.get("block_size_tex").and_then(Value::as_integer).unwrap_or(24) as u32;
 		let block_size_draw = toml.get("block_size_draw").and_then(Value::as_integer).unwrap_or(30) as u32;
 		let block_path = toml.get("block_path").and_then(Value::as_str).unwrap_or("gfx/block.png").into();
+		let line_clear_path = toml.get("line_clear_path").and_then(Value::as_str).unwrap_or("gfx/line_clear.png").into();
+		let line_clear_frames = toml.get("line_clear_frames").and_then(Value::as_integer).unwrap_or(4) as u32;
 		
 		Config {
 			width,
@@ -218,6 +222,8 @@ impl Config {
 			players,
 			binds,
 			block_path,
+			line_clear_frames,
+			line_clear_path,
 		}
 	}
 }

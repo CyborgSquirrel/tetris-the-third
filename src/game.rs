@@ -5,7 +5,7 @@ use rand::{Rng,SeedableRng,rngs::SmallRng};
 use std::cmp::min;
 use serde::{Serialize,Deserialize};
 
-pub type Well = array2d::Array2D<Option<block::Data>>;
+pub type Well = array2d::Array2D<block::Data>;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum MinoRng {
@@ -57,7 +57,7 @@ pub fn check_mino_well_collision(mino: &Mino, well: &Well) -> bool {
 		if !check_block_in_bounds(block, &dim) {
 			return true;
 		}
-		if well[(block.x as usize, block.y as usize)].is_some() {
+		if well[(block.x as usize, block.y as usize)] != block::Data::EMPTY {
 			return true;
 		}
 	}
@@ -106,10 +106,10 @@ pub fn try_clear_lines(well: &mut Well) {
 	for y in (0..well.row_len()).rev() {
 		let mut count = 0;
 		for x in 0..well.column_len() {
-			count += well[(x,y)].is_some() as usize;
+			count += (well[(x,y)] != block::Data::EMPTY) as usize;
 			if dy != 0 {
 				well[(x,y+dy)] = well[(x,y)];
-				well[(x,y)] = None;
+				well[(x,y)] = block::Data::EMPTY;
 			}
 		}
 		if count == well.column_len() {
@@ -120,7 +120,7 @@ pub fn try_clear_lines(well: &mut Well) {
 
 pub fn mino_fits_in_well(mino: &Mino, well: &Well) -> bool {
 	for block in mino.blocks.iter() {
-		if block.y < 0 || well[(block.x as usize, block.y as usize)].is_some() {
+		if block.y < 0 || well[(block.x as usize, block.y as usize)] != block::Data::EMPTY {
 			return false;
 		}
 	}
@@ -129,8 +129,8 @@ pub fn mino_fits_in_well(mino: &Mino, well: &Well) -> bool {
 
 pub fn add_mino_to_well(mino: &Mino, well: &mut Well) {
 	for (block, data) in mino.blocks.iter().zip(mino.blocks_data.iter()) {
-		assert!(block.y >= 0 && well[(block.x as usize, block.y as usize)].is_none());
-		well[(block.x as usize, block.y as usize)] = Some(*data);
+		assert!(block.y >= 0 && well[(block.x as usize, block.y as usize)] == block::Data::EMPTY);
+		well[(block.x as usize, block.y as usize)] = *data;
 	}
 }
 

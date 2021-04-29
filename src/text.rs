@@ -3,17 +3,19 @@ use crate::Color;
 
 pub struct TextCreator<'a, 'b> {
 	texture_creator: &'a TextureCreator<WindowContext>,
-	font: &'b Font<'b, 'b>,
+	menu_font: &'b Font<'b, 'b>,
+	game_font: &'b Font<'b, 'b>,
 	big_font: &'b Font<'b, 'b>,
 }
 
 impl<'a, 'b> TextCreator<'a, 'b> {
 	pub fn new(
 		texture_creator: &'a TextureCreator<WindowContext>,
-		font: &'b Font<'b,'b>, big_font: &'b Font<'b,'b>) -> Self {
+		menu_font: &'b Font<'b,'b>, game_font: &'b Font<'b,'b>, big_font: &'b Font<'b,'b>) -> Self {
 		Self {
 			texture_creator,
-			font,
+			menu_font,
+			game_font,
 			big_font,
 		}
 	}
@@ -28,7 +30,7 @@ pub struct TextBuilder<'a, 'b, 'c> {
 	text: &'c str,
 	color: Color,
 	wrap_max_width: Option<u32>,
-	big: bool,
+	font: &'b Font<'b, 'b>,
 }
 
 impl<'a, 'b, 'c> TextBuilder<'a, 'b, 'c> {
@@ -38,7 +40,7 @@ impl<'a, 'b, 'c> TextBuilder<'a, 'b, 'c> {
 			text,
 			color: Color::WHITE,
 			wrap_max_width: None,
-			big: false,
+			font: text_creator.menu_font,
 		}
 	}
 	pub fn color(mut self, color: Color) -> Self {
@@ -49,19 +51,25 @@ impl<'a, 'b, 'c> TextBuilder<'a, 'b, 'c> {
 		self.wrap_max_width = Some(wrap_max_width);
 		self
 	}
+	pub fn menu(mut self) -> Self {
+		self.font = self.text_creator.menu_font;
+		self
+	}
+	pub fn game(mut self) -> Self {
+		self.font = self.text_creator.game_font;
+		self
+	}
 	pub fn big(mut self) -> Self {
-		self.big = true;
+		self.font = self.text_creator.big_font;
 		self
 	}
 	pub fn build(self: TextBuilder<'a, 'b, 'c>) -> Texture<'a> {
-		let TextBuilder{text_creator: TextCreator{texture_creator, font, big_font},
-		text, color, wrap_max_width, big} = self;
+		let TextBuilder{text_creator: TextCreator{texture_creator, ..},
+		text, color, wrap_max_width, font} = self;
 		
 		// I do this because sdl2 outputs an error if you try to render text from an
 		// empty string.
 		let text = if text.is_empty() {" "} else {text};
-		
-		let font = if big {big_font} else {font};
 		
 		let surface = font.render(text);
 		

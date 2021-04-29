@@ -72,25 +72,23 @@ impl State {
 	}
 }
 
-// TODO: change with_wrap parameter to depend on block size, someday
-
-struct LinesClearedText<'a>(Texture<'a>, &'a TextCreator<'a,'a>);
+struct LinesClearedText<'a>(Texture<'a>, &'a TextCreator<'a,'a>, u32);
 impl<'a> LinesClearedText<'a> {
-	fn new(text_creator: &'a TextCreator) -> Self {
-		LinesClearedText(text_creator.builder("").build(), text_creator)
+	fn new(text_creator: &'a TextCreator, block_size: u32) -> Self {
+		LinesClearedText(text_creator.builder("").build(), text_creator, block_size)
 	}
 	fn update(&mut self, lines_cleared: u32) {
-		self.0 = self.1.builder(&format!("Lines: {}", lines_cleared)).with_wrap(120).build()
+		self.0 = self.1.builder(&format!("Lines: {}", lines_cleared)).game().with_wrap(self.2*4).build()
 	}
 }
 
-struct LevelText<'a>(Texture<'a>, &'a TextCreator<'a,'a>);
+struct LevelText<'a>(Texture<'a>, &'a TextCreator<'a,'a>, u32);
 impl<'a> LevelText<'a> {
-	fn new(text_creator: &'a TextCreator) -> Self {
-		LevelText(text_creator.builder("").build(), text_creator)
+	fn new(text_creator: &'a TextCreator, block_size: u32) -> Self {
+		LevelText(text_creator.builder("").build(), text_creator, block_size)
 	}
 	fn update(&mut self, level: u32) {
-		self.0 = self.1.builder(&format!("Level: {}", level)).with_wrap(120).build()
+		self.0 = self.1.builder(&format!("Level: {}", level)).game().with_wrap(self.2*4).build()
 	}
 }
 
@@ -237,12 +235,11 @@ fn load_saved_unit() -> Option<Unit> {
 }
 
 lazy_static! {
-	static ref SOFTDROP_DURATION: Duration = Duration::from_secs_f64(0.05);
-	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.1);
+	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.2);
 	static ref GAME_OF_LIFE_DURATION: Duration = Duration::from_secs_f64(0.25);
 }
 
-const FONT_SIZE: u16 = 32;
+const MENU_FONT_SIZE: u16 = 32;
 const BIG_FONT_SIZE: u16 = 128;
 
 const MAX_PLAYERS: usize = 8;
@@ -297,20 +294,26 @@ fn main() {
 		.expect("Failed to create event pump");
 	
 	let texture_creator = canvas.texture_creator();
-	let texture = texture_creator.load_texture(config.block_path)
+	let block = texture_creator.load_texture(&config.block_path)
 		.expect("Failed to load block texture");
+	let line_clear = texture_creator.load_texture(&config.line_clear_path)
+		.expect("Failed to load line clear texture");
 	
-	let font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", FONT_SIZE)
+	let mut block_canvas = block::Canvas::new(block, line_clear, config.block_size_tex, config.block_size_draw, config.line_clear_frames);
+	
+	let menu_font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", MENU_FONT_SIZE)
+		.expect("Failed to load font");
+	let game_font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", config.block_size_draw as u16)
 		.expect("Failed to load font");
 	let big_font = ttf_context.load_font("gfx/IBMPlexMono-Regular.otf", BIG_FONT_SIZE)
 		.expect("Failed to load font");
 	
-	let text_creator = TextCreator::new(&texture_creator, &font, &big_font);
+	let text_creator = TextCreator::new(&texture_creator, &menu_font, &game_font, &big_font);
 	
 	let title = texture_creator.load_texture("gfx/title.png").unwrap();
 	
-	let game_over_text = text_creator.builder("Game over").build();
-	let game_won_text = text_creator.builder("You won").build();
+	let game_over_text = text_creator.builder("Game over").game().build();
+	let game_won_text = text_creator.builder("You won").game().build();
 	
 	let host_start_text = text_creator.builder("Press enter to start game")
 		.with_wrap(window_rect.width() as u32).build();
@@ -358,8 +361,8 @@ fn main() {
 			NetworkStateSelection::Client => &client_text,
 		};
 	
-	let mut lines_cleared_text: Vec<_> = iter::from_fn(||Some(LinesClearedText::new(&text_creator))).take(MAX_PLAYERS).collect();
-	let mut level_text: Vec<_> = iter::from_fn(||Some(LevelText::new(&text_creator))).take(MAX_PLAYERS).collect();
+	let mut lines_cleared_text: Vec<_> = iter::from_fn(||Some(LinesClearedText::new(&text_creator, config.block_size_draw))).take(MAX_PLAYERS).collect();
+	let mut level_text: Vec<_> = iter::from_fn(||Some(LevelText::new(&text_creator, config.block_size_draw))).take(MAX_PLAYERS).collect();
 	
 	let can_continue_text = text_creator.builder("Continue").build();
 	let cant_continue_text = text_creator.builder("Continue").color(Color::GRAY).build();
@@ -393,8 +396,6 @@ fn main() {
 	
 	let mut network_players = 0u32;
 	let mut player_names_text = Vec::<Texture>::new();
-	
-	let mut block_canvas = block::Canvas::new(texture, config.block_size_tex, config.block_size_draw);
 	
 	let mut state = State::Title;
 	

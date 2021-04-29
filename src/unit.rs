@@ -5,7 +5,6 @@ use crate::{command::{Command, CommandWrapper}, game, mino_controller::MinoContr
 use crate::mino::Mino;
 use std::time::Duration;
 use std::convert::TryFrom;
-
 use crate::{vec2i,vec2f};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -77,7 +76,7 @@ impl Base {
 			can_store_mino: true,
 			stored_mino: None,
 			falling_mino: None,
-			well: game::Well::filled_with(None, 10, 20),
+			well: game::Well::filled_with(crate::block::Data::EMPTY, 10, 20),
 			
 			gol_animation: None,
 			lc_animation: None,
@@ -178,7 +177,7 @@ pub enum Mode {
 	Marathon {level: u32, level_target: u32, lines_before_next_level: i32},
 	Sprint {lines_cleared_target: u32},
 	Versus {lines_received: VecDeque<usize>, lines_received_sum: usize, target_unit_id: usize},
-	GameOfLife {count: u32},
+	GameOfLife {count: u32, lines_cleared_target: u32},
 }
 
 impl Mode {
@@ -203,6 +202,7 @@ impl Mode {
 	pub fn default_game_of_life() -> Mode {
 		Mode::GameOfLife {
 			count: 0,
+			lines_cleared_target: 20,
 		}
 	}
 }
@@ -330,8 +330,8 @@ impl<'a> Command<'a> for UnitCommandInner {
 					let mut count = 0;
 					let mut sendable = true;
 					for block in row {
-						count += block.is_some() as u32;
-						sendable &= block.map_or(true, |block|block!=crate::block::Data::GRAY);
+						count += (!block.is_empty()) as u32;
+						sendable &= *block != crate::block::Data::GRAY;
 					}
 					if count as usize == base.well.column_len() {
 						clearable_lines += 1;
@@ -376,32 +376,48 @@ impl<'a> Command<'a> for UnitCommandInner {
 					if *level >= *level_target {base.win()}
 					Mode::Sprint {lines_cleared_target} =>
 					if base.lines_cleared >= *lines_cleared_target {base.win()}
+					Mode::GameOfLife {lines_cleared_target,..} =>
+					if base.lines_cleared >= *lines_cleared_target {base.win()}
 					_ => {}
 				}
 			}
 			AnimGameOfLife => {
-				if let Mode::GameOfLife {count} = &mut base.mode {
+				if let Mode::GameOfLife {count, ..} = &mut base.mode {
 					*count += 1;
 					if *count % 5 == 0 { //TODO: change me
 						base.state = State::Animation {countdown: Duration::from_secs(0)};
 						let mut gol_animation = GOLAnimation::new(10, 20);
-						let dx = vec![0, 1, 0, -1];
-						let dy = vec![1, 0, -1, 0];
+						let (dx, dy) = (vec![0, 1, 0, -1], vec![1, 0, -1, 0]);
+						
+						// This animation_block is a trick that I came up with; it makes the
+						// game of life blocks seem random, but it's also deterministic. This
+						// means it doesn't have to be sent over the network :).
+						let mut animation_block = crate::block::Data::BLUE;
+						let mut animation_block_count = 0;
 						for x in 0..base.well.column_len() as i32 {
 							for y in 0..base.well.row_len() as i32 {
-								let mut count = 0;
+								let mut neighbors = 0;
 								for (dx, dy) in izip!(&dx, &dy) {
 									let (x, y) = (x - *dx, y - *dy);
 									let (x, y) = (usize::try_from(x).ok(), usize::try_from(y).ok());
 									if let (Some(x), Some(y)) = (x, y) {
-										if let Some(Some(_)) = base.well.get(x, y) {
-											count += 1;
+										if let Some(block) = base.well.get(x, y) {
+											if !block.is_empty() {
+												neighbors += 1;
+												animation_block_count += 1;
+												if animation_block_count == 3 {
+													animation_block_count = 0;
+													animation_block = *block;
+												}
+											}
 										}
 									}
 								}
 								
 								let (ux, uy) = (x as usize, y as usize);
-								gol_animation.animate_block[(ux, uy)] = if let Some(_) = base.well[(ux, uy)] {if count != 3 {Some(crate::block::Data::BACKGROUND)} else {None}} else {if count == 3 {Some(crate::block::Data::BLUE)} else {None}};
+								let block = &mut gol_animation.animate_block[(ux, uy)];
+								if !base.well[(ux,uy)].is_empty() {if neighbors != 3 {block.get_or_insert(crate::block::Data::EMPTY);}}
+								else {if neighbors == 3 {block.get_or_insert(animation_block);}}
 							}
 						}
 						base.gol_animation = Some(gol_animation);
@@ -414,7 +430,7 @@ impl<'a> Command<'a> for UnitCommandInner {
 						for y in 0..base.well.row_len() {
 							let p = (x,y);
 							if let Some(block) = gol_animation.animate_block[p].take() {
-								base.well[p] = if block != crate::block::Data::BACKGROUND {Some(block)} else {None};
+								base.well[p] = block;
 							}
 						}
 					}
@@ -455,13 +471,13 @@ impl<'a> Command<'a> for UnitCommandInner {
 				if lines == 0 {return}
 				for y in 0..base.well.row_len() {
 					for x in 0..base.well.column_len() {
-						if base.well[(x,y)].is_some() {
+						if !base.well[(x,y)].is_empty() {
 							if y >= lines {
 								base.well[(x,y-lines)] = base.well[(x,y)];
 							}
 						}
 						base.well[(x,y)] = if y >= base.well.row_len()-lines && x != gap
-						{Some(crate::block::Data::GRAY)} else {None}
+						{crate::block::Data::GRAY} else {crate::block::Data::EMPTY}
 					}
 				}
 			}
