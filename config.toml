@@ -1,16 +1,42 @@
 # width = 1200
 width = 700
 height = 700
-# borderless = false
+# borderless = true
+
 block_size_draw = 32
-block_size_tex = 16
-block_path = "gfx/minecraft.png"
-line_clear_path = "gfx/minecraft_line_clear_short.png"
-line_clear_frames = 5
+
+line_clear_duration = 0.1
+game_of_life_duration = 0.25
+
+# THEMES
+
+# Default theme
+block_size_tex = 24
+block_path = "gfx/block.png"
+line_clear_path = "gfx/line_clear.png"
+line_clear_frames = 3
+
+# Minimalist theme
+# block_size_tex = 24
+# block_path = "gfx/minimalist.png"
+# line_clear_path = "gfx/line_clear.png"
+# line_clear_frames = 5
+
+# Minecraft theme
+# block_size_tex = 16
+# block_path = "gfx/minecraft.png"
+# line_clear_path = "gfx/minecraft_line_clear.png"
+# line_clear_frames = 10
+
+# Minecraft drip theme
+# block_size_tex = 16
+# block_path = "gfx/minecraft_drip.png"
+# line_clear_path = "gfx/minecraft_line_clear.png"
+# line_clear_frames = 10
 
 [[players]]
-move_prepeat_duration = 0.15
-move_repeat_duration = 0.05
+move_prepeat_duration = 0.12
+move_repeat_duration = 0.04
 
 [players.controls.keyboard]
 left = "a"

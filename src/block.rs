@@ -103,9 +103,9 @@ impl<'a> Canvas<'a> {
 	pub fn draw_well(
 		&mut self, canvas: &mut WindowCanvas, origin: vec2i, well: &Well,
 		lc_animation: &Option<crate::unit::LCAnimation>, gol_animation: &Option<crate::unit::GOLAnimation>,
-		countdown: Duration,
+		countdown: Duration, config: &crate::config::Config
 	) {
-		let f = countdown.as_secs_f64() / (if lc_animation.is_some() {*crate::LINE_CLEAR_DURATION} else {*crate::GAME_OF_LIFE_DURATION}).as_secs_f64();
+		let f = countdown.as_secs_f64() / (if lc_animation.is_some() {config.line_clear_duration} else {config.game_of_life_duration}).as_secs_f64();
 		for y in 0..well.row_len() {
 			for x in 0..well.column_len() {
 				let p = vec2i!(x as i32, y as i32);

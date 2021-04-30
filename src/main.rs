@@ -12,7 +12,6 @@ use std::thread::sleep;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use config::{InputMethod,Bind,MenuBinds};
-use lazy_static::lazy_static;
 use network::{NetworkState,NetworkCommand};
 use command::Command;
 
@@ -234,10 +233,10 @@ fn load_saved_unit() -> Option<Unit> {
 	})
 }
 
-lazy_static! {
-	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.2);
-	static ref GAME_OF_LIFE_DURATION: Duration = Duration::from_secs_f64(0.25);
-}
+// lazy_static! {
+// 	static ref LINE_CLEAR_DURATION: Duration = Duration::from_secs_f64(0.2);
+// 	static ref GAME_OF_LIFE_DURATION: Duration = Duration::from_secs_f64(0.25);
+// }
 
 const MENU_FONT_SIZE: u16 = 32;
 const BIG_FONT_SIZE: u16 = 128;
@@ -741,11 +740,11 @@ fn main() {
 				if let unit::State::Animation {countdown} = &mut unit.base.state {
 					*countdown += dpf;
 					if unit.base.lc_animation.is_some() {
-						if *countdown >= *LINE_CLEAR_DURATION {
+						if *countdown >= config.line_clear_duration {
 							unit.base.state = unit::State::Play;
 						}
 					}else if unit.base.gol_animation.is_some() {
-						if *countdown >= *GAME_OF_LIFE_DURATION {
+						if *countdown >= config.game_of_life_duration {
 							unit.base.state = unit::State::Play;
 						}
 					}
@@ -991,7 +990,7 @@ fn main() {
 					
 					let countdown = if let unit::State::Animation {countdown} = state {*countdown} else {Duration::from_secs(0)};
 					
-					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, &lc_animation, &gol_animation, countdown);
+					block_canvas.draw_well(&mut canvas, layout.as_vec2i(), &well, &lc_animation, &gol_animation, countdown, &config);
 					if let Some(falling_mino) = falling_mino {
 						let shadow_mino = game::create_shadow_mino(falling_mino, &well);
 						block_canvas.draw_mino(&mut canvas, layout.as_vec2i(), &shadow_mino);

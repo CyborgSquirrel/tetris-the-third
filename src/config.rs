@@ -1,6 +1,6 @@
 use toml::Value;
 use sdl2::{event::Event, keyboard::Keycode};
-use std::{fs::File, path::{Path, PathBuf}};
+use std::{fs::File, path::PathBuf};
 use std::io::prelude::*;
 use std::time::Duration;
 use serde::{Serialize,Deserialize};
@@ -182,6 +182,8 @@ pub struct Config {
 	pub binds: Vec<PlayerBinds>,
 	pub block_path: PathBuf,
 	pub line_clear_path: PathBuf,
+	pub line_clear_duration: Duration,
+	pub game_of_life_duration: Duration,
 }
 
 impl Config {
@@ -213,6 +215,19 @@ impl Config {
 		let line_clear_path = toml.get("line_clear_path").and_then(Value::as_str).unwrap_or("gfx/line_clear.png").into();
 		let line_clear_frames = toml.get("line_clear_frames").and_then(Value::as_integer).unwrap_or(4) as u32;
 		
+		let get_duration = |name, default|{
+			let name = toml.get(name);
+			let secs = if let Some(name) = name {
+				if let Some(secs) = name.as_float() {secs}
+				else if let Some(secs) = name.as_integer() {secs as f64}
+				else {default}
+			}else {default};
+			Duration::from_secs_f64(secs)
+		};
+		
+		let line_clear_duration = get_duration("line_clear_duration", 0.1);
+		let game_of_life_duration = get_duration("game_of_life_duration", 0.25);
+		
 		Config {
 			width,
 			height,
@@ -224,6 +239,8 @@ impl Config {
 			block_path,
 			line_clear_frames,
 			line_clear_path,
+			line_clear_duration,
+			game_of_life_duration,
 		}
 	}
 }
