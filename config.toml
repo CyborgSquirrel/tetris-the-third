@@ -1,7 +1,7 @@
 # width = 1200
-# width = 700
-# height = 700
-borderless = true
+width = 700
+height = 700
+# borderless = true
 
 block_size_draw = 32
 
@@ -35,7 +35,7 @@ line_clear_frames = 3
 # line_clear_frames = 10
 
 [[players]]
-move_prepeat_duration = 0.12
+move_prepeat_duration = 0.15
 move_repeat_duration = 0.04
 
 [players.controls.keyboard]
